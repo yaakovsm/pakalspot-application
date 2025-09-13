@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Env files (never bake secrets into images)
+.env
+
+# Git
+.git/
+.gitignore
+
+# Byte-compiled
+*.db
+
+# Alembic cache
+alembic/versions/__pycache__/
+
+# Local media (if any in backend folder)
+Media/
+
+# OS files
+.DS_Store

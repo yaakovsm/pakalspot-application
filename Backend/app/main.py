@@ -5,7 +5,7 @@ from app.core.database import engine, Base
 
 # Create DB tables if not using Alembic yet
 # (when you add migrations, you can remove this line)
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="PakalSpot API",
