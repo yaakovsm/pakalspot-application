@@ -46,10 +46,22 @@ class UserLogin(BaseModel):
 
 class UserOut(UserBase):
     id: uuid.UUID
+    username: str  # Alias for display_name to match frontend
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        
+    @classmethod
+    def from_orm(cls, user):
+        """Custom from_orm to map display_name to username"""
+        return cls(
+            id=user.id,
+            email=user.email,
+            display_name=user.display_name,
+            username=user.display_name,  # Map display_name to username
+            created_at=user.created_at
+        )
 
 
 # ----------------------
@@ -83,7 +95,7 @@ class SpotOut(SpotBase):
     owner_id: uuid.UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ----------------------
@@ -105,7 +117,7 @@ class PhotoOut(PhotoBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ----------------------
@@ -124,7 +136,7 @@ class LikeOut(LikeBase):
     spot_id: uuid.UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ----------------------
@@ -139,4 +151,4 @@ class FavoriteOut(FavoriteBase):
     spot_id: uuid.UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True

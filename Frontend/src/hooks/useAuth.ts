@@ -12,6 +12,7 @@ interface AuthState {
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
+  initialize: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -28,7 +29,6 @@ export const useAuthStore = create<AuthState>()(
           const response = await authAPI.login(data);
           const { user, token } = response.data;
           
-          localStorage.setItem('auth_token', token);
           set({
             user,
             token,
@@ -47,7 +47,6 @@ export const useAuthStore = create<AuthState>()(
           const response = await authAPI.register(data);
           const { user, token } = response.data;
           
-          localStorage.setItem('auth_token', token);
           set({
             user,
             token,
@@ -61,7 +60,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('auth_token');
         set({
           user: null,
           token: null,
@@ -71,6 +69,32 @@ export const useAuthStore = create<AuthState>()(
 
       updateUser: (user: User) => {
         set({ user });
+      },
+
+      initialize: () => {
+        const token = localStorage.getItem('auth_token');
+        const { user, isAuthenticated } = get();
+        
+        // If we have a token but no user data, try to restore from localStorage
+        if (token && !user) {
+          const stored = localStorage.getItem('auth-storage');
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              if (parsed.state && parsed.state.user && parsed.state.token) {
+                set({
+                  user: parsed.state.user,
+                  token: parsed.state.token,
+                  isAuthenticated: true,
+                });
+              }
+            } catch (error) {
+              console.error('Failed to restore auth state:', error);
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('auth-storage');
+            }
+          }
+        }
       },
     }),
     {
@@ -95,6 +119,7 @@ export const useAuth = () => {
     register,
     logout,
     updateUser,
+    initialize,
   } = useAuthStore();
 
   return {
@@ -106,5 +131,6 @@ export const useAuth = () => {
     register,
     logout,
     updateUser,
+    initialize,
   };
 };

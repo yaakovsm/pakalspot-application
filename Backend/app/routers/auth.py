@@ -8,7 +8,7 @@ from app.core.security import get_current_user
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=schemas.UserOut)
+@router.post("/register")
 def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.User).filter(models.User.email == user_in.email).first()
     if existing:
@@ -22,7 +22,10 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+    
+    token = create_access_token(subject=str(user.id))
+    user_out = schemas.UserOut.from_orm(user)
+    return {"user": user_out, "token": token}
 
 
 @router.post("/login")
@@ -34,8 +37,9 @@ def login(user_in: schemas.UserLogin, db: Session = Depends(get_db)):
             detail="Invalid credentials",
         )
 
-    token = create_access_token({"sub": str(user.id)})
-    return {"access_token": token, "token_type": "bearer"}
+    token = create_access_token(subject=str(user.id))
+    user_out = schemas.UserOut.from_orm(user)
+    return {"user": user_out, "token": token}
 
 
 @router.get("/me", response_model=schemas.UserOut)

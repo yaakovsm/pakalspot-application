@@ -50,7 +50,7 @@ export const authAPI = {
     api.post('/auth/logout'),
   
   getProfile: (): Promise<AxiosResponse<User>> =>
-    api.get('/auth/profile'),
+    api.get('/auth/me'),
 };
 
 // Spots API

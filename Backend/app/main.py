@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, spots, photos, utils
-from app.core.database import engine, Base
+from app.core.database import engine
+from app.models import Base
 
 # Create DB tables if not using Alembic yet
 # (when you add migrations, you can remove this line)
-#Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="PakalSpot API",
@@ -23,10 +24,10 @@ app.add_middleware(
 )
 
 # Routers
-app.include_router(auth.router)
-app.include_router(spots.router)
-app.include_router(photos.router)
-app.include_router(utils.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(spots.router, prefix="/api")
+app.include_router(photos.router, prefix="/api")
+app.include_router(utils.router, prefix="/api")
 
 
 @app.get("/")

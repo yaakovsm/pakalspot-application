@@ -56,7 +56,7 @@ const Register: React.FC = () => {
 
     try {
       await register({
-        username: formData.username,
+        display_name: formData.username,
         email: formData.email,
         password: formData.password,
       });
