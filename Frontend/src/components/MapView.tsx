@@ -111,7 +111,7 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
       `;
 
       const marker = new maplibregl.Marker(el)
-        .setLngLat([spot.longitude, spot.latitude])
+        .setLngLat([spot.lon, spot.lat])
         .addTo(map.current!);
 
       // Handle marker click
@@ -130,7 +130,7 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
 
     // Fly to selected spot
     map.current.flyTo({
-      center: [selectedSpot.longitude, selectedSpot.latitude],
+      center: [selectedSpot.lon, selectedSpot.lat],
       zoom: 15,
       duration: 1000,
     });
@@ -145,7 +145,7 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
     popupContent.innerHTML = `
       <div class="spot-popup p-0 max-w-sm">
         <div class="relative">
-          ${spot.photos[0] ? `
+          ${spot.photos && spot.photos.length > 0 && spot.photos[0] ? `
             <img src="${spot.photos[0].url}" alt="${spot.title}" class="w-full h-32 object-cover rounded-t-lg">
           ` : `
             <div class="w-full h-32 bg-gradient-card rounded-t-lg flex items-center justify-center">
@@ -183,7 +183,7 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
       closeOnClick: true,
       maxWidth: '320px',
     })
-      .setLngLat([spot.longitude, spot.latitude])
+      .setLngLat([spot.lon, spot.lat])
       .setDOMContent(popupContent)
       .addTo(map.current!);
   };
@@ -216,7 +216,7 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
       {selectedSpot && (
         <Card className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-80 shadow-strong backdrop-blur-md bg-card/90">
           <CardContent className="p-4">
-            {selectedSpot.photos[0] && (
+            {selectedSpot.photos && selectedSpot.photos.length > 0 && selectedSpot.photos[0] && (
               <img 
                 src={selectedSpot.photos[0].url} 
                 alt={selectedSpot.title}

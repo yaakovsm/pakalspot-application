@@ -27,20 +27,20 @@ export interface Spot {
   title: string;
   description: string;
   type: SpotType;
-  latitude: number;
-  longitude: number;
+  lat: number;
+  lon: number;
   region: IsraeliRegion;
-  createdBy: User;
-  photos: Photo[];
-  likes: Like[];
-  likeCount: number;
-  dislikeCount: number;
-  isFavorited: boolean;
+  createdBy?: User;
+  photos?: Photo[];
+  likes?: Like[];
+  likeCount?: number;
+  dislikeCount?: number;
+  isFavorited?: boolean;
   userLike?: Like; // Current user's like/dislike
   distance?: number; // Distance from user's location
-  popularity: number;
+  popularity?: number;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export type SpotType = 
@@ -86,7 +86,29 @@ export interface CreateSpotRequest {
   latitude: number;
   longitude: number;
   region: IsraeliRegion;
+  locationName?: string;
   photos?: File[];
+}
+
+export interface LocationSearchResult {
+  name: string;
+  lat: number;
+  lng: number;
+  type: string;
+  importance: number;
+  address: string;
+}
+
+export interface LocationSearchResponse {
+  results: LocationSearchResult[];
+}
+
+export interface GeocodeResult {
+  name: string;
+  lat: number;
+  lng: number;
+  region: string;
+  address: string;
 }
 
 export interface LoginRequest {

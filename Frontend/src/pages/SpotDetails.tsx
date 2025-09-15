@@ -170,7 +170,7 @@ const SpotDetails: React.FC = () => {
           </Button>
 
           {/* Image Gallery */}
-          {selectedSpot.photos.length > 0 && (
+          {selectedSpot.photos && selectedSpot.photos.length > 0 && (
             <Card className="mb-6 overflow-hidden">
               <div className="relative">
                 <img 
@@ -273,7 +273,7 @@ const SpotDetails: React.FC = () => {
                       className="gap-2"
                     >
                       <ThumbsUp className="w-4 h-4" />
-                      {selectedSpot.likeCount}
+                      {selectedSpot.likeCount || 0}
                     </Button>
                     
                     <Button
@@ -282,7 +282,7 @@ const SpotDetails: React.FC = () => {
                       className="gap-2"
                     >
                       <ThumbsDown className="w-4 h-4" />
-                      {selectedSpot.dislikeCount}
+                      {selectedSpot.dislikeCount || 0}
                     </Button>
                   </div>
                 </CardContent>
@@ -307,7 +307,7 @@ const SpotDetails: React.FC = () => {
                     <div>
                       <span className="text-muted-foreground">Coordinates:</span>
                       <span className="ml-2 font-mono text-xs">
-                        {selectedSpot.latitude.toFixed(4)}, {selectedSpot.longitude.toFixed(4)}
+                        {selectedSpot.lat.toFixed(4)}, {selectedSpot.lon.toFixed(4)}
                       </span>
                     </div>
                     {selectedSpot.distance && (
@@ -335,7 +335,7 @@ const SpotDetails: React.FC = () => {
                   <div className="space-y-3 text-sm">
                     <div>
                       <span className="text-muted-foreground">Added by:</span>
-                      <span className="ml-2 font-medium">{selectedSpot.createdBy.username}</span>
+                      <span className="ml-2 font-medium">{selectedSpot.createdBy?.username || 'Unknown'}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Added on:</span>
@@ -343,7 +343,7 @@ const SpotDetails: React.FC = () => {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Popularity:</span>
-                      <span className="ml-2 font-medium">{selectedSpot.popularity} views</span>
+                      <span className="ml-2 font-medium">{selectedSpot.popularity || 0} views</span>
                     </div>
                   </div>
                 </CardContent>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -55,10 +56,16 @@ const distanceOptions = [
 
 const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
   const { spots, filters, updateFilters, isLoading, selectSpot } = useSpots();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [maxDistance, setMaxDistance] = useState([filters.maxDistance || 100]);
   const [selectedRegion, setSelectedRegion] = useState<IsraeliRegion | 'all'>('all');
+
+  const handleViewDetails = (spot: any) => {
+    selectSpot(spot);
+    navigate(`/spot/${spot.id}`);
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -254,6 +261,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             <div key={spot.id} onClick={() => selectSpot(spot)}>
               <SpotCard 
                 spot={spot} 
+                onViewDetails={handleViewDetails}
                 className="cursor-pointer hover:shadow-medium transition-smooth"
               />
             </div>

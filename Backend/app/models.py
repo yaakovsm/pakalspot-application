@@ -81,6 +81,7 @@ class Spot(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     spot_type: Mapped[SpotType] = mapped_column(Enum(SpotType), nullable=False)
     region: Mapped[Region] = mapped_column(Enum(Region), nullable=False)
+    location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

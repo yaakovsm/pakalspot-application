@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
-import { AuthResponse, CreateSpotRequest, LoginRequest, RegisterRequest, Spot, User } from '../types/spot';
+import { AuthResponse, CreateSpotRequest, LoginRequest, RegisterRequest, Spot, User, LocationSearchResponse, GeocodeResult } from '../types/spot';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -77,6 +77,10 @@ export const spotsAPI = {
     formData.append('longitude', data.longitude.toString());
     formData.append('region', data.region);
     
+    if (data.locationName) {
+      formData.append('location_name', data.locationName);
+    }
+    
     if (data.photos) {
       data.photos.forEach((photo) => {
         formData.append('photos', photo);
@@ -107,6 +111,15 @@ export const spotsAPI = {
   
   getFavorites: (): Promise<AxiosResponse<Spot[]>> =>
     api.get('/spots/favorites'),
+  
+  searchLocations: (query: string, limit: number = 10): Promise<AxiosResponse<LocationSearchResponse>> =>
+    api.get('/spots/search/locations', { params: { q: query, limit } }),
+  
+  geocodeLocation: (location: string): Promise<AxiosResponse<GeocodeResult>> =>
+    api.get('/spots/geocode', { params: { location } }),
+  
+  reverseGeocode: (lat: number, lng: number): Promise<AxiosResponse<GeocodeResult>> =>
+    api.get('/spots/reverse-geocode', { params: { lat, lng } }),
 };
 
 export default api;

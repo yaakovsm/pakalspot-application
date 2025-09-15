@@ -6,9 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { useSpots } from '../hooks/useSpots';
-import { SpotType, IsraeliRegion, CreateSpotRequest } from '../types/spot';
-import { MapPin, Upload, X, Plus } from 'lucide-react';
+import { SpotType, IsraeliRegion, CreateSpotRequest, GeocodeResult } from '../types/spot';
+import { MapPin, Upload, X, Plus, Map } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import LocationSearch from './LocationSearch';
+import { spotsAPI } from '../api/api';
 
 interface AddSpotFormProps {
   onClose?: () => void;
@@ -54,18 +56,32 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     title: '',
     description: '',
     type: 'waterfall',
-    latitude: initialLocation?.lat || 31.5,
-    longitude: initialLocation?.lng || 34.8,
+    latitude: initialLocation?.lat || 0,
+    longitude: initialLocation?.lng || 0,
     region: 'jerusalem',
+    locationName: '',
     photos: [],
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<GeocodeResult | null>(null);
+  const [showCoordinateInputs, setShowCoordinateInputs] = useState(false);
 
   const handleInputChange = (field: keyof CreateSpotRequest, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleLocationSelect = (location: GeocodeResult) => {
+    setSelectedLocation(location);
+    setFormData(prev => ({
+      ...prev,
+      latitude: location.lat,
+      longitude: location.lng,
+      region: location.region as IsraeliRegion,
+      locationName: location.name,
+    }));
   };
 
   const handleFileSelect = (files: FileList | null) => {
@@ -100,10 +116,10 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     handleFileSelect(e.dataTransfer.files);
   };
 
-  const getCurrentLocation = () => {
+  const getCurrentLocation = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           
@@ -111,15 +127,34 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
           const isInIsrael = lng >= 34.25 && lng <= 35.9 && lat >= 29.5 && lat <= 33.4;
           
           if (isInIsrael) {
-            setFormData(prev => ({
-              ...prev,
-              latitude: lat,
-              longitude: lng,
-            }));
-            toast({
-              title: "Location updated",
-              description: "Current location has been set for the spot.",
-            });
+            try {
+              // Try to reverse geocode to get location name
+              const response = await spotsAPI.reverseGeocode(lat, lng);
+              const locationData = response.data;
+              setSelectedLocation(locationData);
+              setFormData(prev => ({
+                ...prev,
+                latitude: lat,
+                longitude: lng,
+                region: locationData.region as IsraeliRegion,
+                locationName: locationData.name,
+              }));
+              toast({
+                title: "Location updated",
+                description: `Current location set: ${locationData.name}`,
+              });
+            } catch (error) {
+              // Fallback if reverse geocoding fails
+              setFormData(prev => ({
+                ...prev,
+                latitude: lat,
+                longitude: lng,
+              }));
+              toast({
+                title: "Location updated",
+                description: "Current location has been set for the spot.",
+              });
+            }
           } else {
             toast({
               title: "Location outside Israel",
@@ -151,10 +186,10 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
       return;
     }
 
-    if (!formData.latitude || !formData.longitude) {
+    if (!selectedLocation || !formData.latitude || !formData.longitude) {
       toast({
         title: "Location required",
-        description: "Please set a location for the spot.",
+        description: "Please select a location for the spot.",
         variant: "destructive",
       });
       return;
@@ -183,6 +218,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
         latitude: formData.latitude!,
         longitude: formData.longitude!,
         region: formData.region!,
+        locationName: formData.locationName,
         photos: selectedPhotos,
       };
 
@@ -248,48 +284,25 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Type *
-                </label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => handleInputChange('type', value as SpotType)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select spot type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {spotTypes.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Region *
-                </label>
-                <Select 
-                  value={formData.region} 
-                  onValueChange={(value) => handleInputChange('region', value as IsraeliRegion)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {israeliRegions.map(region => (
-                      <SelectItem key={region.value} value={region.value}>
-                        {region.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Type *
+              </label>
+              <Select 
+                value={formData.type} 
+                onValueChange={(value) => handleInputChange('type', value as SpotType)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select spot type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {spotTypes.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -298,29 +311,64 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
             <label className="block text-sm font-medium text-foreground mb-2">
               Location *
             </label>
-            <div className="grid grid-cols-2 gap-4 mb-2">
-              <Input
-                type="number"
-                step="any"
-                value={formData.latitude || ''}
-                onChange={(e) => handleInputChange('latitude', parseFloat(e.target.value))}
-                placeholder="Latitude"
-                required
-              />
-              <Input
-                type="number"
-                step="any"
-                value={formData.longitude || ''}
-                onChange={(e) => handleInputChange('longitude', parseFloat(e.target.value))}
-                placeholder="Longitude"
-                required
-              />
+            <LocationSearch
+              onLocationSelect={handleLocationSelect}
+              placeholder="Search for a location in Israel..."
+              className="mb-3"
+            />
+            
+            {/* Selected Location Display */}
+            {selectedLocation && (
+              <div className="mb-3 p-3 bg-muted/50 rounded-lg border">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <span className="font-medium text-sm">{selectedLocation.name}</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <p>Region: {israeliRegions.find(r => r.value === selectedLocation.region)?.label || selectedLocation.region}</p>
+                  <p>Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Coordinate Refinement */}
+            <div className="space-y-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowCoordinateInputs(!showCoordinateInputs)}
+                className="w-full gap-2"
+              >
+                <Map className="w-4 h-4" />
+                {showCoordinateInputs ? 'Hide' : 'Refine'} Coordinates
+              </Button>
+              
+              {showCoordinateInputs && (
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="number"
+                    step="any"
+                    value={formData.latitude || ''}
+                    onChange={(e) => handleInputChange('latitude', parseFloat(e.target.value))}
+                    placeholder="Latitude"
+                  />
+                  <Input
+                    type="number"
+                    step="any"
+                    value={formData.longitude || ''}
+                    onChange={(e) => handleInputChange('longitude', parseFloat(e.target.value))}
+                    placeholder="Longitude"
+                  />
+                </div>
+              )}
             </div>
+
             <Button 
               type="button" 
               variant="outline" 
               onClick={getCurrentLocation}
-              className="w-full gap-2"
+              className="w-full gap-2 mt-2"
             >
               <MapPin className="w-4 h-4" />
               Use Current Location

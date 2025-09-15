@@ -74,6 +74,7 @@ class SpotBase(BaseModel):
     region: Region
     lat: float
     lon: float
+    location_name: Optional[str] = None
 
 
 class SpotCreate(SpotBase):
@@ -89,8 +90,15 @@ class SpotUpdate(BaseModel):
     lon: Optional[float] = None
 
 
-class SpotOut(SpotBase):
+class SpotOut(BaseModel):
     id: uuid.UUID
+    title: str
+    description: str
+    spot_type: SpotType
+    region: Region
+    lat: float
+    lon: float
+    location_name: Optional[str] = None
     created_at: datetime
     owner_id: uuid.UUID
 
@@ -152,3 +160,27 @@ class FavoriteOut(FavoriteBase):
 
     class Config:
         from_attributes = True
+
+
+# ----------------------
+# Location Search Schemas
+# ----------------------
+class LocationSearchResult(BaseModel):
+    name: str
+    lat: float
+    lng: float
+    type: str
+    importance: float
+    address: str
+
+
+class LocationSearchResponse(BaseModel):
+    results: List[LocationSearchResult]
+
+
+class GeocodeResult(BaseModel):
+    name: str
+    lat: float
+    lng: float
+    region: str
+    address: str

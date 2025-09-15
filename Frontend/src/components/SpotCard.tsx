@@ -70,7 +70,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) =
       <CardContent className="p-0">
         {/* Image */}
         <div className="relative">
-          {spot.photos[0] ? (
+          {spot.photos && spot.photos.length > 0 && spot.photos[0] ? (
             <img 
               src={spot.photos[0].url} 
               alt={spot.title}
@@ -122,14 +122,14 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) =
           {/* Meta Info */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>by {spot.createdBy.username}</span>
+              <span>by {spot.createdBy?.username || 'Unknown'}</span>
               <span>•</span>
               <span>{new Date(spot.createdAt).toLocaleDateString()}</span>
             </div>
             
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Eye className="w-3 h-3" />
-              <span>{spot.popularity}</span>
+              <span>{spot.popularity || 0}</span>
             </div>
           </div>
           
@@ -143,7 +143,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) =
                 className={`text-xs ${spot.userLike?.isLike ? 'text-green-600 bg-green-50' : 'text-muted-foreground'}`}
               >
                 <ThumbsUp className="w-4 h-4 mr-1" />
-                {spot.likeCount}
+                {spot.likeCount || 0}
               </Button>
               
               <Button
@@ -153,7 +153,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) =
                 className={`text-xs ${spot.userLike && !spot.userLike.isLike ? 'text-red-600 bg-red-50' : 'text-muted-foreground'}`}
               >
                 <ThumbsDown className="w-4 h-4 mr-1" />
-                {spot.dislikeCount}
+                {spot.dislikeCount || 0}
               </Button>
             </div>
             

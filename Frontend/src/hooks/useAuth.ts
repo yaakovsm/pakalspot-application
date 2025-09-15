@@ -29,6 +29,9 @@ export const useAuthStore = create<AuthState>()(
           const response = await authAPI.login(data);
           const { user, token } = response.data;
           
+          // Store token in localStorage for API interceptor
+          localStorage.setItem('auth_token', token);
+          
           set({
             user,
             token,
@@ -47,6 +50,9 @@ export const useAuthStore = create<AuthState>()(
           const response = await authAPI.register(data);
           const { user, token } = response.data;
           
+          // Store token in localStorage for API interceptor
+          localStorage.setItem('auth_token', token);
+          
           set({
             user,
             token,
@@ -60,6 +66,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        // Clear token from localStorage
+        localStorage.removeItem('auth_token');
+        
         set({
           user: null,
           token: null,
@@ -72,26 +81,19 @@ export const useAuthStore = create<AuthState>()(
       },
 
       initialize: () => {
-        const token = localStorage.getItem('auth_token');
         const { user, isAuthenticated } = get();
         
-        // If we have a token but no user data, try to restore from localStorage
-        if (token && !user) {
+        // If we have user data but no token in localStorage, restore it
+        if (user && isAuthenticated) {
           const stored = localStorage.getItem('auth-storage');
           if (stored) {
             try {
               const parsed = JSON.parse(stored);
-              if (parsed.state && parsed.state.user && parsed.state.token) {
-                set({
-                  user: parsed.state.user,
-                  token: parsed.state.token,
-                  isAuthenticated: true,
-                });
+              if (parsed.state && parsed.state.token) {
+                localStorage.setItem('auth_token', parsed.state.token);
               }
             } catch (error) {
-              console.error('Failed to restore auth state:', error);
-              localStorage.removeItem('auth_token');
-              localStorage.removeItem('auth-storage');
+              console.error('Failed to restore auth token:', error);
             }
           }
         }
