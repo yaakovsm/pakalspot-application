@@ -6,11 +6,13 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { MapPin, Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const Register: React.FC = () => {
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     username: '',
@@ -29,27 +31,27 @@ const Register: React.FC = () => {
     
     if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
       toast({
-        title: "Validation error",
-        description: "Please fill in all fields.",
-        variant: "destructive",
+        title: t('auth.validation_error'),
+        description: t('auth.fill_all_fields'),
+        variant: 'destructive',
       });
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match.",
-        variant: "destructive",
+        title: t('auth.password_mismatch'),
+        description: t('auth.passwords_dont_match'),
+        variant: 'destructive',
       });
       return;
     }
 
     if (formData.password.length < 6) {
       toast({
-        title: "Weak password",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
+        title: t('auth.weak_password'),
+        description: t('auth.password_min_length'),
+        variant: 'destructive',
       });
       return;
     }
@@ -62,15 +64,15 @@ const Register: React.FC = () => {
       });
       
       toast({
-        title: "Welcome to PakalSpot!",
-        description: "Your account has been created successfully.",
+        title: t('auth.welcome_to_pakalspot'),
+        description: t('auth.account_created_successfully'),
       });
       navigate('/');
     } catch (error: any) {
       toast({
-        title: "Registration failed",
-        description: error.response?.data?.message || "Something went wrong. Please try again.",
-        variant: "destructive",
+        title: t('auth.registration_failed'),
+        description: error.response?.data?.message || t('auth.something_went_wrong'),
+        variant: 'destructive',
       });
     }
   };
@@ -86,26 +88,26 @@ const Register: React.FC = () => {
               alt="PakalSpot Logo" 
               className="w-12 h-12 object-contain"
             />
-            <span className="text-3xl font-bold text-white">PakalSpot</span>
+            <span className="text-3xl font-bold text-white">{t('app.name')}</span>
           </div>
-          <p className="text-white/80 mt-2">Join the community of explorers</p>
+          <p className="text-white/80 mt-2">{t('auth.join_community')}</p>
         </div>
 
         <Card className="shadow-strong border-0">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center text-foreground">
-              Create Account
+              {t('auth.create_account_title')}
             </CardTitle>
             <p className="text-center text-muted-foreground">
-              Sign up to start discovering amazing places
+              {t('auth.sign_up_to_start')}
             </p>
           </CardHeader>
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Username
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  {t('auth.username')}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -113,7 +115,7 @@ const Register: React.FC = () => {
                     type="text"
                     value={formData.username}
                     onChange={(e) => handleInputChange('username', e.target.value)}
-                    placeholder="Choose a username"
+                    placeholder={t('auth.choose_username')}
                     className="pl-10"
                     required
                   />
@@ -121,8 +123,8 @@ const Register: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Email
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  {t('auth.email')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -130,7 +132,7 @@ const Register: React.FC = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder={t('auth.enter_email')}
                     className="pl-10"
                     required
                   />
@@ -138,8 +140,8 @@ const Register: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Password
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  {t('auth.password')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -147,7 +149,7 @@ const Register: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder="Create a password"
+                    placeholder={t('auth.create_password')}
                     className="pl-10 pr-10"
                     required
                   />
@@ -168,8 +170,8 @@ const Register: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Confirm Password
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  {t('auth.confirm_password')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -177,7 +179,7 @@ const Register: React.FC = () => {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    placeholder="Confirm your password"
+                    placeholder={t('auth.confirm_your_password')}
                     className="pl-10"
                     required
                   />
@@ -193,10 +195,10 @@ const Register: React.FC = () => {
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating account...
+                    {t('auth.creating_account')}
                   </>
                 ) : (
-                  'Create Account'
+                  t('auth.create_account')
                 )}
               </Button>
 
@@ -206,7 +208,7 @@ const Register: React.FC = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">
-                    Already have an account?
+                    {t('auth.already_have_account')}
                   </span>
                 </div>
               </div>
@@ -217,7 +219,7 @@ const Register: React.FC = () => {
                 className="w-full"
                 onClick={() => navigate('/login')}
               >
-                Sign In
+                {t('auth.sign_in')}
               </Button>
             </form>
           </CardContent>
@@ -228,7 +230,7 @@ const Register: React.FC = () => {
             to="/" 
             className="text-white/80 hover:text-white transition-colors text-sm"
           >
-            ← Back to Home
+            {t('auth.back_to_home')}
           </Link>
         </div>
       </div>

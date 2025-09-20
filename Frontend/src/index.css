@@ -148,6 +148,186 @@ All colors MUST be HSL.
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    direction: rtl;
+  }
+
+  [dir="ltr"] {
+    direction: ltr;
+  }
+
+  /* RTL-specific adjustments */
+  [dir="rtl"] .flex:not(.flex-col):not(.flex-col-reverse):not(.justify-between):not(.justify-center):not(.justify-start):not(.justify-end):not(.justify-around):not(.justify-evenly) {
+    flex-direction: row-reverse;
+  }
+
+  /* Force RTL for specific elements that should always be RTL */
+  [dir="rtl"] .flex.items-center.gap-2:not(.justify-between) {
+    flex-direction: row-reverse;
+  }
+
+  [dir="rtl"] .space-x-2 > * + * {
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+
+  [dir="rtl"] .space-x-4 > * + * {
+    margin-left: 0;
+    margin-right: 1rem;
+  }
+
+  [dir="rtl"] .space-x-6 > * + * {
+    margin-left: 0;
+    margin-right: 1.5rem;
+  }
+
+  [dir="rtl"] .ml-2 {
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+
+  [dir="rtl"] .mr-2 {
+    margin-right: 0;
+    margin-left: 0.5rem;
+  }
+
+  [dir="rtl"] .pl-4 {
+    padding-left: 0;
+    padding-right: 1rem;
+  }
+
+  [dir="rtl"] .pr-4 {
+    padding-right: 0;
+    padding-left: 1rem;
+  }
+
+  /* Text alignment for RTL */
+  [dir="rtl"] .text-left {
+    text-align: right;
+  }
+
+  [dir="rtl"] .text-right {
+    text-align: left;
+  }
+
+  /* Dropdown menu alignment for RTL */
+  [dir="rtl"] [data-radix-popper-content-wrapper] {
+    transform-origin: top right;
+  }
+
+  /* Button icon positioning for RTL */
+  [dir="rtl"] .flex.items-center.gap-2 {
+    flex-direction: row-reverse;
+  }
+
+  /* Header specific RTL fixes */
+  [dir="rtl"] .container.mx-auto {
+    direction: rtl;
+  }
+
+  /* Sidebar specific RTL fixes */
+  [dir="rtl"] .border-r {
+    border-right: none;
+    border-left: 1px solid hsl(var(--sidebar-border));
+  }
+
+  /* Search input RTL fixes */
+  [dir="rtl"] .pl-10 {
+    padding-left: 0.75rem;
+    padding-right: 2.5rem;
+  }
+
+  [dir="rtl"] .absolute.left-3 {
+    left: auto;
+    right: 0.75rem;
+  }
+
+  /* Map controls RTL fixes */
+  [dir="rtl"] .absolute.top-4.left-4 {
+    left: auto;
+    right: 1rem;
+  }
+
+  [dir="rtl"] .fixed.bottom-6.right-6 {
+    right: auto;
+    left: 1.5rem;
+  }
+
+  /* Badge positioning RTL fixes */
+  [dir="rtl"] .absolute.top-3.left-3 {
+    left: auto;
+    right: 0.75rem;
+  }
+
+  [dir="rtl"] .absolute.top-3.right-3 {
+    right: auto;
+    left: 0.75rem;
+  }
+
+  [dir="rtl"] .absolute.bottom-3.left-3 {
+    left: auto;
+    right: 0.75rem;
+  }
+
+  /* Button icon RTL fixes */
+  [dir="rtl"] .mr-1 {
+    margin-right: 0;
+    margin-left: 0.25rem;
+  }
+
+  /* Form elements RTL fixes */
+  [dir="rtl"] .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+
+  [dir="rtl"] .space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+
+  /* Grid RTL fixes */
+  [dir="rtl"] .grid-cols-2 {
+    direction: rtl;
+  }
+
+  /* Card content RTL fixes */
+  [dir="rtl"] .p-6 {
+    text-align: right;
+  }
+
+  [dir="rtl"] .p-4 {
+    text-align: right;
+  }
+
+  /* Label RTL fixes */
+  [dir="rtl"] label {
+    text-align: right;
+  }
+
+  /* Input RTL fixes */
+  [dir="rtl"] input[type="text"],
+  [dir="rtl"] input[type="email"],
+  [dir="rtl"] input[type="password"],
+  [dir="rtl"] input[type="number"],
+  [dir="rtl"] textarea {
+    text-align: right;
+  }
+
+  /* Select RTL fixes */
+  [dir="rtl"] [data-radix-select-trigger] {
+    text-align: right;
+  }
+
+  /* Modal RTL fixes */
+  [dir="rtl"] .max-w-2xl {
+    direction: rtl;
+  }
+
+  /* Header navigation RTL fixes */
+  [dir="rtl"] nav {
+    direction: rtl;
+  }
 }
 
 /* Fancy map marker hover animation */

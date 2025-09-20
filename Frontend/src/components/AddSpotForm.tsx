@@ -11,6 +11,7 @@ import { MapPin, Upload, X, Plus, Map } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import LocationSearch from './LocationSearch';
 import { spotsAPI } from '../api/api';
+import { useTranslation } from 'react-i18next';
 
 interface AddSpotFormProps {
   onClose?: () => void;
@@ -18,39 +19,20 @@ interface AddSpotFormProps {
   initialLocation?: { lat: number; lng: number };
 }
 
-const spotTypes: { value: SpotType; label: string }[] = [
-  { value: 'waterfall', label: 'Waterfall' },
-  { value: 'spring', label: 'Spring' },
-  { value: 'viewpoint', label: 'Viewpoint' },
-  { value: 'beach', label: 'Beach' },
-  { value: 'lake', label: 'Lake' },
-  { value: 'river', label: 'River' },
-  { value: 'cave', label: 'Cave' },
-  { value: 'park', label: 'Park' },
-  { value: 'forest', label: 'Forest' },
-  { value: 'historical', label: 'Historical Site' },
-  { value: 'archaeological', label: 'Archaeological Site' },
-  { value: 'religious', label: 'Religious Site' },
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'cafe', label: 'Cafe' },
-  { value: 'camping', label: 'Camping' },
-  { value: 'other', label: 'Other' },
+const spotTypes: SpotType[] = [
+  'waterfall', 'spring', 'viewpoint', 'beach', 'lake', 'river', 'cave', 'park', 
+  'forest', 'historical', 'archaeological', 'religious', 'restaurant', 'cafe', 
+  'camping', 'other'
 ];
 
-const israeliRegions: { value: IsraeliRegion; label: string }[] = [
-  { value: 'negev', label: 'Negev' },
-  { value: 'galilee', label: 'Galilee' },
-  { value: 'golan', label: 'Golan Heights' },
-  { value: 'shfela', label: 'Shfela' },
-  { value: 'sharon', label: 'Sharon' },
-  { value: 'shomron', label: 'Shomron (Samaria)' },
-  { value: 'jerusalem', label: 'Jerusalem Area' },
-  { value: 'arava', label: 'Arava' },
+const israeliRegions: IsraeliRegion[] = [
+  'negev', 'galilee', 'golan', 'shfela', 'sharon', 'shomron', 'jerusalem', 'arava'
 ];
 
 const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLocation }) => {
   const { createSpot } = useSpots();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState<Partial<CreateSpotRequest>>({
     title: '',
@@ -225,17 +207,17 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
       await createSpot(spotData);
       
       toast({
-        title: "Success!",
-        description: "Your spot has been created successfully.",
+        title: t('spots.spot_created_success'),
+        description: t('spots.spot_created_success_desc'),
       });
       
       onSuccess?.();
       onClose?.();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create spot. Please try again.",
-        variant: "destructive",
+        title: t('common.error'),
+        description: t('spots.spot_creation_failed'),
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -246,7 +228,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     <Card className="w-full max-w-2xl mx-auto shadow-strong">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-foreground">Add New Spot</CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">{t('spots.add_new_spot')}</CardTitle>
           {onClose && (
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5" />
@@ -261,24 +243,24 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Title *
+                {t('spots.title')} *
               </label>
               <Input
                 value={formData.title || ''}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Give your spot a catchy name..."
+                placeholder={t('spots.title_placeholder')}
                 required
               />
             </div>
             
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Description *
+                {t('spots.description')} *
               </label>
               <Textarea
                 value={formData.description || ''}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe what makes this spot special..."
+                placeholder={t('spots.description_placeholder')}
                 className="min-h-[100px]"
                 required
               />
@@ -286,19 +268,19 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Type *
+                {t('spots.type')} *
               </label>
               <Select 
                 value={formData.type} 
                 onValueChange={(value) => handleInputChange('type', value as SpotType)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select spot type" />
+                  <SelectValue placeholder={t('spots.select_type')} />
                 </SelectTrigger>
                 <SelectContent>
                   {spotTypes.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                    <SelectItem key={type} value={type}>
+                      {t(`spot_types.${type}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -309,11 +291,11 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
           {/* Location */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Location *
+              {t('spots.location')} *
             </label>
             <LocationSearch
               onLocationSelect={handleLocationSelect}
-              placeholder="Search for a location in Israel..."
+              placeholder={t('spots.location_placeholder')}
               className="mb-3"
             />
             
@@ -325,8 +307,8 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                   <span className="font-medium text-sm">{selectedLocation.name}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  <p>Region: {israeliRegions.find(r => r.value === selectedLocation.region)?.label || selectedLocation.region}</p>
-                  <p>Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                  <p>{t('spots.region')}: {t(`regions.${selectedLocation.region}`)}</p>
+                  <p>{t('spots.coordinates')}: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
                 </div>
               </div>
             )}
@@ -341,7 +323,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 className="w-full gap-2"
               >
                 <Map className="w-4 h-4" />
-                {showCoordinateInputs ? 'Hide' : 'Refine'} Coordinates
+                {showCoordinateInputs ? t('spots.hide') : t('spots.refine')} {t('spots.coordinates')}
               </Button>
               
               {showCoordinateInputs && (
@@ -351,14 +333,14 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                     step="any"
                     value={formData.latitude || ''}
                     onChange={(e) => handleInputChange('latitude', parseFloat(e.target.value))}
-                    placeholder="Latitude"
+                    placeholder={t('spots.latitude')}
                   />
                   <Input
                     type="number"
                     step="any"
                     value={formData.longitude || ''}
                     onChange={(e) => handleInputChange('longitude', parseFloat(e.target.value))}
-                    placeholder="Longitude"
+                    placeholder={t('spots.longitude')}
                   />
                 </div>
               )}
@@ -371,14 +353,14 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
               className="w-full gap-2 mt-2"
             >
               <MapPin className="w-4 h-4" />
-              Use Current Location
+              {t('spots.use_current_location')}
             </Button>
           </div>
 
           {/* Photo Upload */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Photos (Optional)
+              {t('spots.photos_optional')}
             </label>
             
             {/* Drop Zone */}
@@ -395,7 +377,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
             >
               <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
               <p className="text-muted-foreground mb-2">
-                Drag and drop photos here, or click to select
+                {t('spots.drag_drop_photos')}
               </p>
               <input
                 type="file"
@@ -451,7 +433,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
           <div className="flex gap-3 pt-4">
             {onClose && (
               <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-                Cancel
+                {t('common.cancel')}
               </Button>
             )}
             <Button 
@@ -463,12 +445,12 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Creating...
+                  {t('spots.creating')}
                 </>
               ) : (
                 <>
                   <Plus className="w-4 h-4" />
-                  Create Spot
+                  {t('spots.create_spot')}
                 </>
               )}
             </Button>

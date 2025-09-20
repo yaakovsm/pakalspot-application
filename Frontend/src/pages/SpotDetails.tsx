@@ -8,11 +8,13 @@ import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { ArrowLeft, MapPin, Star, ThumbsUp, ThumbsDown, Calendar, User, Share2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const SpotDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { selectedSpot, selectSpot, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -42,21 +44,21 @@ const SpotDetails: React.FC = () => {
       if (selectedSpot.isFavorited) {
         await unfavoriteSpot(selectedSpot.id);
         toast({
-          title: "Removed from favorites",
-          description: "This spot has been removed from your favorites.",
+          title: t('spots.removed_from_favorites'),
+          description: t('spots.removed_from_favorites_desc'),
         });
       } else {
         await favoriteSpot(selectedSpot.id);
         toast({
-          title: "Added to favorites",
-          description: "This spot has been saved to your favorites.",
+          title: t('spots.added_to_favorites'),
+          description: t('spots.added_to_favorites_desc'),
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update favorites. Please try again.",
-        variant: "destructive",
+        title: t('common.error'),
+        description: t('spots.favorites_update_failed'),
+        variant: 'destructive',
       });
     }
   };
@@ -72,14 +74,14 @@ const SpotDetails: React.FC = () => {
     try {
       await likeSpot(selectedSpot.id, isLike);
       toast({
-        title: isLike ? "Spot liked!" : "Feedback recorded",
-        description: `Your ${isLike ? 'like' : 'dislike'} has been recorded.`,
+        title: isLike ? t('spots.spot_liked') : t('spots.feedback_recorded'),
+        description: isLike ? t('spots.like_recorded') : t('spots.dislike_recorded'),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to record your feedback. Please try again.",
-        variant: "destructive",
+        title: t('common.error'),
+        description: t('spots.feedback_failed'),
+        variant: 'destructive',
       });
     }
   };
@@ -100,14 +102,14 @@ const SpotDetails: React.FC = () => {
       try {
         await navigator.clipboard.writeText(window.location.href);
         toast({
-          title: "Link copied",
-          description: "The spot link has been copied to your clipboard.",
+          title: t('spots.link_copied'),
+          description: t('spots.link_copied_desc'),
         });
       } catch (error) {
         toast({
-          title: "Share failed",
-          description: "Could not share the spot link.",
-          variant: "destructive",
+          title: t('spots.share_failed'),
+          description: t('spots.share_failed_desc'),
+          variant: 'destructive',
         });
       }
     }
@@ -166,7 +168,7 @@ const SpotDetails: React.FC = () => {
             className="mb-6 gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Map
+            {t('spots.back_to_map')}
           </Button>
 
           {/* Image Gallery */}
@@ -234,10 +236,10 @@ const SpotDetails: React.FC = () => {
                       </h1>
                       <div className="flex items-center gap-2 mb-4">
                         <Badge className={`${getTypeColor(selectedSpot.type)} text-white`}>
-                          {selectedSpot.type}
+                          {t(`spot_types.${selectedSpot.type}`)}
                         </Badge>
                         <Badge variant="outline">
-                          {getRegionLabel(selectedSpot.region)}
+                          {t(`regions.${selectedSpot.region}`)}
                         </Badge>
                       </div>
                     </div>
@@ -296,23 +298,23 @@ const SpotDetails: React.FC = () => {
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
-                    Location Details
+                    {t('spots.location_details')}
                   </h3>
                   
                   <div className="space-y-3 text-sm">
                     <div>
-                      <span className="text-muted-foreground">Region:</span>
+                      <span className="text-muted-foreground">{t('spots.region')}:</span>
                       <span className="ml-2 font-medium">{getRegionLabel(selectedSpot.region)}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Coordinates:</span>
+                      <span className="text-muted-foreground">{t('spots.coordinates')}:</span>
                       <span className="ml-2 font-mono text-xs">
                         {selectedSpot.lat.toFixed(4)}, {selectedSpot.lon.toFixed(4)}
                       </span>
                     </div>
                     {selectedSpot.distance && (
                       <div>
-                        <span className="text-muted-foreground">Distance:</span>
+                        <span className="text-muted-foreground">{t('spots.distance')}:</span>
                         <span className="ml-2 font-medium">
                           {selectedSpot.distance < 1 
                             ? `${Math.round(selectedSpot.distance * 1000)}m` 
@@ -329,21 +331,21 @@ const SpotDetails: React.FC = () => {
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <User className="w-5 h-5" />
-                    Spot Info
+                    {t('spots.spot_info')}
                   </h3>
                   
                   <div className="space-y-3 text-sm">
                     <div>
-                      <span className="text-muted-foreground">Added by:</span>
-                      <span className="ml-2 font-medium">{selectedSpot.createdBy?.username || 'Unknown'}</span>
+                      <span className="text-muted-foreground">{t('spots.added_by')}:</span>
+                      <span className="ml-2 font-medium">{selectedSpot.createdBy?.username || t('spots.unknown')}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Added on:</span>
+                      <span className="text-muted-foreground">{t('spots.added_on')}:</span>
                       <span className="ml-2">{new Date(selectedSpot.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Popularity:</span>
-                      <span className="ml-2 font-medium">{selectedSpot.popularity || 0} views</span>
+                      <span className="text-muted-foreground">{t('spots.popularity')}:</span>
+                      <span className="ml-2 font-medium">{selectedSpot.popularity || 0} {t('spots.views')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -356,7 +358,7 @@ const SpotDetails: React.FC = () => {
                 className="w-full gap-2"
               >
                 <MapPin className="w-4 h-4" />
-                View on Map
+                {t('spots.view_on_map')}
               </Button>
             </div>
           </div>

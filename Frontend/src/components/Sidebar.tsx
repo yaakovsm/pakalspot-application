@@ -10,40 +10,21 @@ import { useSpots } from '../hooks/useSpots';
 import { SpotType, IsraeliRegion } from '../types/spot';
 import { Search, Filter, MapPin, Plus } from 'lucide-react';
 import SpotCard from './SpotCard';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   onAddSpot?: () => void;
   className?: string;
 }
 
-const spotTypes: { value: SpotType; label: string }[] = [
-  { value: 'waterfall', label: 'Waterfall' },
-  { value: 'spring', label: 'Spring' },
-  { value: 'viewpoint', label: 'Viewpoint' },
-  { value: 'beach', label: 'Beach' },
-  { value: 'lake', label: 'Lake' },
-  { value: 'river', label: 'River' },
-  { value: 'cave', label: 'Cave' },
-  { value: 'park', label: 'Park' },
-  { value: 'forest', label: 'Forest' },
-  { value: 'historical', label: 'Historical Site' },
-  { value: 'archaeological', label: 'Archaeological Site' },
-  { value: 'religious', label: 'Religious Site' },
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'cafe', label: 'Cafe' },
-  { value: 'camping', label: 'Camping' },
-  { value: 'other', label: 'Other' },
+const spotTypes: SpotType[] = [
+  'waterfall', 'spring', 'viewpoint', 'beach', 'lake', 'river', 'cave', 'park', 
+  'forest', 'historical', 'archaeological', 'religious', 'restaurant', 'cafe', 
+  'camping', 'other'
 ];
 
-const israeliRegions: { value: IsraeliRegion; label: string }[] = [
-  { value: 'negev', label: 'Negev' },
-  { value: 'galilee', label: 'Galilee' },
-  { value: 'golan', label: 'Golan Heights' },
-  { value: 'shfela', label: 'Shfela' },
-  { value: 'sharon', label: 'Sharon' },
-  { value: 'shomron', label: 'Shomron' },
-  { value: 'jerusalem', label: 'Jerusalem' },
-  { value: 'arava', label: 'Arava' },
+const israeliRegions: IsraeliRegion[] = [
+  'negev', 'galilee', 'golan', 'shfela', 'sharon', 'shomron', 'jerusalem', 'arava'
 ];
 
 const distanceOptions = [
@@ -51,12 +32,13 @@ const distanceOptions = [
   { value: 10, label: '10km' },
   { value: 20, label: '20km' },
   { value: 50, label: '50km' },
-  { value: 100, label: 'All Israel' },
+  { value: 100, label: 'all_israel' },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
   const { spots, filters, updateFilters, isLoading, selectSpot } = useSpots();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [maxDistance, setMaxDistance] = useState([filters.maxDistance || 100]);
@@ -105,10 +87,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-sidebar-foreground">PakalSpot</h2>
+          <h2 className="text-xl font-bold text-sidebar-foreground">{t('app.name')}</h2>
           <Button variant="hero" size="sm" onClick={onAddSpot} className="gap-2">
             <Plus className="w-4 h-4" />
-            Add Spot
+            {t('spots.add_spot')}
           </Button>
         </div>
         
@@ -116,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
-            placeholder="Search spots..."
+            placeholder={t('spots.search_placeholder')}
             value={searchQuery}
             onChange={handleSearchChange}
             className="pl-10"
@@ -127,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
       {/* Filters */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-sidebar-foreground">Filters</h3>
+          <h3 className="font-semibold text-sidebar-foreground">{t('spots.filters')}</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -135,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             className="gap-2"
           >
             <Filter className="w-4 h-4" />
-            {showFilters ? 'Hide' : 'Show'}
+            {showFilters ? t('spots.hide_filters') : t('spots.show_filters')}
           </Button>
         </div>
 
@@ -144,17 +126,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             {/* Sort */}
             <div>
               <label className="text-sm font-medium text-sidebar-foreground mb-2 block">
-                Sort by
+                {t('spots.sort_by')}
               </label>
               <Select value={filters.sortBy} onValueChange={handleSortChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="distance">Distance</SelectItem>
-                  <SelectItem value="popularity">Popularity</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="oldest">Oldest</SelectItem>
+                  <SelectItem value="distance">{t('spots.distance')}</SelectItem>
+                  <SelectItem value="popularity">{t('spots.popularity')}</SelectItem>
+                  <SelectItem value="newest">{t('spots.newest')}</SelectItem>
+                  <SelectItem value="oldest">{t('spots.oldest')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -162,7 +144,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             {/* Distance */}
             <div>
               <label className="text-sm font-medium text-sidebar-foreground mb-2 block">
-                Distance from your location
+                {t('spots.distance_from_location')}
               </label>
               <Select value={maxDistance[0].toString()} onValueChange={(value) => handleDistanceChange([parseInt(value)])}>
                 <SelectTrigger>
@@ -171,7 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
                 <SelectContent>
                   {distanceOptions.map(option => (
                     <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
+                      {t(`distance_options.${option.label}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -181,17 +163,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             {/* Region */}
             <div>
               <label className="text-sm font-medium text-sidebar-foreground mb-2 block">
-                Region
+                {t('spots.region')}
               </label>
               <Select value={selectedRegion} onValueChange={handleRegionChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
+                  <SelectItem value="all">{t('spots.all_regions')}</SelectItem>
                   {israeliRegions.map(region => (
-                    <SelectItem key={region.value} value={region.value}>
-                      {region.label}
+                    <SelectItem key={region} value={region}>
+                      {t(`regions.${region}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -216,17 +198,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             {/* Types */}
             <div>
               <label className="text-sm font-medium text-sidebar-foreground mb-2 block">
-                Types
+                {t('spots.types')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {spotTypes.map(type => (
                   <Badge
-                    key={type.value}
-                    variant={filters.types.includes(type.value) ? "default" : "outline"}
+                    key={type}
+                    variant={filters.types.includes(type) ? "default" : "outline"}
                     className="cursor-pointer text-xs"
-                    onClick={() => handleTypeToggle(type.value)}
+                    onClick={() => handleTypeToggle(type)}
                   >
-                    {type.label}
+                    {t(`spot_types.${type}`)}
                   </Badge>
                 ))}
               </div>
@@ -239,7 +221,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-sidebar-foreground">
-            {filteredSpots.length} spot{filteredSpots.length !== 1 ? 's' : ''}
+            {t('spots.spots_count_plural', { count: filteredSpots.length })}
           </h3>
           
           {isLoading && (
@@ -271,10 +253,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             <div className="text-center py-8">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">
-                {searchQuery ? 'No spots found matching your search.' : 'No spots available.'}
+                {searchQuery ? t('spots.no_spots_found') : t('spots.no_spots')}
               </p>
               <Button variant="outline" onClick={onAddSpot} className="mt-3">
-                Add the first spot
+                {t('spots.add_first_spot')}
               </Button>
             </div>
           )}

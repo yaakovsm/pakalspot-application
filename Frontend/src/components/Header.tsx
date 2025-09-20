@@ -3,8 +3,11 @@ import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAuth } from '../hooks/useAuth';
+import { useSpots } from '../hooks/useSpots';
 import { User, LogOut, Heart, Settings, MapPin, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
   className?: string;
@@ -12,7 +15,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ className }) => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { setUserLocation, userLocation } = useSpots();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -21,6 +26,23 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
 
   const getInitials = (username: string) => {
     return username.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const handleLocationRequest = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.warn('Could not get user location:', error);
+          // You could show a toast notification here
+        }
+      );
+    }
   };
 
   const [theme, setTheme] = React.useState<string>(() => document.documentElement.classList.contains('dark') ? 'dark' : 'light');
@@ -52,21 +74,33 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
               alt="PakalSpot Logo" 
               className="w-10 h-10 object-contain"
             />
-            <span className="text-xl font-bold text-foreground">PakalSpot</span>
+            <span className="text-xl font-bold text-foreground">{t('app.name')}</span>
           </div>
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Button variant="ghost" onClick={() => navigate('/')}>
-              Discover
+              {t('navbar.home')}
             </Button>
             <Button variant="ghost" onClick={() => navigate('/favorites')}>
-              Favorites
+              {t('navbar.favorites')}
             </Button>
           </nav>
 
-          {/* Right actions */}
+          {/* Actions */}
           <div className="flex items-center gap-4">
+            {/* Language switcher */}
+            <LanguageSwitcher />
+            {/* Location button */}
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleLocationRequest}
+              aria-label="Get current location"
+              title={userLocation ? "Update location" : "Get current location"}
+            >
+              <MapPin className="w-4 h-4" />
+            </Button>
             {/* Theme toggle */}
             <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -95,7 +129,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                   <div className="h-px bg-border my-1" />
                   <DropdownMenuItem onClick={() => navigate('/favorites')} className="cursor-pointer">
                     <Heart className="mr-2 h-4 w-4" />
-                    <span>Favorites</span>
+                    <span>{t('navbar.favorites')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
@@ -108,17 +142,17 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                   <div className="h-px bg-border my-1" />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>{t('auth.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={() => navigate('/login')}>
-                  Sign In
+                  {t('auth.login')}
                 </Button>
                 <Button variant="hero" onClick={() => navigate('/register')}>
-                  Sign Up
+                  {t('auth.signup')}
                 </Button>
               </div>
             )}

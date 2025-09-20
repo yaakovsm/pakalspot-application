@@ -5,6 +5,7 @@ import { Badge } from './ui/badge';
 import { Spot } from '../types/spot';
 import { Star, ThumbsUp, ThumbsDown, MapPin, Eye } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
+import { useTranslation } from 'react-i18next';
 
 interface SpotCardProps {
   spot: Spot;
@@ -14,6 +15,7 @@ interface SpotCardProps {
 
 const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) => {
   const { selectSpot, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
+  const { t } = useTranslation();
 
   const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -96,7 +98,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) =
           <Badge 
             className={`absolute top-3 left-3 ${getTypeColor(spot.type)} text-white`}
           >
-            {spot.type}
+            {t(`spot_types.${spot.type}`)}
           </Badge>
           
           {/* Distance */}
@@ -122,7 +124,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) =
           {/* Meta Info */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>by {spot.createdBy?.username || 'Unknown'}</span>
+              <span>{t('spots.by')} {spot.createdBy?.username || t('spots.unknown')}</span>
               <span>•</span>
               <span>{new Date(spot.createdAt).toLocaleDateString()}</span>
             </div>
@@ -165,7 +167,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, className }) =
                 onViewDetails?.(spot);
               }}
             >
-              View Details
+              {t('spots.view_details')}
             </Button>
           </div>
         </div>

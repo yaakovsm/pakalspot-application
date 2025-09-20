@@ -36,7 +36,7 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
   const infoWindow = useRef<google.maps.InfoWindow | null>(null);
   const markersRef = useRef<(google.maps.marker.AdvancedMarkerElement | google.maps.Marker)[]>([]);
   
-  const { spots, selectedSpot, selectSpot, setUserLocation, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
+  const { spots, selectedSpot, selectSpot, userLocation, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
 
   // Initialize map
@@ -82,64 +82,6 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
 
         // Initialize info window
         infoWindow.current = new google.maps.InfoWindow();
-
-        // Add geolocation functionality
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const userLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              };
-              setUserLocation(userLocation);
-              
-              // Add user location marker using AdvancedMarkerElement
-              if (userLocationMarker) {
-                userLocationMarker.setMap(null);
-              }
-              
-              // Create a custom element for the user location marker
-              const userLocationElement = document.createElement('div');
-              userLocationElement.style.width = '16px';
-              userLocationElement.style.height = '16px';
-              userLocationElement.style.borderRadius = '50%';
-              userLocationElement.style.backgroundColor = '#4285F4';
-              userLocationElement.style.border = '2px solid #ffffff';
-              userLocationElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-              
-              // Use AdvancedMarkerElement if available, otherwise fall back to regular Marker
-              let marker;
-              if (google.maps.marker?.AdvancedMarkerElement) {
-                marker = new google.maps.marker.AdvancedMarkerElement({
-                  position: userLocation,
-                  map: map.current,
-                  title: 'Your Location',
-                  content: userLocationElement
-                });
-              } else {
-                // Fallback to regular Marker
-                marker = new google.maps.Marker({
-                  position: userLocation,
-                  map: map.current,
-                  title: 'Your Location',
-                  icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 8,
-                    fillColor: '#4285F4',
-                    fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 2
-                  }
-                });
-              }
-              
-              setUserLocationMarker(marker as any); // Type assertion for compatibility
-            },
-            (error) => {
-              console.error('Error getting user location:', error);
-            }
-          );
-        }
       } catch (error) {
         console.error('Failed to initialize Google Maps:', error);
       }
@@ -152,13 +94,77 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
         map.current = null;
       }
     };
-  }, [setUserLocation, userLocationMarker]);
+  }, []);
+
+  // Handle user location changes from store
+  useEffect(() => {
+    if (!map.current || !userLocation) return;
+
+    // Remove existing user location marker
+    if (userLocationMarker) {
+      if ('setMap' in userLocationMarker) {
+        userLocationMarker.setMap(null);
+      } else {
+        // For AdvancedMarkerElement, we need to set map to null differently
+        (userLocationMarker as any).map = null;
+      }
+    }
+    
+    // Create a custom element for the user location marker
+    const userLocationElement = document.createElement('div');
+    userLocationElement.style.width = '16px';
+    userLocationElement.style.height = '16px';
+    userLocationElement.style.borderRadius = '50%';
+    userLocationElement.style.backgroundColor = '#4285F4';
+    userLocationElement.style.border = '2px solid #ffffff';
+    userLocationElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+    
+    // Use AdvancedMarkerElement if available, otherwise fall back to regular Marker
+    let marker;
+    if (google.maps.marker?.AdvancedMarkerElement) {
+      marker = new google.maps.marker.AdvancedMarkerElement({
+        position: userLocation,
+        map: map.current,
+        title: 'Your Location',
+        content: userLocationElement
+      });
+    } else {
+      // Fallback to regular Marker
+      marker = new google.maps.Marker({
+        position: userLocation,
+        map: map.current,
+        title: 'Your Location',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        }
+      });
+    }
+    
+    setUserLocationMarker(marker as any); // Type assertion for compatibility
+
+    // Center map on user location if it's the first time
+    if (map.current.getZoom() === ISRAEL_ZOOM) {
+      map.current.setCenter(userLocation);
+      map.current.setZoom(12);
+    }
+  }, [userLocation]);
 
   // Add spot markers
   useEffect(() => {
     if (!map.current || !spots.length) return;
 
-    markersRef.current.forEach(marker => marker.map = null);
+    markersRef.current.forEach(marker => {
+      if ('setMap' in marker) {
+        marker.setMap(null);
+      } else {
+        (marker as any).map = null;
+      }
+    });
     markersRef.current = [];
 
     spots.forEach(spot => {

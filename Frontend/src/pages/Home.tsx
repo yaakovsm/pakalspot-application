@@ -29,6 +29,15 @@ const Home: React.FC = () => {
           console.warn('Could not get user location:', error);
           // Set default location to Israel center
           setUserLocation({ lat: 31.5, lng: 34.8 });
+          
+          // Show user-friendly message based on error type
+          if (error.code === 1) {
+            console.info('Location access denied. You can click the location button in the header to try again.');
+          } else if (error.code === 2) {
+            console.info('Location unavailable. Using default location.');
+          } else if (error.code === 3) {
+            console.info('Location request timed out. Using default location.');
+          }
         }
       );
     } else {

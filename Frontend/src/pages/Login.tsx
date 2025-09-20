@@ -6,11 +6,13 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { MapPin, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const Login: React.FC = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -27,8 +29,8 @@ const Login: React.FC = () => {
     
     if (!formData.email || !formData.password) {
       toast({
-        title: "Validation error",
-        description: "Please fill in all fields.",
+        title: t('auth.validation_error'),
+        description: t('auth.fill_all_fields'),
         variant: "destructive",
       });
       return;
@@ -37,14 +39,14 @@ const Login: React.FC = () => {
     try {
       await login(formData);
       toast({
-        title: "Welcome back!",
-        description: "You have been successfully logged in.",
+        title: t('auth.welcome_back'),
+        description: t('auth.account_created_successfully'),
       });
       navigate('/');
     } catch (error: any) {
       toast({
-        title: "Login failed",
-        description: error.response?.data?.message || "Invalid email or password.",
+        title: t('auth.login_failed'),
+        description: error.response?.data?.message || t('auth.invalid_credentials'),
         variant: "destructive",
       });
     }
@@ -61,18 +63,18 @@ const Login: React.FC = () => {
               alt="PakalSpot Logo" 
               className="w-12 h-12 object-contain"
             />
-            <span className="text-3xl font-bold text-white">PakalSpot</span>
+            <span className="text-3xl font-bold text-white">{t('app.name')}</span>
           </div>
-          <p className="text-white/80 mt-2">Discover amazing places around you</p>
+          <p className="text-white/80 mt-2">{t('auth.discover_amazing_places')}</p>
         </div>
 
         <Card className="shadow-strong border-0">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center text-foreground">
-              Welcome Back
+              {t('auth.welcome_back')}
             </CardTitle>
             <p className="text-center text-muted-foreground">
-              Sign in to your account to continue
+              {t('auth.sign_in_to_continue')}
             </p>
           </CardHeader>
           
@@ -80,27 +82,27 @@ const Login: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Email
+                  {t('auth.email')}
                 </label>
                 <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={t('auth.enter_email')}
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Password
+                  {t('auth.password')}
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.enter_password')}
                     className="pr-10"
                     required
                   />
@@ -129,10 +131,10 @@ const Login: React.FC = () => {
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Signing in...
+                    {t('auth.signing_in')}
                   </>
                 ) : (
-                  'Sign In'
+                  t('auth.sign_in')
                 )}
               </Button>
 
@@ -141,7 +143,7 @@ const Login: React.FC = () => {
                   to="/forgot-password" 
                   className="text-sm text-primary hover:text-primary-dark transition-colors"
                 >
-                  Forgot your password?
+                  {t('auth.forgot_password')}
                 </Link>
               </div>
 
@@ -151,7 +153,7 @@ const Login: React.FC = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">
-                    Don't have an account?
+                    {t('auth.dont_have_account')}
                   </span>
                 </div>
               </div>
@@ -162,7 +164,7 @@ const Login: React.FC = () => {
                 className="w-full"
                 onClick={() => navigate('/register')}
               >
-                Create Account
+                {t('auth.create_account')}
               </Button>
             </form>
           </CardContent>
@@ -173,7 +175,7 @@ const Login: React.FC = () => {
             to="/" 
             className="text-white/80 hover:text-white transition-colors text-sm"
           >
-            ← Back to Home
+            {t('auth.back_to_home')}
           </Link>
         </div>
       </div>
