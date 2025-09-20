@@ -1,21 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+
+// Declare Google Maps types
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
 import { useSpots } from '../hooks/useSpots';
 import { Spot } from '../types/spot';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { MapPin, Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import googleMapsLoader from '../utils/googleMapsLoader';
 
 // Israel map configuration
-const ISRAEL_CENTER: [number, number] = [34.8, 31.5]; // [lng, lat]
-const ISRAEL_ZOOM = 7;
-const ISRAEL_BOUNDS: [[number, number], [number, number]] = [
-  [34.25, 29.5], // Southwest corner [lng, lat]
-  [35.9, 33.4]   // Northeast corner [lng, lat]
-];
+const ISRAEL_CENTER: google.maps.LatLngLiteral = { lat: 31.3, lng: 34.8 };
+const ISRAEL_ZOOM = 10;
+const ISRAEL_BOUNDS: google.maps.LatLngBoundsLiteral = {
+  north: 33.4,
+  south: 29.5,
+  east: 35.9,
+  west: 34.25
+};
 
-const MAP_TILE_URL = import.meta.env.VITE_MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+// Google Maps is loaded directly in index.html with Hebrew language and Israel region
 
 interface MapViewProps {
   className?: string;
@@ -23,101 +32,176 @@ interface MapViewProps {
 
 const MapView: React.FC<MapViewProps> = ({ className }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
-  const popup = useRef<maplibregl.Popup | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
+  const map = useRef<google.maps.Map | null>(null);
+  const infoWindow = useRef<google.maps.InfoWindow | null>(null);
+  const markersRef = useRef<(google.maps.marker.AdvancedMarkerElement | google.maps.Marker)[]>([]);
   
   const { spots, selectedSpot, selectSpot, setUserLocation, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
-  const [userLocationMarker, setUserLocationMarker] = useState<maplibregl.Marker | null>(null);
+  const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          'raster-tiles': {
-            type: 'raster',
-            tiles: [MAP_TILE_URL],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
-          }
-        },
-        layers: [
-          {
-            id: 'simple-tiles',
-            type: 'raster',
-            source: 'raster-tiles',
-            minzoom: 0,
-            maxzoom: 22
-          }
-        ]
-      },
-      center: ISRAEL_CENTER,
-      zoom: ISRAEL_ZOOM,
-      maxBounds: ISRAEL_BOUNDS, // Restrict map to Israel
-    });
+    const initMap = async () => {
+      try {
+        // Load Google Maps API with proper configuration
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+          console.error('Google Maps API key is not configured. Please set VITE_GOOGLE_MAPS_API_KEY in your environment variables.');
+          return;
+        }
 
-    // Add navigation controls
-    map.current.addControl(
-      new maplibregl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
+        await googleMapsLoader.load({
+          apiKey,
+          language: 'he',
+          region: 'IL',
+          libraries: ['places']
+        });
 
-    // Add geolocate control
-    const geolocate = new maplibregl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true
-      },
-      trackUserLocation: true
-    });
+        if (!mapContainer.current) return;
 
-    map.current.addControl(geolocate, 'top-right');
+        // Ensure Google Maps is fully loaded before creating the map
+        if (!window.google?.maps?.MapTypeId) {
+          throw new Error('Google Maps API is not fully loaded');
+        }
 
-    // Handle user location
-    geolocate.on('geolocate', (e: any) => {
-      const { longitude, latitude } = e.coords;
-      setUserLocation({ lat: latitude, lng: longitude });
-    });
+        map.current = new google.maps.Map(mapContainer.current, {
+          center: ISRAEL_CENTER,
+          zoom: ISRAEL_ZOOM,
+          restriction: {
+            latLngBounds: ISRAEL_BOUNDS,
+            strictBounds: false
+          },
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+          zoomControl: true,
+          mapTypeId: google.maps.MapTypeId.TERRAIN
+        });
+
+        // Initialize info window
+        infoWindow.current = new google.maps.InfoWindow();
+
+        // Add geolocation functionality
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              setUserLocation(userLocation);
+              
+              // Add user location marker using AdvancedMarkerElement
+              if (userLocationMarker) {
+                userLocationMarker.setMap(null);
+              }
+              
+              // Create a custom element for the user location marker
+              const userLocationElement = document.createElement('div');
+              userLocationElement.style.width = '16px';
+              userLocationElement.style.height = '16px';
+              userLocationElement.style.borderRadius = '50%';
+              userLocationElement.style.backgroundColor = '#4285F4';
+              userLocationElement.style.border = '2px solid #ffffff';
+              userLocationElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+              
+              // Use AdvancedMarkerElement if available, otherwise fall back to regular Marker
+              let marker;
+              if (google.maps.marker?.AdvancedMarkerElement) {
+                marker = new google.maps.marker.AdvancedMarkerElement({
+                  position: userLocation,
+                  map: map.current,
+                  title: 'Your Location',
+                  content: userLocationElement
+                });
+              } else {
+                // Fallback to regular Marker
+                marker = new google.maps.Marker({
+                  position: userLocation,
+                  map: map.current,
+                  title: 'Your Location',
+                  icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: '#4285F4',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2
+                  }
+                });
+              }
+              
+              setUserLocationMarker(marker as any); // Type assertion for compatibility
+            },
+            (error) => {
+              console.error('Error getting user location:', error);
+            }
+          );
+        }
+      } catch (error) {
+        console.error('Failed to initialize Google Maps:', error);
+      }
+    };
+
+    initMap();
 
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        map.current = null;
+      }
     };
-  }, [setUserLocation]);
+  }, [setUserLocation, userLocationMarker]);
 
   // Add spot markers
   useEffect(() => {
     if (!map.current || !spots.length) return;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current.forEach(marker => marker.map = null);
     markersRef.current = [];
 
-    // Add new markers
     spots.forEach(spot => {
-      const el = document.createElement('div');
-      el.className = 'spot-marker';
-      el.innerHTML = `
-        <div class="w-10 h-10 bg-primary rounded-full shadow-medium flex items-center justify-center cursor-pointer hover:scale-110 transition-smooth border-2 border-white">
-          <svg class="w-5 h-5 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-        </div>
-      `;
+      // Create a custom element for the spot marker
+      const spotElement = document.createElement('div');
+      spotElement.style.width = '24px';
+      spotElement.style.height = '24px';
+      spotElement.style.borderRadius = '50%';
+      spotElement.style.backgroundColor = '#2d7c3e';
+      spotElement.style.border = '2px solid #ffffff';
+      spotElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      spotElement.style.cursor = 'pointer';
+      spotElement.title = spot.title;
 
-      const marker = new maplibregl.Marker(el)
-        .setLngLat([spot.lon, spot.lat])
-        .addTo(map.current!);
+      // Use AdvancedMarkerElement if available, otherwise fall back to regular Marker
+      let marker;
+      if (google.maps.marker?.AdvancedMarkerElement) {
+        marker = new google.maps.marker.AdvancedMarkerElement({
+          position: { lat: spot.lat, lng: spot.lon },
+          map: map.current,
+          title: spot.title,
+          content: spotElement
+        });
+      } else {
+        // Fallback to regular Marker
+        marker = new google.maps.Marker({
+          position: { lat: spot.lat, lng: spot.lon },
+          map: map.current,
+          title: spot.title,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: '#2d7c3e',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+          }
+        });
+      }
 
-      // Handle marker click
-      el.addEventListener('click', () => {
+      marker.addListener('click', () => {
         selectSpot(spot);
-        showSpotPopup(spot, marker);
+        showSpotInfoWindow(spot, marker);
       });
 
       markersRef.current.push(marker);
@@ -128,29 +212,25 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
   useEffect(() => {
     if (!map.current || !selectedSpot) return;
 
-    // Fly to selected spot
-    map.current.flyTo({
-      center: [selectedSpot.lon, selectedSpot.lat],
-      zoom: 15,
-      duration: 1000,
-    });
+    map.current.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lon });
+    map.current.setZoom(15);
   }, [selectedSpot]);
 
-  const showSpotPopup = (spot: Spot, marker: maplibregl.Marker) => {
-    if (popup.current) {
-      popup.current.remove();
+  const showSpotInfoWindow = (spot: Spot, marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker) => {
+    if (infoWindow.current) {
+      infoWindow.current.close();
     }
 
-    const popupContent = document.createElement('div');
-    popupContent.innerHTML = `
-      <div class="spot-popup p-0 max-w-sm">
+    const infoContent = document.createElement('div');
+    infoContent.innerHTML = `
+      <div class="spot-info p-0 max-w-sm">
         <div class="relative">
-          ${spot.photos && spot.photos.length > 0 && spot.photos[0] ? `
+          ${spot.photos?.[0] ? `
             <img src="${spot.photos[0].url}" alt="${spot.title}" class="w-full h-32 object-cover rounded-t-lg">
           ` : `
             <div class="w-full h-32 bg-gradient-card rounded-t-lg flex items-center justify-center">
               <svg class="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5 2.5-2.5 2.5-2.5 2.5z"/>
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
               </svg>
             </div>
           `}
@@ -178,23 +258,28 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
       </div>
     `;
 
-    popup.current = new maplibregl.Popup({
-      closeButton: true,
-      closeOnClick: true,
-      maxWidth: '320px',
-    })
-      .setLngLat([spot.lon, spot.lat])
-      .setDOMContent(popupContent)
-      .addTo(map.current!);
+    infoWindow.current = new google.maps.InfoWindow({
+      content: infoContent,
+      maxWidth: 320
+    });
+
+    // Handle both AdvancedMarkerElement and regular Marker
+    if ('anchor' in marker) {
+      // AdvancedMarkerElement
+      infoWindow.current.open({
+        anchor: marker,
+        map: map.current
+      });
+    } else {
+      // Regular Marker
+      infoWindow.current.open(map.current, marker);
+    }
   };
 
   const handleFavoriteSpot = async (spotId: string, isFavorited: boolean) => {
     try {
-      if (isFavorited) {
-        await unfavoriteSpot(spotId);
-      } else {
-        await favoriteSpot(spotId);
-      }
+      if (isFavorited) await unfavoriteSpot(spotId);
+      else await favoriteSpot(spotId);
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
     }
@@ -212,11 +297,10 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
     <div className={`relative w-full h-full ${className}`}>
       <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden shadow-medium" />
       
-      {/* Selected Spot Card */}
       {selectedSpot && (
         <Card className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-80 shadow-strong backdrop-blur-md bg-card/90">
           <CardContent className="p-4">
-            {selectedSpot.photos && selectedSpot.photos.length > 0 && selectedSpot.photos[0] && (
+            {selectedSpot.photos?.[0] && (
               <img 
                 src={selectedSpot.photos[0].url} 
                 alt={selectedSpot.title}

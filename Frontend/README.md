@@ -1,6 +1,6 @@
 # PakalSpot Frontend - Israel Nature Explorer
 
-A modern React application for discovering and sharing amazing natural spots across Israel. Built with React, TypeScript, MapLibre GL, and TailwindCSS.
+A modern React application for discovering and sharing amazing natural spots across Israel. Built with React, TypeScript, Google Maps, and TailwindCSS.
 
 ## 🇮🇱 Israel-Focused Features
 
@@ -13,7 +13,7 @@ A modern React application for discovering and sharing amazing natural spots acr
 
 ## 🚀 Core Features
 
-- **Interactive Maps**: Explore spots with MapLibre GL integration and Israel focus
+- **Interactive Maps**: Explore spots with Google Maps integration and Israel focus
 - **Spot Discovery**: Browse, search, and filter spots by type, distance, and region
 - **User Authentication**: JWT-based login and registration
 - **Favorites System**: Save and manage your favorite Israeli spots
@@ -25,7 +25,7 @@ A modern React application for discovering and sharing amazing natural spots acr
 ## 🛠️ Tech Stack
 
 - **Framework**: React 18 + TypeScript + Vite
-- **Maps**: MapLibre GL JS
+- **Maps**: Google Maps JavaScript API
 - **Styling**: TailwindCSS + shadcn/ui components
 - **State Management**: Zustand with persistence
 - **Routing**: React Router v6
@@ -54,7 +54,7 @@ A modern React application for discovering and sharing amazing natural spots acr
    Update the environment variables for Israel configuration:
    ```env
    VITE_API_BASE_URL=http://localhost:8000/api
-   VITE_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
    # Default Israel bounds: 34.25-35.9°E, 29.5-33.4°N
    # Default center: 31.5°N, 34.8°E (Tel Aviv area)
    ```
@@ -174,8 +174,7 @@ The frontend expects a REST API with these endpoints:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `VITE_API_BASE_URL` | Backend API URL | `http://localhost:8000/api` |
-| `VITE_MAP_TILE_URL` | Map tile server URL | OpenStreetMap tiles |
-| `VITE_MAPBOX_TOKEN` | Mapbox token (optional) | - |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key | Required |
 
 ## 🚢 Deployment
 

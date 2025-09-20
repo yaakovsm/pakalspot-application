@@ -5,7 +5,7 @@
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pakalspot_user') THEN
-        CREATE USER pakalspot_user WITH PASSWORD 'pakalspot_password';
+        CREATE USER pakalspot_user WITH PASSWORD 'jcoffeebrew';
     END IF;
 END
 $$;

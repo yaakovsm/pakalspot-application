@@ -56,15 +56,18 @@ Create a `.env` file in the `PakalSpot/Frontend/` directory with the following v
 
 | Variable | Description | Default | Example |
 |----------|-------------|---------|---------|
-| `VITE_MAPLIBRE_ACCESS_TOKEN` | MapLibre access token for maps | Not set | `pk.your-token-here` |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API key for maps | Not set | `AIzaSyCwCjeTEmRel_nG1MGsC5sacEFGuipEs8k` |
 | `VITE_APP_NAME` | Application name | `PakalSpot` | `PakalSpot` |
 | `VITE_APP_VERSION` | Application version | `1.0.0` | `1.0.0` |
 
-### MapLibre Setup
+### Google Maps Setup
 
-1. Sign up at [MapLibre](https://maplibre.org/)
-2. Get your access token
-3. Add it to your `.env` file
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Maps JavaScript API
+4. Create credentials (API Key)
+5. Restrict the API key to your domain for security
+6. Add it to your `.env` file
 
 ## Development Setup
 
@@ -157,9 +160,10 @@ Create a `.env` file in the `PakalSpot/Frontend/` directory with the following v
    - Ensure frontend URL is allowed
 
 4. **Map Not Loading**
-   - Check MapLibre access token
-   - Verify network connectivity
+   - Check Google Maps API key
+   - Verify API key has Maps JavaScript API enabled
    - Check browser console for errors
+   - Ensure API key restrictions allow your domain
 
 ### Getting Help
 

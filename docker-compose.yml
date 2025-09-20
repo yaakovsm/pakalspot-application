@@ -1,14 +1,14 @@
 services:
   db:
     image: postgis/postgis:15-3.3
+    container_name: pakal-spot-db
     restart: unless-stopped
+    env_file:
+      - .env 
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./Backend/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -25,18 +25,14 @@ services:
       context: ./Backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./Backend:/app
+    env_file:
+      - .env 
+      - ./Backend/.env
     environment:
-      - DB_URL=postgresql://pakalspot_user:pakalspot_password@db:5432/pakalspot_db
-      - SECRET_KEY=dev-secret-key-change-in-production-12345
-      - JWT_EXPIRY=43200
-      - API_PREFIX=/api
-      - S3_BUCKET=pakalspot-photos
-      - S3_ENDPOINT=https://s3.amazonaws.com
-      - S3_ACCESS_KEY=AKIASU5665ZS2ORE6Q6B
-      - S3_SECRET_KEY=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
+      - DB_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     depends_on:
       db:
         condition: service_healthy
@@ -48,12 +44,9 @@ services:
       context: ./Frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api
-      - VITE_MAPLIBRE_ACCESS_TOKEN=pk.dev-token-for-development
-      - VITE_APP_NAME=PakalSpot
-      - VITE_APP_VERSION=1.0.0
+      - "${FRONTEND_PORT:-5173}:5173"
+    env_file:
+      - ./Frontend/.env
     depends_on:
       - backend
     networks:

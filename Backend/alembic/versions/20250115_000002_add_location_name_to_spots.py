@@ -27,3 +27,4 @@ def downgrade():
     op.drop_column('spots', 'location_name')
     # ### end Alembic commands ###
 
+
