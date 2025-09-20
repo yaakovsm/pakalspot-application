@@ -44,12 +44,14 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div 
-            className="flex items-center gap-2 cursor-pointer" 
+            className="flex items-center gap-2 cursor-pointer px-2 py-1" 
             onClick={() => navigate('/')}
           >
-            <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-white" />
-            </div>
+            <img 
+              src="/PakalSpot_Transperent_logo.png" 
+              alt="PakalSpot Logo" 
+              className="w-10 h-10 object-contain"
+            />
             <span className="text-xl font-bold text-foreground">PakalSpot</span>
           </div>
 

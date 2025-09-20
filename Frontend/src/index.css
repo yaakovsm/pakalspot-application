@@ -8,42 +8,50 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Nature-inspired color palette */
-    --background: 0 0% 100%;
-    --foreground: 215 25% 27%;
+    /* PakalSpot Logo Color Palette */
+    --milano-red: 12 98% 37%; /* #be2e02 - Rich earthy red-orange (map pin) */
+    --solitaire: 45 85% 97%; /* #fef5e4 - Warm off-white / light beige (background) */
+    --irish-coffee: 30 45% 28%; /* #674627 - Deep coffee brown (cezve body) */
+    --raw-sienna: 20 55% 55%; /* #cf794a - Lighter brown highlights */
+    --tuscany: 15 60% 50%; /* #cc592b - Slightly lighter brown (cezve handle) */
+    --tia-maria: 15 86% 42%; /* #c43f0f - Dark brown (steam) */
     
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    /* App Color System - Updated Colors */
+    --background: 35 94% 93%; /* #fef6e6 - warm cream background */
+    --foreground: 30 45% 25%; /* #5d4023 - dark brown text */
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --card: 35 94% 93%; /* #fef6e6 - warm cream background */
+    --card-foreground: 30 45% 25%; /* #5d4023 - dark brown text */
     
-    /* Primary: Forest Green */
-    --primary: 134 61% 41%;
-    --primary-foreground: 0 0% 98%;
-    --primary-light: 134 45% 65%;
-    --primary-dark: 134 65% 32%;
+    --popover: 35 94% 93%; /* #fef6e6 - warm cream background */
+    --popover-foreground: 30 45% 25%; /* #5d4023 - dark brown text */
     
-    /* Secondary: Mountain Blue */
-    --secondary: 210 50% 45%;
-    --secondary-foreground: 0 0% 98%;
-    --secondary-light: 210 40% 65%;
+    /* Primary: Button Color */
+    --primary: 17 81% 43%; /* #c64615 - warm orange button */
+    --primary-foreground: 35 94% 93%; /* #fef6e6 - cream text on button */
+    --primary-light: 17 70% 55%; /* lighter orange */
+    --primary-dark: 17 85% 35%; /* darker orange */
     
-    /* Accent: Sunset Orange */
-    --accent: 25 85% 60%;
-    --accent-foreground: 0 0% 98%;
-    --accent-light: 25 75% 75%;
+    /* Secondary: Dark Brown */
+    --secondary: 30 45% 25%; /* #5d4023 - dark brown */
+    --secondary-foreground: 35 94% 93%; /* #fef6e6 - cream text */
+    --secondary-light: 30 35% 40%; /* lighter brown */
     
-    /* Muted: Soft Gray */
-    --muted: 215 15% 95%;
-    --muted-foreground: 215 15% 45%;
+    /* Accent: Warm Orange */
+    --accent: 17 81% 43%; /* #c64615 - warm orange */
+    --accent-foreground: 35 94% 93%; /* #fef6e6 - cream text */
+    --accent-light: 17 70% 55%; /* lighter orange */
     
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    /* Muted: Cream with slight variation */
+    --muted: 35 80% 90%;
+    --muted-foreground: 30 35% 45%;
     
-    --border: 215 15% 90%;
-    --input: 215 15% 95%;
-    --ring: 134 61% 41%;
+    --destructive: 17 81% 43%; /* warm orange for destructive actions */
+    --destructive-foreground: 35 94% 93%; /* cream text */
+    
+    --border: 30 25% 80%;
+    --input: 35 80% 90%;
+    --ring: 17 81% 43%; /* warm orange */
     
     --radius: 0.75rem;
     
@@ -51,76 +59,83 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-dark)));
     --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
     --gradient-card: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    --gradient-cream: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
     
     /* Shadows */
     --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.1);
     --shadow-medium: 0 4px 16px -4px hsl(var(--primary) / 0.15);
     --shadow-strong: 0 8px 32px -8px hsl(var(--primary) / 0.2);
+    --shadow-coffee: 0 4px 16px -4px hsl(var(--irish-coffee) / 0.2);
     
     /* Animations */
     --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 215 25% 27%;
-    --sidebar-primary: 134 61% 41%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 215 15% 95%;
-    --sidebar-accent-foreground: 215 25% 27%;
-    --sidebar-border: 215 15% 90%;
-    --sidebar-ring: 134 61% 41%;
+    --sidebar-background: 35 94% 93%; /* #fef6e6 - warm cream background */
+    --sidebar-foreground: 30 45% 25%; /* #5d4023 - dark brown text */
+    --sidebar-primary: 17 81% 43%; /* #c64615 - warm orange button */
+    --sidebar-primary-foreground: 35 94% 93%; /* #fef6e6 - cream text */
+    --sidebar-accent: 35 80% 90%;
+    --sidebar-accent-foreground: 30 45% 25%; /* #5d4023 - dark brown text */
+    --sidebar-border: 30 25% 80%;
+    --sidebar-ring: 17 81% 43%; /* warm orange */
   }
 
   .dark {
-    --background: 215 28% 8%;
-    --foreground: 210 40% 98%;
+    /* Dark mode with warm, earthy tones */
+    --background: 30 25% 8%; /* dark brown background */
+    --foreground: 35 94% 93%; /* #fef6e6 - cream text */
     
-    --card: 215 25% 12%;
-    --card-foreground: 210 40% 98%;
+    --card: 30 30% 12%; /* slightly lighter dark brown */
+    --card-foreground: 35 94% 93%; /* cream text */
     
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 30 30% 12%;
+    --popover-foreground: 35 94% 93%;
     
-    --primary: 134 50% 55%;
-    --primary-foreground: 215 28% 8%;
-    --primary-light: 134 45% 65%;
-    --primary-dark: 134 60% 45%;
+    --primary: 17 75% 55%; /* brighter warm orange for dark mode */
+    --primary-foreground: 30 25% 8%; /* dark brown text on button */
+    --primary-light: 17 65% 65%;
+    --primary-dark: 17 85% 40%;
     
-    --secondary: 210 45% 55%;
-    --secondary-foreground: 215 28% 8%;
-    --secondary-light: 210 40% 65%;
+    --secondary: 30 45% 25%; /* #5d4023 - dark brown */
+    --secondary-foreground: 35 94% 93%; /* cream text */
+    --secondary-light: 30 35% 35%;
     
-    --accent: 25 80% 65%;
-    --accent-foreground: 215 28% 8%;
-    --accent-light: 25 75% 75%;
+    --accent: 17 75% 55%; /* warm orange accent */
+    --accent-foreground: 30 25% 8%; /* dark brown text */
+    --accent-light: 17 65% 65%;
     
-    --muted: 215 25% 15%;
-    --muted-foreground: 215 15% 65%;
+    --muted: 30 25% 15%;
+    --muted-foreground: 30 20% 65%;
     
-    --destructive: 0 75% 65%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 17 75% 55%; /* warm orange for destructive actions */
+    --destructive-foreground: 35 94% 93%; /* cream text */
     
-    --border: 215 25% 18%;
-    --input: 215 25% 15%;
-    --ring: 134 50% 55%;
+    --border: 30 25% 18%;
+    --input: 30 25% 15%;
+    --ring: 17 75% 55%;
     
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-dark)));
     --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
     --gradient-card: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    --gradient-cream: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
     
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
     --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
     --shadow-strong: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
+    --shadow-coffee: 0 4px 16px -4px hsl(var(--secondary) / 0.3);
     
-    --sidebar-background: 215 25% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 134 50% 55%;
-    --sidebar-primary-foreground: 215 28% 8%;
-    --sidebar-accent: 215 25% 15%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 25% 18%;
-    --sidebar-ring: 134 50% 55%;
+    --sidebar-background: 30 25% 10%;
+    --sidebar-foreground: 35 94% 93%;
+    --sidebar-primary: 17 75% 55%;
+    --sidebar-primary-foreground: 30 25% 8%;
+    --sidebar-accent: 30 25% 15%;
+    --sidebar-accent-foreground: 35 94% 93%;
+    --sidebar-border: 30 25% 18%;
+    --sidebar-ring: 17 75% 55%;
   }
 }
 

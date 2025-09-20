@@ -79,11 +79,13 @@ const Register: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-medium">
-              <MapPin className="w-7 h-7 text-primary" />
-            </div>
+        <div className="text-center mb-8 px-4 py-2">
+          <div className="inline-flex items-center gap-2">
+            <img 
+              src="/PakalSpot_Transperent_logo.png" 
+              alt="PakalSpot Logo" 
+              className="w-12 h-12 object-contain"
+            />
             <span className="text-3xl font-bold text-white">PakalSpot</span>
           </div>
           <p className="text-white/80 mt-2">Join the community of explorers</p>
