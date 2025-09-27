@@ -18,7 +18,14 @@ def get_password_hash(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-	return pwd_context.verify(plain_password, hashed_password)
+	# Try bcrypt first
+	try:
+		return pwd_context.verify(plain_password, hashed_password)
+	except Exception:
+		# Fallback to SHA256 for development
+		import hashlib
+		sha256_hash = hashlib.sha256(plain_password.encode()).hexdigest()
+		return sha256_hash == hashed_password
 
 
 def create_access_token(subject: str, expires_minutes: Optional[int] = None) -> str:

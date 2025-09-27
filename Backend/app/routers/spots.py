@@ -105,6 +105,18 @@ def list_spots(db: Session = Depends(get_db)):
         except Exception:
             # If we can't extract coordinates, skip this spot
             continue
+        
+        # Get photos for this spot
+        photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        photos_data = []
+        for photo in photos:
+            photos_data.append({
+                "id": photo.id,
+                "spot_id": photo.spot_id,
+                "url": photo.url,
+                "thumbnail_url": photo.thumbnail_url,
+                "created_at": photo.created_at
+            })
             
         result.append({
             "id": spot.id,
@@ -116,7 +128,8 @@ def list_spots(db: Session = Depends(get_db)):
             "lon": lon,
             "location_name": spot.location_name,
             "created_at": spot.created_at,
-            "owner_id": spot.user_id
+            "owner_id": spot.user_id,
+            "photos": photos_data
         })
     
     return result
@@ -137,6 +150,18 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=500, detail="Error extracting coordinates")
     
+    # Get photos for this spot
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    photos_data = []
+    for photo in photos:
+        photos_data.append({
+            "id": photo.id,
+            "spot_id": photo.spot_id,
+            "url": photo.url,
+            "thumbnail_url": photo.thumbnail_url,
+            "created_at": photo.created_at
+        })
+    
     return {
         "id": spot.id,
         "title": spot.title,
@@ -147,7 +172,8 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
         "lon": lon,
         "location_name": spot.location_name,
         "created_at": spot.created_at,
-        "owner_id": spot.user_id
+        "owner_id": spot.user_id,
+        "photos": photos_data
     }
 
 
@@ -221,3 +247,94 @@ def reverse_geocode(
         raise HTTPException(status_code=404, detail="Location not found for these coordinates")
     
     return schemas.GeocodeResult(**result)
+
+
+@router.put("/{spot_id}", response_model=schemas.SpotOut)
+def update_spot(
+    spot_id: str,
+    spot_update: schemas.SpotUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Update a spot (only by owner)"""
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    
+    # Check if user is the owner
+    if spot.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this spot")
+    
+    # Update fields if provided
+    if spot_update.title is not None:
+        spot.title = spot_update.title
+    if spot_update.description is not None:
+        spot.description = spot_update.description
+    if spot_update.spot_type is not None:
+        spot.spot_type = spot_update.spot_type
+    if spot_update.region is not None:
+        spot.region = spot_update.region
+    if spot_update.lat is not None and spot_update.lon is not None:
+        # Update geometry
+        from shapely.geometry import Point
+        point = from_shape(Point(spot_update.lon, spot_update.lat), srid=4326)
+        spot.geom = point
+    
+    db.commit()
+    db.refresh(spot)
+    
+    # Extract coordinates for response
+    try:
+        from shapely.wkt import loads
+        geom_wkt = db.execute(func.ST_AsText(spot.geom)).scalar()
+        point = loads(geom_wkt)
+        lon, lat = point.x, point.y
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error extracting coordinates")
+    
+    # Get photos for this spot
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    photos_data = []
+    for photo in photos:
+        photos_data.append({
+            "id": photo.id,
+            "spot_id": photo.spot_id,
+            "url": photo.url,
+            "thumbnail_url": photo.thumbnail_url,
+            "created_at": photo.created_at
+        })
+    
+    return {
+        "id": spot.id,
+        "title": spot.title,
+        "description": spot.description,
+        "spot_type": spot.spot_type,
+        "region": spot.region,
+        "lat": lat,
+        "lon": lon,
+        "location_name": spot.location_name,
+        "created_at": spot.created_at,
+        "owner_id": spot.user_id,
+        "photos": photos_data
+    }
+
+
+@router.delete("/{spot_id}")
+def delete_spot(
+    spot_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Delete a spot (only by owner)"""
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    
+    # Check if user is the owner
+    if spot.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this spot")
+    
+    db.delete(spot)
+    db.commit()
+    
+    return {"message": "Spot deleted successfully"}

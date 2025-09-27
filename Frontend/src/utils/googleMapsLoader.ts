@@ -12,6 +12,7 @@ class GoogleMapsLoader {
   private static instance: GoogleMapsLoader;
   private loadPromise: Promise<void> | null = null;
   private isLoaded = false;
+  private currentOptions: GoogleMapsLoaderOptions | null = null;
 
   private constructor() {}
 
@@ -23,6 +24,26 @@ class GoogleMapsLoader {
   }
 
   async load(options: GoogleMapsLoaderOptions): Promise<void> {
+    // Check if we need to reload with different language
+    if (this.isLoaded && this.currentOptions && 
+        this.currentOptions.language !== options.language) {
+      // Language changed, need to reload
+      this.isLoaded = false;
+      this.loadPromise = null;
+      this.currentOptions = null;
+      
+      // Remove existing script
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+      
+      // Clear Google Maps from window
+      if (window.google) {
+        delete window.google;
+      }
+    }
+
     if (this.isLoaded) {
       return Promise.resolve();
     }
@@ -31,6 +52,7 @@ class GoogleMapsLoader {
       return this.loadPromise;
     }
 
+    this.currentOptions = options;
     this.loadPromise = this.loadScript(options);
     return this.loadPromise;
   }

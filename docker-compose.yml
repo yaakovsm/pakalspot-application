@@ -47,6 +47,9 @@ services:
       - "${FRONTEND_PORT:-5173}:5173"
     env_file:
       - ./Frontend/.env
+      - .env
+    environment:
+      VITE_API_BASE_URL: "${API_BASE_URL}"
     depends_on:
       - backend
     networks:

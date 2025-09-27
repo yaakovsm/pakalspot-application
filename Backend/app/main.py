@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.routers import auth, spots, photos, utils
 from app.core.database import engine
 from app.models import Base
@@ -22,6 +23,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files for media
+app.mount("/media", StaticFiles(directory="media"), name="media")
 
 # Routers
 app.include_router(auth.router, prefix="/api")

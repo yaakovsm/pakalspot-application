@@ -65,6 +65,28 @@ class UserOut(UserBase):
 
 
 # ----------------------
+# Photo Schemas
+# ----------------------
+class PhotoBase(BaseModel):
+    url: str
+    thumbnail_url: Optional[str] = None
+
+
+class PhotoCreate(PhotoBase):
+    spot_id: uuid.UUID
+    object_key: str
+
+
+class PhotoOut(PhotoBase):
+    id: uuid.UUID
+    spot_id: uuid.UUID
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ----------------------
 # Spot Schemas
 # ----------------------
 class SpotBase(BaseModel):
@@ -101,28 +123,7 @@ class SpotOut(BaseModel):
     location_name: Optional[str] = None
     created_at: datetime
     owner_id: uuid.UUID
-
-    class Config:
-        from_attributes = True
-
-
-# ----------------------
-# Photo Schemas
-# ----------------------
-class PhotoBase(BaseModel):
-    url: str
-    thumbnail_url: Optional[str] = None
-
-
-class PhotoCreate(PhotoBase):
-    spot_id: uuid.UUID
-    object_key: str
-
-
-class PhotoOut(PhotoBase):
-    id: uuid.UUID
-    spot_id: uuid.UUID
-    created_at: datetime
+    photos: Optional[List[PhotoOut]] = []
 
     class Config:
         from_attributes = True
