@@ -4,7 +4,7 @@ metadata:
   name: backend-config
   namespace: pakalspot
 data:
-  DB_URL: "postgresql://pakalspot_user:@postgres:5432/pakalspot_db"
+  DB_URL: "postgresql://pakalspot_user:$(DB_PASSWORD)@postgres:5432/pakalspot_db"
   JWT_EXPIRY: "43200"
   API_PREFIX: "/api"
   S3_BUCKET: "pakalspot-photos"

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: pakalspot-frontend:latest
+          image: yaakovsm/pakalspot-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5173

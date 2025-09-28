@@ -15,13 +15,26 @@ spec:
     spec:
       containers:
         - name: backend
-          image: pakalspot-backend:latest
+          image: yaakovsm/pakalspot-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          env:
+            - name: DB_URL
+              value: "postgresql://pakalspot_user:$(DB_PASSWORD)@postgres:5432/pakalspot_db"
+            - name: JWT_EXPIRY
+              value: "43200"
+            - name: API_PREFIX
+              value: "/api"
+            - name: S3_BUCKET
+              value: "pakalspot-photos"
+            - name: S3_ENDPOINT
+              value: "https://s3.amazonaws.com"
+            - name: DEBUG
+              value: "true"
+            - name: ENVIRONMENT
+              value: "development"
           envFrom:
-            - configMapRef:
-                name: backend-config
             - secretRef:
                 name: backend-secrets
             - secretRef:

@@ -1,0 +1,167 @@
+name: Build, Test and Push PakalSpot Docker Images
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract short SHA
+        id: vars
+        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Create environment files
+        run: |
+          # Create main .env file
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "BACKEND_PORT=8000" >> .env
+          echo "FRONTEND_PORT=5173" >> .env
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
+          
+          # Create backend .env file
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> Backend/.env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> Backend/.env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> Backend/.env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> Backend/.env
+          
+          # Create frontend .env file
+          echo "VITE_API_BASE_URL=${{ secrets.API_BASE_URL }}" >> Frontend/.env
+
+      - name: Build services with docker compose
+        run: docker compose -f docker-compose.yml build
+
+      - name: Run services with docker compose
+        run: |
+          docker compose -f docker-compose.yml up -d
+          sleep 15
+
+      - name: Wait for database to be ready
+        run: |
+          echo "Waiting for database to be ready..."
+          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}; do sleep 2; done'
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+          docker compose exec -T backend alembic upgrade head
+
+      - name: Check backend is running
+        run: |
+          if [ "$(docker inspect -f '{{.State.Running}}' $(docker compose ps -q backend))" != "true" ]; then
+            echo "Backend failed to start"
+            docker compose logs backend
+            exit 1
+          fi
+
+      - name: Check frontend is running
+        run: |
+          if [ "$(docker inspect -f '{{.State.Running}}' $(docker compose ps -q frontend))" != "true" ]; then
+            echo "Frontend failed to start"
+            docker compose logs frontend
+            exit 1
+          fi
+
+      - name: Test backend HTTP response
+        run: |
+          echo "Testing backend endpoint..."
+          curl --fail http://localhost:8000/docs || (echo "Backend did not respond properly" && exit 1)
+
+      - name: Test frontend HTTP response
+        run: |
+          echo "Testing frontend endpoint..."
+          curl --fail http://localhost:5173 || (echo "Frontend did not respond properly" && exit 1)
+
+      - name: Shut down containers
+        run: docker compose -f docker-compose.yml down
+
+      - name: Clean old DockerHub images (backend)
+        env:
+          IMAGE_NAME: pakalspot-backend
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "Cleaning old backend tags from DockerHub..."
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"$DOCKER_USERNAME"'", "password": "'"$DOCKER_PASSWORD"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          TAGS=$(curl -s -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/$DOCKER_USERNAME/$IMAGE_NAME/tags/?page_size=100" | jq -r '.results | sort_by(.last_updated) | .[].name')
+          COUNT=$(echo "$TAGS" | wc -l)
+          KEEP=5
+          echo "Found $COUNT backend tags"
+          if [ "$COUNT" -gt "$KEEP" ]; then
+            DELETE=$(echo "$TAGS" | head -n $(($COUNT - $KEEP)))
+            for tag in $DELETE; do
+              echo "Deleting backend tag: $tag"
+              curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/$DOCKER_USERNAME/$IMAGE_NAME/tags/$tag/"
+            done
+          else
+            echo "No backend tags to delete"
+          fi
+
+      - name: Clean old DockerHub images (frontend)
+        env:
+          IMAGE_NAME: pakalspot-frontend
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "Cleaning old frontend tags from DockerHub..."
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"$DOCKER_USERNAME"'", "password": "'"$DOCKER_PASSWORD"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          TAGS=$(curl -s -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/$DOCKER_USERNAME/$IMAGE_NAME/tags/?page_size=100" | jq -r '.results | sort_by(.last_updated) | .[].name')
+          COUNT=$(echo "$TAGS" | wc -l)
+          KEEP=5
+          echo "Found $COUNT frontend tags"
+          if [ "$COUNT" -gt "$KEEP" ]; then
+            DELETE=$(echo "$TAGS" | head -n $(($COUNT - $KEEP)))
+            for tag in $DELETE; do
+              echo "Deleting frontend tag: $tag"
+              curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/$DOCKER_USERNAME/$IMAGE_NAME/tags/$tag/"
+            done
+          else
+            echo "No frontend tags to delete"
+          fi
+
+      - name: Tag and Push images to DockerHub
+        run: |
+          docker tag ${DOCKER_USERNAME}/pakalspot-backend:latest ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }}
+          docker tag ${DOCKER_USERNAME}/pakalspot-frontend:latest ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }}
+
+          docker push ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }}
+          docker push ${DOCKER_USERNAME}/pakalspot-backend:latest
+
+          docker push ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }}
+          docker push ${DOCKER_USERNAME}/pakalspot-frontend:latest
+
+      - name: Save image digests
+        run: |
+          docker pull ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }}
+          docker pull ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }}
+
+          docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }} > digest-backend.txt
+          docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }} > digest-frontend.txt
+
+      - name: Upload digest artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-digests
+          path: |
+            digest-backend.txt
+            digest-frontend.txt
