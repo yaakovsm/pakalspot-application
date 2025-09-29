@@ -54,12 +54,25 @@ jobs:
       - name: Run services with docker compose
         run: |
           docker compose -f docker-compose.yml up -d
-          sleep 15
+          echo "Waiting for services to start..."
+          sleep 30
 
       - name: Wait for database to be ready
         run: |
           echo "Waiting for database to be ready..."
-          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}; do sleep 2; done'
+          timeout 120 bash -c 'until docker compose exec -T db pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}; do echo "Database not ready yet, waiting..."; sleep 5; done'
+          echo "Database is ready!"
+
+      - name: Check database container status
+        run: |
+          echo "Checking database container status..."
+          docker compose ps db
+          if [ "$(docker inspect -f '{{.State.Health.Status}}' $(docker compose ps -q db))" != "healthy" ]; then
+            echo "Database container is not healthy. Logs:"
+            docker compose logs db
+            exit 1
+          fi
+          echo "Database container is healthy!"
 
       - name: Run database migrations
         run: |
