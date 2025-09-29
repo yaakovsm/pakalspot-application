@@ -37,7 +37,10 @@ jobs:
           echo "${{ secrets.FRONTEND_ENV_FILE }}" > Frontend/.env
 
       - name: Build services with docker compose
-        run: docker compose -f docker-compose.yml build
+        run: |
+          docker compose -f docker-compose.yml build
+          docker tag pakalspot-backend ${DOCKER_USERNAME}/pakalspot-backend:latest
+          docker tag pakalspot-frontend ${DOCKER_USERNAME}/pakalspot-frontend:latest
 
       - name: Run services with docker compose
         run: |
