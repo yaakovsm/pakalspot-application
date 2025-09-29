@@ -49,6 +49,11 @@ jobs:
           echo "Waiting for database to be ready..."
           timeout 60 bash -c 'until docker compose exec -T db pg_isready -U $(grep POSTGRES_USER .env | cut -d "=" -f2) -d $(grep POSTGRES_DB .env | cut -d "=" -f2); do sleep 2; done'
 
+      - name: Reset database state for clean migration
+        run: |
+          echo "Resetting database state..."
+          docker compose exec -T db psql -U $(grep POSTGRES_USER .env | cut -d "=" -f2) -d $(grep POSTGRES_DB .env | cut -d "=" -f2) -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
       - name: Run database migrations
         run: docker compose exec -T backend alembic upgrade head
 
