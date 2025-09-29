@@ -28,25 +28,13 @@ jobs:
         id: vars
         run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Create environment files
+      - name: Restore env files from GitHub Secrets
         run: |
-          # Create main .env file
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "DB_PORT=5432" >> .env
-          echo "BACKEND_PORT=8000" >> .env
-          echo "FRONTEND_PORT=5173" >> .env
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
-          
-          # Create backend .env file
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> Backend/.env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> Backend/.env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> Backend/.env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> Backend/.env
-          
-          # Create frontend .env file
-          echo "VITE_API_BASE_URL=${{ secrets.API_BASE_URL }}" >> Frontend/.env
+          echo "${{ secrets.ROOT_ENV_FILE }}" > .env
+          mkdir -p Backend
+          echo "${{ secrets.BACKEND_ENV_FILE }}" > Backend/.env
+          mkdir -p Frontend
+          echo "${{ secrets.FRONTEND_ENV_FILE }}" > Frontend/.env
 
       - name: Build services with docker compose
         run: docker compose -f docker-compose.yml build
@@ -54,30 +42,15 @@ jobs:
       - name: Run services with docker compose
         run: |
           docker compose -f docker-compose.yml up -d
-          echo "Waiting for services to start..."
-          sleep 30
+          sleep 15
 
       - name: Wait for database to be ready
         run: |
           echo "Waiting for database to be ready..."
-          timeout 120 bash -c 'until docker compose exec -T db pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}; do echo "Database not ready yet, waiting..."; sleep 5; done'
-          echo "Database is ready!"
-
-      - name: Check database container status
-        run: |
-          echo "Checking database container status..."
-          docker compose ps db
-          if [ "$(docker inspect -f '{{.State.Health.Status}}' $(docker compose ps -q db))" != "healthy" ]; then
-            echo "Database container is not healthy. Logs:"
-            docker compose logs db
-            exit 1
-          fi
-          echo "Database container is healthy!"
+          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U $(grep POSTGRES_USER .env | cut -d "=" -f2) -d $(grep POSTGRES_DB .env | cut -d "=" -f2); do sleep 2; done'
 
       - name: Run database migrations
-        run: |
-          echo "Running database migrations..."
-          docker compose exec -T backend alembic upgrade head
+        run: docker compose exec -T backend alembic upgrade head
 
       - name: Check backend is running
         run: |
