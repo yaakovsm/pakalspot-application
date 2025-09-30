@@ -2,7 +2,7 @@ name: Build, Test and Push PakalSpot Docker Images
 
 on:
   push:
-    branches: [main]
+    branches: [dev, main, staging]
 
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
