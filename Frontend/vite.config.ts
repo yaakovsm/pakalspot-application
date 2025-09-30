@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => ({
     },
     allowedHosts: "all",
     disableHostCheck: true,
+    cors: true,
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

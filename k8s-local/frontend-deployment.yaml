@@ -22,4 +22,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: frontend-config
+          env:
+            - name: VITE_HOST
+              value: "0.0.0.0"
+            - name: VITE_ALLOWED_HOSTS
+              value: "all"
 
