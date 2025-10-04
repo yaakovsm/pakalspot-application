@@ -4,6 +4,7 @@ metadata:
   name: postgres
   namespace: pakalspot
 spec:
+  type: ClusterIP
   ports:
     - port: 5432
   selector:
