@@ -4,16 +4,20 @@ import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import MapView from '../components/MapView';
 import AddSpotForm from '../components/AddSpotForm';
+import SpotDetailSidebar from '../components/SpotDetailSidebar';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Plus, Menu, X } from 'lucide-react';
+import { Spot } from '../types/spot';
 
 const Home: React.FC = () => {
-  const { fetchSpots, setUserLocation } = useSpots();
+  const { fetchSpots, setUserLocation, selectedSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showDetailSidebar, setShowDetailSidebar] = useState(false);
+  const [hoveredSpot, setHoveredSpot] = useState<Spot | null>(null);
 
   useEffect(() => {
     // Get user location and fetch spots
@@ -62,6 +66,18 @@ const Home: React.FC = () => {
     fetchSpots(); // Refresh spots
   };
 
+  const handleInfoClick = () => {
+    setShowDetailSidebar(true);
+  };
+
+  const handleCloseDetailSidebar = () => {
+    setShowDetailSidebar(false);
+  };
+
+  const handleInfoHover = (spot: Spot | null) => {
+    setHoveredSpot(spot);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <Header />
@@ -69,7 +85,7 @@ const Home: React.FC = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block w-96 h-full">
-          <Sidebar onAddSpot={handleAddSpot} />
+          <Sidebar onAddSpot={handleAddSpot} onInfoClick={handleInfoClick} onInfoHover={handleInfoHover} />
         </div>
 
         {/* Mobile Sidebar */}
@@ -77,7 +93,7 @@ const Home: React.FC = () => {
           <div className="fixed inset-0 z-50 lg:hidden">
             <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowSidebar(false)} />
             <div className="relative w-80 h-full">
-              <Sidebar onAddSpot={handleAddSpot} />
+              <Sidebar onAddSpot={handleAddSpot} onInfoClick={handleInfoClick} onInfoHover={handleInfoHover} />
               <Button
                 variant="ghost"
                 size="icon"
@@ -92,7 +108,7 @@ const Home: React.FC = () => {
 
         {/* Map */}
         <div className="flex-1 relative">
-          <MapView className="w-full h-full" />
+          <MapView className="w-full h-full" hoveredSpot={hoveredSpot} />
           
           {/* Mobile Controls */}
           <div className="lg:hidden absolute top-4 left-4 flex gap-2">
@@ -117,6 +133,14 @@ const Home: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Spot Detail Sidebar */}
+      {showDetailSidebar && selectedSpot && (
+        <SpotDetailSidebar 
+          spot={selectedSpot} 
+          onClose={handleCloseDetailSidebar}
+        />
+      )}
 
       {/* Add Spot Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>

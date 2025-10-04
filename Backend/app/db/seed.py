@@ -118,7 +118,7 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
         
         # Get the specific photo for this spot from the spots_data
         photo_filename = spots_data[i]["photo"]
-        photo_url = f"http://172.26.102.44:30081/media/{photo_filename}"
+        photo_url = f"http://localhost:8000/media/{photo_filename}"
         
         photo = Photo(
             spot_id=spot.id,

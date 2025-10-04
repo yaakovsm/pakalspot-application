@@ -28,13 +28,16 @@ const ISRAEL_BOUNDS: google.maps.LatLngBoundsLiteral = {
 
 interface MapViewProps {
   className?: string;
+  hoveredSpot?: Spot | null;
 }
 
-const MapView: React.FC<MapViewProps> = ({ className }) => {
+const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
-  const infoWindow = useRef<google.maps.InfoWindow | null>(null);
+  // Removed infoWindow - no longer needed
   const markersRef = useRef<(google.maps.marker.AdvancedMarkerElement | google.maps.Marker)[]>([]);
+  const hoverMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
+  const selectedMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
   
   const { spots, selectedSpot, selectSpot, userLocation, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
@@ -81,7 +84,7 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
         });
 
         // Initialize info window
-        infoWindow.current = new google.maps.InfoWindow();
+        // Removed infoWindow initialization - no longer needed
       } catch (error) {
         console.error('Failed to initialize Google Maps:', error);
       }
@@ -168,46 +171,21 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
     markersRef.current = [];
 
     spots.forEach(spot => {
-      // Create a custom element for the spot marker
-      const spotElement = document.createElement('div');
-      spotElement.style.width = '24px';
-      spotElement.style.height = '24px';
-      spotElement.style.borderRadius = '50%';
-      spotElement.style.backgroundColor = '#2d7c3e';
-      spotElement.style.border = '2px solid #ffffff';
-      spotElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-      spotElement.style.cursor = 'pointer';
-      spotElement.title = spot.title;
-
-      // Use AdvancedMarkerElement if available, otherwise fall back to regular Marker
-      let marker;
-      if (google.maps.marker?.AdvancedMarkerElement) {
-        marker = new google.maps.marker.AdvancedMarkerElement({
-          position: { lat: spot.lat, lng: spot.lon },
-          map: map.current,
-          title: spot.title,
-          content: spotElement
-        });
-      } else {
-        // Fallback to regular Marker
-        marker = new google.maps.Marker({
-          position: { lat: spot.lat, lng: spot.lon },
-          map: map.current,
-          title: spot.title,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 12,
-            fillColor: '#2d7c3e',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2
-          }
-        });
-      }
+      // Use regular Marker with transparent logo for all cases
+      const marker = new google.maps.Marker({
+        position: { lat: spot.lat, lng: spot.lon },
+        map: map.current,
+        title: spot.title,
+        icon: {
+          url: '/PakalSpot_Transperent_logo.png',
+          scaledSize: new google.maps.Size(32, 32),
+          anchor: new google.maps.Point(16, 16)
+        }
+      });
 
       marker.addListener('click', () => {
         selectSpot(spot);
-        showSpotInfoWindow(spot, marker);
+        // Removed showSpotInfoWindow to eliminate map overlay card
       });
 
       markersRef.current.push(marker);
@@ -216,71 +194,114 @@ const MapView: React.FC<MapViewProps> = ({ className }) => {
 
   // Handle selected spot
   useEffect(() => {
-    if (!map.current || !selectedSpot) return;
+    if (!map.current) return;
 
-    map.current.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lon });
-    map.current.setZoom(15);
+    // Remove existing selected marker
+    if (selectedMarkerRef.current) {
+      if ('setMap' in selectedMarkerRef.current) {
+        selectedMarkerRef.current.setMap(null);
+      } else {
+        (selectedMarkerRef.current as any).map = null;
+      }
+      selectedMarkerRef.current = null;
+    }
+
+    if (selectedSpot) {
+      // Pan to selected spot
+      map.current.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lon });
+      map.current.setZoom(15);
+
+      // Create a special marker for the selected spot using the transparent logo
+      const selectedElement = document.createElement('div');
+      selectedElement.style.width = '40px';
+      selectedElement.style.height = '40px';
+      selectedElement.style.backgroundImage = 'url(/PakalSpot_Transperent_logo.png)';
+      selectedElement.style.backgroundSize = 'contain';
+      selectedElement.style.backgroundRepeat = 'no-repeat';
+      selectedElement.style.backgroundPosition = 'center';
+      selectedElement.style.cursor = 'pointer';
+      selectedElement.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
+      selectedElement.style.border = '3px solid #ffffff';
+      selectedElement.style.borderRadius = '50%';
+
+      let selectedMarker;
+      if (google.maps.marker?.AdvancedMarkerElement) {
+        selectedMarker = new google.maps.marker.AdvancedMarkerElement({
+          position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
+          map: map.current,
+          content: selectedElement
+        });
+      } else {
+        // Fallback to regular Marker with logo
+        selectedMarker = new google.maps.Marker({
+          position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
+          map: map.current,
+          icon: {
+            url: '/PakalSpot_Transperent_logo.png',
+            scaledSize: new google.maps.Size(40, 40),
+            anchor: new google.maps.Point(20, 20)
+          }
+        });
+      }
+
+      selectedMarkerRef.current = selectedMarker;
+    }
   }, [selectedSpot]);
 
-  const showSpotInfoWindow = (spot: Spot, marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker) => {
-    if (infoWindow.current) {
-      infoWindow.current.close();
+  // Handle hovered spot
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Remove existing hover marker
+    if (hoverMarkerRef.current) {
+      if ('setMap' in hoverMarkerRef.current) {
+        hoverMarkerRef.current.setMap(null);
+      } else {
+        (hoverMarkerRef.current as any).map = null;
+      }
+      hoverMarkerRef.current = null;
     }
 
-    const infoContent = document.createElement('div');
-    infoContent.innerHTML = `
-      <div class="spot-info p-0 max-w-sm">
-        <div class="relative">
-          ${spot.photos?.[0] ? `
-            <img src="${spot.photos[0].url}" alt="${spot.title}" class="w-full h-32 object-cover rounded-t-lg">
-          ` : `
-            <div class="w-full h-32 bg-gradient-card rounded-t-lg flex items-center justify-center">
-              <svg class="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-            </div>
-          `}
-        </div>
-        <div class="p-4">
-          <h3 class="font-semibold text-foreground mb-2">${spot.title}</h3>
-          <p class="text-muted-foreground text-sm mb-3 line-clamp-2">${spot.description}</p>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-sm text-muted-foreground">
-              <span class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                </svg>
-                ${spot.likeCount}
-              </span>
-              <span class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                ${spot.isFavorited ? 'Favorited' : 'Favorite'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    // Add new hover marker if hoveredSpot exists
+    if (hoveredSpot) {
+      // Create a grey circular marker for hover effect
+      const hoverElement = document.createElement('div');
+      hoverElement.style.width = '16px';
+      hoverElement.style.height = '16px';
+      hoverElement.style.borderRadius = '50%';
+      hoverElement.style.backgroundColor = '#6b7280'; // grey-500
+      hoverElement.style.border = '2px solid #ffffff';
+      hoverElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      hoverElement.style.cursor = 'pointer';
 
-    infoWindow.current = new google.maps.InfoWindow({
-      content: infoContent,
-      maxWidth: 320
-    });
+      let hoverMarker;
+      if (google.maps.marker?.AdvancedMarkerElement) {
+        hoverMarker = new google.maps.marker.AdvancedMarkerElement({
+          position: { lat: hoveredSpot.lat, lng: hoveredSpot.lon },
+          map: map.current,
+          content: hoverElement
+        });
+      } else {
+        // Fallback to regular Marker
+        hoverMarker = new google.maps.Marker({
+          position: { lat: hoveredSpot.lat, lng: hoveredSpot.lon },
+          map: map.current,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#6b7280',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+          }
+        });
+      }
 
-    // Handle both AdvancedMarkerElement and regular Marker
-    if ('anchor' in marker) {
-      // AdvancedMarkerElement
-      infoWindow.current.open({
-        anchor: marker,
-        map: map.current
-      });
-    } else {
-      // Regular Marker
-      infoWindow.current.open(map.current, marker);
+      hoverMarkerRef.current = hoverMarker;
     }
-  };
+  }, [hoveredSpot]);
+
+  // Removed showSpotInfoWindow function - no longer needed
 
   const handleFavoriteSpot = async (spotId: string, isFavorited: boolean) => {
     try {

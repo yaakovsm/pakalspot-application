@@ -3,7 +3,7 @@ import psycopg2
 from sqlalchemy import create_engine, text
 
 # Database connection
-DB_URL = os.getenv('DB_URL', 'postgresql://pakalspot_user:pakalspot_password@db:5432/pakalspot_db')
+DB_URL = 'postgresql://pakalspot_user:jcoffeebrew@db:5432/pakalspot_db'
 engine = create_engine(DB_URL)
 
 try:

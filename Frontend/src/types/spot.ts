@@ -26,7 +26,7 @@ export interface Spot {
   id: string;
   title: string;
   description: string;
-  type: SpotType;
+  spot_type: SpotType;
   lat: number;
   lon: number;
   region: IsraeliRegion;

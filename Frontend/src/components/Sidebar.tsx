@@ -14,6 +14,8 @@ import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   onAddSpot?: () => void;
+  onInfoClick?: () => void;
+  onInfoHover?: (spot: Spot | null) => void;
   className?: string;
 }
 
@@ -35,7 +37,7 @@ const distanceOptions = [
   { value: 100, label: 'all_israel' },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, className }) => {
   const { spots, filters, updateFilters, isLoading, selectSpot } = useSpots();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -47,6 +49,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
   const handleViewDetails = (spot: any) => {
     selectSpot(spot);
     navigate(`/spot/${spot.id}`);
+  };
+
+  const handleInfoClick = (spot: any) => {
+    selectSpot(spot);
+    onInfoClick?.();
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,10 +247,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, className }) => {
             </>
           )}
           {!isLoading && filteredSpots.map(spot => (
-            <div key={spot.id} onClick={() => selectSpot(spot)}>
+            <div key={spot.id}>
               <SpotCard 
                 spot={spot} 
                 onViewDetails={handleViewDetails}
+                onInfoClick={handleInfoClick}
+                onInfoHover={onInfoHover}
                 className="cursor-pointer hover:shadow-medium transition-smooth"
               />
             </div>

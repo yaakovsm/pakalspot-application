@@ -235,8 +235,8 @@ const SpotDetails: React.FC = () => {
                         {selectedSpot.title}
                       </h1>
                       <div className="flex items-center gap-2 mb-4">
-                        <Badge className={`${getTypeColor(selectedSpot.type)} text-white`}>
-                          {t(`spot_types.${selectedSpot.type}`)}
+                        <Badge className={`${getTypeColor(selectedSpot.spot_type)} text-white`}>
+                          {t(`spot_types.${selectedSpot.spot_type}`)}
                         </Badge>
                         <Badge variant="outline">
                           {t(`regions.${selectedSpot.region}`)}
