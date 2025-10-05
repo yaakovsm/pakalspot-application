@@ -1,7 +1,8 @@
 import axios, { AxiosResponse } from 'axios';
 import { AuthResponse, CreateSpotRequest, LoginRequest, RegisterRequest, Spot, User, LocationSearchResponse, GeocodeResult } from '../types/spot';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+// Hard-coded API configuration
+const API_BASE_URL = 'http://localhost:8000/api';
 
 // Create axios instance
 const api = axios.create({

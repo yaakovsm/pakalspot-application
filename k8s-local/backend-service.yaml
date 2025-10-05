@@ -4,11 +4,10 @@ metadata:
   name: backend
   namespace: pakalspot
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: backend
   ports:
     - port: 8000
       targetPort: 8000
-      nodePort: 30081
       protocol: TCP

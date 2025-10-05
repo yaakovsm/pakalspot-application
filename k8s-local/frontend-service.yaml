@@ -4,11 +4,10 @@ metadata:
   name: frontend
   namespace: pakalspot
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: frontend
   ports:
     - port: 5173
       targetPort: 5173
-      nodePort: 30080
       protocol: TCP

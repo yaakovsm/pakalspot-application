@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       port: 5173,
     },
-    allowedHosts: "all",
+    allowedHosts: ["all", "pakalspot.local"]
     disableHostCheck: true,
     cors: true,
   },
