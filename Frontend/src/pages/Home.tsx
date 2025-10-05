@@ -17,6 +17,8 @@ const Home: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showDetailSidebar, setShowDetailSidebar] = useState(false);
+  const [isClosingSidebar, setIsClosingSidebar] = useState(false);
+  const [isOpeningSidebar, setIsOpeningSidebar] = useState(false);
   const [hoveredSpot, setHoveredSpot] = useState<Spot | null>(null);
 
   useEffect(() => {
@@ -68,10 +70,19 @@ const Home: React.FC = () => {
 
   const handleInfoClick = () => {
     setShowDetailSidebar(true);
+    setIsOpeningSidebar(true);
+    // Reset opening state after animation completes
+    setTimeout(() => {
+      setIsOpeningSidebar(false);
+    }, 300);
   };
 
   const handleCloseDetailSidebar = () => {
-    setShowDetailSidebar(false);
+    setIsClosingSidebar(true);
+    setTimeout(() => {
+      setShowDetailSidebar(false);
+      setIsClosingSidebar(false);
+    }, 300); // Match the animation duration
   };
 
   const handleInfoHover = (spot: Spot | null) => {
@@ -139,6 +150,8 @@ const Home: React.FC = () => {
         <SpotDetailSidebar 
           spot={selectedSpot} 
           onClose={handleCloseDetailSidebar}
+          isClosing={isClosingSidebar}
+          isOpening={isOpeningSidebar}
         />
       )}
 

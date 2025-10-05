@@ -57,8 +57,8 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
             "spot_type": SpotType.spring,
             "region": Region.golan,
             "location_name": "בריכת משושים",
-            "latitude": 33.4167,
-            "longitude": 35.8500,
+            "latitude": 32.936512,
+            "longitude": 35.6998754,
             "photo": "IMG_5307.JPG"
         },
         {

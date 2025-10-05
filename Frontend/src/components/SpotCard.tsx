@@ -76,34 +76,34 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
       className={`cursor-pointer transition-smooth hover:shadow-medium group ${className}`}
       onClick={handleCardClick}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-start justify-between">
           {/* Left side - Spot info */}
-          <div className="flex-1 pr-4">
-            <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors mb-1">
-              {spot.title}
-            </h3>
-            
-            <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
-              {spot.description}
-            </p>
-            
-            {/* Distance and type */}
-            <div className="flex items-center gap-2 mb-2">
-              {spot.distance && (
-                <span className="text-xs text-muted-foreground">
-                  {spot.distance < 1 ? `${Math.round(spot.distance * 1000)}m away` : `${spot.distance.toFixed(1)}km away`}
-                </span>
-              )}
+          <div className="flex-1 pr-3">
+            {/* Badge and title on same line, aligned to right */}
+            <div className="flex items-center justify-end gap-2 mb-1">
               <Badge 
-                className={`text-xs ${getTypeColor(spot.spot_type)} text-white`}
+                className={`text-xs ${getTypeColor(spot.spot_type)} text-white mr-4`}
               >
                 {t(`spot_types.${spot.spot_type}`)}
               </Badge>
+              <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">
+                {spot.title}
+              </h3>
             </div>
             
-            {/* Meta info */}
+            <p className="text-muted-foreground text-sm mb-2 line-clamp-1">
+              {spot.description}
+            </p>
+            
+            {/* Distance and meta info */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {spot.distance && (
+                <span>
+                  {spot.distance < 1 ? `${Math.round(spot.distance * 1000)}m away` : `${spot.distance.toFixed(1)}km away`}
+                </span>
+              )}
+              {spot.distance && <span>•</span>}
               <span>{t('spots.by')} {spot.createdBy?.username || t('spots.unknown')}</span>
               <span>•</span>
               <span>{new Date(spot.createdAt).toLocaleDateString()}</span>

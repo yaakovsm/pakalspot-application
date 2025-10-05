@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -10,12 +10,26 @@ import { useTranslation } from 'react-i18next';
 interface SpotDetailSidebarProps {
   spot: Spot | null;
   onClose: () => void;
+  isClosing?: boolean;
+  isOpening?: boolean;
   className?: string;
 }
 
-const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, className }) => {
+const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, isClosing = false, isOpening = false, className }) => {
   const { favoriteSpot, unfavoriteSpot } = useSpots();
   const { t } = useTranslation();
+  const [isAnimating, setIsAnimating] = useState(isOpening);
+
+  useEffect(() => {
+    if (isOpening) {
+      // Start with closed state, then animate to open
+      setIsAnimating(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 50); // Small delay to ensure the initial state is rendered
+      return () => clearTimeout(timer);
+    }
+  }, [isOpening]);
 
   if (!spot) return null;
 
@@ -69,7 +83,19 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, cl
   };
 
   return (
-    <div className={`fixed inset-y-0 left-0 w-96 bg-background border-r border-border shadow-strong z-50 overflow-y-auto ${className}`}>
+    <div 
+      className={`fixed inset-y-0 left-0 w-96 bg-background border-r border-border shadow-strong z-50 overflow-y-auto transition-all duration-300 ${
+        isClosing 
+          ? 'opacity-0 scale-95 translate-x-[-10px]' 
+          : isAnimating
+          ? 'opacity-0 scale-95 translate-x-[-10px]'
+          : 'opacity-100 scale-100 translate-x-0'
+      } ${className}`}
+      style={{
+        transformOrigin: 'left center',
+        transitionTimingFunction: isClosing ? 'cubic-bezier(0.4, 0, 1, 1)' : 'cubic-bezier(0, 0, 0.2, 1)'
+      }}
+    >
       <div className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
