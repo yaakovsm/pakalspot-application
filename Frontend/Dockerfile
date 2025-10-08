@@ -7,7 +7,7 @@
     RUN bun run build
     
     # --- run stage ---
-    FROM nginx:1.27-alpine   # pin exact version instead of "alpine"
+    FROM nginx:1.27-alpine
     WORKDIR /usr/share/nginx/html
     COPY --from=build /app/dist ./
     RUN rm -f /etc/nginx/conf.d/default.conf
