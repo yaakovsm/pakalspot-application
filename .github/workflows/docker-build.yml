@@ -38,9 +38,7 @@ jobs:
         run: |
           docker compose -f docker-compose.yml build
           docker tag pakalspot-backend ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }}
-          docker tag pakalspot-backend ${DOCKER_USERNAME}/pakalspot-backend:dev-latest
           docker tag pakalspot-frontend ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }}
-          docker tag pakalspot-frontend ${DOCKER_USERNAME}/pakalspot-frontend:dev-latest
 
       - name: Run services with docker compose
         env:
@@ -151,10 +149,7 @@ jobs:
       - name: Push images to DockerHub
         run: |
           docker push ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }}
-          docker push ${DOCKER_USERNAME}/pakalspot-backend:dev-latest
-
           docker push ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }}
-          docker push ${DOCKER_USERNAME}/pakalspot-frontend:dev-latest
 
       - name: Save image digests
         run: |
@@ -165,16 +160,20 @@ jobs:
           docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }} > digest-frontend.txt
 
       - name: Create Kubernetes secrets
-        if: ${{ secrets.KUBECONFIG != '' }}
         run: |
-          # Create secrets for the cluster
-          kubectl create secret generic pakalspot-secrets \
-            --from-literal=MAPS_API_KEY="${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" \
-            --from-literal=S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}" \
-            --from-literal=S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}" \
-            --from-literal=SECRET_KEY="${{ secrets.SECRET_KEY }}" \
-            --from-literal=DB_URL="postgresql://pakalspot_user:jcoffeebrew@pakalspot-pakalspot-chart-postgres:5432/pakalspot_db" \
-            --dry-run=client -o yaml | kubectl apply -f -
+          # Create secrets for the cluster (only if KUBECONFIG is available)
+          if [ -n "$KUBECONFIG" ]; then
+            kubectl create secret generic pakalspot-secrets \
+              --from-literal=MAPS_API_KEY="${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" \
+              --from-literal=S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}" \
+              --from-literal=S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}" \
+              --from-literal=SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
+              --from-literal=DB_URL="postgresql://pakalspot_user:jcoffeebrew@pakalspot-pakalspot-chart-postgres:5432/pakalspot_db" \
+              --dry-run=client -o yaml | kubectl apply -f -
+            echo "✅ Kubernetes secrets created successfully"
+          else
+            echo "⚠️ KUBECONFIG not available, skipping Kubernetes secret creation"
+          fi
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
 
@@ -185,3 +184,9 @@ jobs:
           path: |
             digest-backend.txt
             digest-frontend.txt
+
+      - name: Output image information
+        run: |
+          echo "Backend image: yaakovsm/pakalspot-backend:dev-${{ env.SHORT_SHA }}"
+          echo "Frontend image: yaakovsm/pakalspot-frontend:dev-${{ env.SHORT_SHA }}"
+          echo "Immutable tags created: dev-${{ env.SHORT_SHA }}"

@@ -18,7 +18,7 @@ frontend:
   
   image:
     repository: yaakovsm/pakalspot-frontend
-    tag: dev-latest
+    tag: dev-848ae3a
     pullPolicy: IfNotPresent
   
   service:
@@ -66,7 +66,7 @@ backend:
   
   image:
     repository: yaakovsm/pakalspot-backend
-    tag: dev-latest
+    tag: dev-848ae3a
     pullPolicy: IfNotPresent
   
   service:

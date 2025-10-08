@@ -7,7 +7,7 @@ frontend:
   replicaCount: 1
   image:
     repository: yaakovsm/pakalspot-frontend
-    tag: dev-latest
+    tag: dev-848ae3a
     pullPolicy: Always
   service:
     targetPort: 80
@@ -24,7 +24,7 @@ backend:
   replicaCount: 1
   image:
     repository: yaakovsm/pakalspot-backend
-    tag: dev-latest
+    tag: dev-848ae3a
     pullPolicy: Always
   resources:
     limits:

@@ -80,8 +80,10 @@ kubectl port-forward -n pakalspot service/pakalspot-frontend 3000:80
 
 ## 🏷️ Image Tags
 
-- **Backend**: `<dockerhub-username>/pakalspot-backend:dev-latest`
-- **Frontend**: `<dockerhub-username>/pakalspot-frontend:dev-latest`
+- **Backend**: `<dockerhub-username>/pakalspot-backend:dev-{SHORT_SHA}`
+- **Frontend**: `<dockerhub-username>/pakalspot-frontend:dev-{SHORT_SHA}`
+
+**Note**: Each commit gets a unique, immutable tag. Update Helm values with the specific SHA when deploying.
 
 ## 🔐 Required GitHub Secrets
 

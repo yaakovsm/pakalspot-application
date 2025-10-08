@@ -56,14 +56,15 @@ The CI pipeline automatically:
 1. **Builds** both backend and frontend Docker images
 2. **Tags** images with:
    - `dev-${{ github.sha }}` (immutable, commit-specific)
-   - `dev-latest` (moving development tag)
 3. **Pushes** to Docker Hub
 4. **Creates** Kubernetes secrets in the cluster
 
 ### Image Tags
 
-- **Backend**: `<dockerhub-username>/pakalspot-backend:dev-latest`
-- **Frontend**: `<dockerhub-username>/pakalspot-frontend:dev-latest`
+- **Backend**: `<dockerhub-username>/pakalspot-backend:dev-{SHORT_SHA}`
+- **Frontend**: `<dockerhub-username>/pakalspot-frontend:dev-{SHORT_SHA}`
+
+**Note**: Each commit gets a unique, immutable tag based on the Git SHA.
 
 ## Kubernetes Deployment
 
