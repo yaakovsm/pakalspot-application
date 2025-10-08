@@ -15,5 +15,6 @@
     EXPOSE 80
     
     # Add healthcheck for K8s/Docker
-    HEALTHCHECK CMD wget -qO- http://localhost:80 || exit 1
+    HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+        CMD wget -qO- http://localhost:80 || exit 1
     

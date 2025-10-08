@@ -17,14 +17,14 @@ frontend:
   replicaCount: 1
   
   image:
-    repository: nginxinc/nginx-unprivileged
-    tag: v1.27.2
+    repository: yaakovsm/pakalspot-frontend
+    tag: dev-latest
     pullPolicy: IfNotPresent
   
   service:
     type: ClusterIP
     port: 80
-    targetPort: 8080
+    targetPort: 80
   
   resources:
     limits:
@@ -37,7 +37,7 @@ frontend:
   livenessProbe:
     httpGet:
       path: /
-      port: 8080
+      port: 80
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -46,7 +46,7 @@ frontend:
   readinessProbe:
     httpGet:
       path: /
-      port: 8080
+      port: 80
     initialDelaySeconds: 5
     periodSeconds: 5
     timeoutSeconds: 3
@@ -65,8 +65,8 @@ backend:
   replicaCount: 1
   
   image:
-    repository: ghcr.io/yaakovsm/pakalspot-backend
-    tag: v0.5.3-abc1234
+    repository: yaakovsm/pakalspot-backend
+    tag: dev-latest
     pullPolicy: IfNotPresent
   
   service:
@@ -106,10 +106,7 @@ backend:
     S3_BUCKET: "pakalspot-photos"
     DEBUG: "true"
     ENVIRONMENT: "development"
-  secrets:
-    S3_ACCESS_KEY_ID: ""
-    S3_SECRET_ACCESS_KEY: ""
-    S3_ENDPOINT: "https://s3.amazonaws.com"
+  # Secrets are now managed by CI/CD pipeline via pakalspot-secrets
   
   # Database migration and seeding
   initContainers:
@@ -190,13 +187,9 @@ database:
     fsGroup: 999
 
 # Secrets configuration
+# Backend secrets are now managed by CI/CD pipeline via pakalspot-secrets
+# Database secrets remain in this chart for local development
 secrets:
-  backend:
-    SECRET_KEY: "your-super-secret-key-here-change-in-production"
-    DB_PASSWORD: "jcoffeebrew"
-    S3_ACCESS_KEY: "AKIASU5665ZS3XYDVF4Y"
-    S3_SECRET_KEY: "l/taYFmfqqCCn5UO5OZTAqTx5GLzFVJ4Cn5aYsIh"
-  
   database:
     POSTGRES_USER: "pakalspot_user"
     POSTGRES_PASSWORD: "jcoffeebrew"
