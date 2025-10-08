@@ -4,7 +4,8 @@
 
 ```bash
 # One-command deployment
-./deploy-k8s.sh
+cd pakalspot-chart
+./deploy.sh development install
 ```
 
 ## 🔧 Manual Deployment Commands

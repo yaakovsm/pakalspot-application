@@ -50,7 +50,7 @@ KUBECONFIG=base64-encoded-kubeconfig
 
 ## CI/CD Pipeline
 
-### Build Workflow (`.github/workflows/build-dev.yaml`)
+### Build Workflow (`.github/workflows/docker-build.yml`)
 
 The CI pipeline automatically:
 1. **Builds** both backend and frontend Docker images
@@ -76,8 +76,9 @@ The CI pipeline automatically:
 ### Deploy to Kubernetes
 
 ```bash
-# Quick deployment
-./deploy-k8s.sh
+# Quick deployment using the existing script
+cd pakalspot-chart
+./deploy.sh development install
 
 # Manual deployment
 helm upgrade --install pakalspot ./pakalspot-chart \
@@ -243,11 +244,11 @@ kubectl get secret pakalspot-secrets -n pakalspot -o yaml
 ## File Changes Summary
 
 ### New Files
-- `.github/workflows/build-dev.yaml`: CI pipeline
-- `deploy-k8s.sh`: Kubernetes deployment script
 - `DEVOPS-SETUP.md`: This documentation
+- `DEPLOYMENT-QUICK-REFERENCE.md`: Quick command reference
 
 ### Modified Files
+- `.github/workflows/docker-build.yml`: Updated to use dev-latest tags and create K8s secrets
 - `Backend/Dockerfile`: Added health check and curl
 - `Frontend/Dockerfile`: Enhanced health check
 - `docker-compose.yml`: Added MAPS_API_KEY

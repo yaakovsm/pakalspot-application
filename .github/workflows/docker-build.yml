@@ -37,8 +37,10 @@ jobs:
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
         run: |
           docker compose -f docker-compose.yml build
-          docker tag pakalspot-backend ${DOCKER_USERNAME}/pakalspot-backend:latest
-          docker tag pakalspot-frontend ${DOCKER_USERNAME}/pakalspot-frontend:latest
+          docker tag pakalspot-backend ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }}
+          docker tag pakalspot-backend ${DOCKER_USERNAME}/pakalspot-backend:dev-latest
+          docker tag pakalspot-frontend ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }}
+          docker tag pakalspot-frontend ${DOCKER_USERNAME}/pakalspot-frontend:dev-latest
 
       - name: Run services with docker compose
         env:
@@ -146,24 +148,34 @@ jobs:
             echo "No frontend tags to delete"
           fi
 
-      - name: Tag and Push images to DockerHub
+      - name: Push images to DockerHub
         run: |
-          docker tag ${DOCKER_USERNAME}/pakalspot-backend:latest ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }}
-          docker tag ${DOCKER_USERNAME}/pakalspot-frontend:latest ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }}
+          docker push ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }}
+          docker push ${DOCKER_USERNAME}/pakalspot-backend:dev-latest
 
-          docker push ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }}
-          docker push ${DOCKER_USERNAME}/pakalspot-backend:latest
-
-          docker push ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }}
-          docker push ${DOCKER_USERNAME}/pakalspot-frontend:latest
+          docker push ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }}
+          docker push ${DOCKER_USERNAME}/pakalspot-frontend:dev-latest
 
       - name: Save image digests
         run: |
-          docker pull ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }}
-          docker pull ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }}
+          docker pull ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }}
+          docker pull ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }}
 
-          docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-backend:${{ env.SHORT_SHA }} > digest-backend.txt
-          docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-frontend:${{ env.SHORT_SHA }} > digest-frontend.txt
+          docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }} > digest-backend.txt
+          docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }} > digest-frontend.txt
+
+      - name: Create Kubernetes secrets
+        run: |
+          # Create secrets for the cluster
+          kubectl create secret generic pakalspot-secrets \
+            --from-literal=MAPS_API_KEY="${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" \
+            --from-literal=S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}" \
+            --from-literal=S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}" \
+            --from-literal=SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+            --from-literal=DB_URL="postgresql://pakalspot_user:jcoffeebrew@pakalspot-pakalspot-chart-postgres:5432/pakalspot_db" \
+            --dry-run=client -o yaml | kubectl apply -f -
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
 
       - name: Upload digest artifacts
         uses: actions/upload-artifact@v4
