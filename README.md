@@ -117,9 +117,28 @@ Use the deployment script for local testing:
 
 ### Verification
 
-Check deployment status:
+Use the automated verification script:
 ```bash
+# Run comprehensive smoke tests
+./scripts/verify.sh pakalspot
+
+# Or specify custom namespace and release name
+./scripts/verify.sh my-namespace my-release
+```
+
+Manual verification:
+```bash
+# Check deployment status
 kubectl -n pakalspot get pods,svc,ep
+
+# Check that no pods are using 'latest' tags
+kubectl get pods -n pakalspot -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].image}{"\n"}{end}'
+
+# Verify frontend is serving static files (no build logs)
+kubectl logs -n pakalspot deploy/pakalspot-pakalspot-chart-frontend --tail=10
+
+# Test backend health endpoint
+kubectl exec -n pakalspot deploy/pakalspot-pakalspot-chart-backend -- curl -f http://localhost:8000/api/health
 ```
 
 Access the application:
@@ -146,11 +165,16 @@ docker compose up
 
 ### Key Features
 
-- **Static Frontend**: Nginx serves pre-built React app (no runtime builds)
+- **Production-Ready Frontend**: nginx-unprivileged on port 8080, no runtime builds
 - **Runtime Environment**: Google Maps API key injected at runtime via ConfigMap
 - **Secure Backend**: S3 credentials managed via Kubernetes Secrets
+- **Versioned Images**: No 'latest' tags, Helm guardrails prevent deployment of unversioned images
+- **Unified Database**: Single DB_URL across all backend containers with proper secrets
+- **Security Hardened**: Non-root containers, privilege escalation disabled, resource limits
 - **Docker Compose Compatible**: Maintains compatibility with existing docker-compose setup
 - **Environment-driven**: API URLs use environment variables with safe fallbacks
+- **Clean Ingress**: Proper routing (/api → backend, / → frontend)
+- **Comprehensive Monitoring**: Health checks, readiness probes, and verification scripts
 
 ### Render Manifests
 ```bash

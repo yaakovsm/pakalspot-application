@@ -1,4 +1,5 @@
 {{- if .Values.backend.enabled }}
+{{ include "noLatest" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,7 +38,7 @@ spec:
             - bash
             - -lc
             - |
-              until pg_isready -h {{ include "pakalspot-chart.fullname" . }}-postgres -p 5432 -U {{ .Values.secrets.database.POSTGRES_USER }}; do
+              until pg_isready -h {{ include "pakalspot-chart.fullname" . }}-postgres -p 5432 -U {{ .Values.secrets.database.POSTGRES_USER }} -d {{ .Values.database.config.POSTGRES_DB }}; do
                 echo "waiting for database...";
                 sleep 2;
               done

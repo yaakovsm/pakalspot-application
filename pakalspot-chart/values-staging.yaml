@@ -6,7 +6,8 @@ app:
 frontend:
   replicaCount: 1
   image:
-    tag: "nginx"
+    repository: nginxinc/nginx-unprivileged
+    tag: "v1.27.2"
     pullPolicy: IfNotPresent
   resources:
     limits:
@@ -20,7 +21,8 @@ frontend:
 backend:
   replicaCount: 2
   image:
-    tag: "staging"
+    repository: ghcr.io/yaakovsm/pakalspot-backend
+    tag: "v0.5.3-staging-abc1234"
     pullPolicy: Always
   resources:
     limits:

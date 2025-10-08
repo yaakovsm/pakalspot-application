@@ -6,7 +6,8 @@ app:
 frontend:
   replicaCount: 2
   image:
-    tag: "nginx"  # Use nginx tag for prebuilt static assets
+    repository: nginxinc/nginx-unprivileged
+    tag: "v1.27.2"  # Use versioned tag for prebuilt static assets
     pullPolicy: IfNotPresent
   resources:
     limits:
@@ -20,7 +21,8 @@ frontend:
 backend:
   replicaCount: 3
   image:
-    tag: "v1.0.0"  # Use specific version tags in production
+    repository: ghcr.io/yaakovsm/pakalspot-backend
+    tag: "v1.0.0-abc1234"  # Use specific version tags in production
     pullPolicy: IfNotPresent
   resources:
     limits:
