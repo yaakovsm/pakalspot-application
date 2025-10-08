@@ -16,14 +16,14 @@ frontend:
   replicaCount: 1
   
   image:
-    repository: yaakovsm/pakalspot-frontend
-    tag: nginx
+    repository: nginxinc/nginx-unprivileged
+    tag: v1.27.2
     pullPolicy: IfNotPresent
   
   service:
     type: ClusterIP
     port: 80
-    targetPort: 80
+    targetPort: 8080
   
   resources:
     limits:
@@ -36,7 +36,7 @@ frontend:
   livenessProbe:
     httpGet:
       path: /
-      port: 80
+      port: 8080
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -45,7 +45,7 @@ frontend:
   readinessProbe:
     httpGet:
       path: /
-      port: 80
+      port: 8080
     initialDelaySeconds: 5
     periodSeconds: 5
     timeoutSeconds: 3
@@ -65,8 +65,8 @@ backend:
   
   image:
     repository: yaakovsm/pakalspot-backend
-    tag: latest
-    pullPolicy: Always
+    tag: v0.5.3-abc1234
+    pullPolicy: IfNotPresent
   
   service:
     type: ClusterIP
@@ -83,7 +83,7 @@ backend:
   
   livenessProbe:
     httpGet:
-      path: /
+      path: /api/health
       port: 8000
     initialDelaySeconds: 60
     periodSeconds: 10
@@ -92,7 +92,7 @@ backend:
   
   readinessProbe:
     httpGet:
-      path: /
+      path: /api/health
       port: 8000
     initialDelaySeconds: 30
     periodSeconds: 5
@@ -217,7 +217,9 @@ ingress:
           pathType: Prefix
           service: frontend
   
-  tls: []
+  tls:
+    enabled: false
+    secretName: pakalspot-tls
 
 # Service Account
 serviceAccount:

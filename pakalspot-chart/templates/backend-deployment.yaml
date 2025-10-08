@@ -53,8 +53,6 @@ spec:
           command: ["python", "-c"]
           args: ["from app.models import Base; from app.core.database import engine; Base.metadata.create_all(bind=engine); print('Database tables created successfully')"]
           env:
-            - name: DB_URL
-              value: "postgresql://{{ .Values.secrets.database.POSTGRES_USER }}:$(DB_PASSWORD)@{{ include "pakalspot-chart.fullname" . }}-postgres:5432/{{ .Values.database.config.POSTGRES_DB }}"
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
@@ -72,8 +70,6 @@ spec:
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           command: ["python", "/app/app/db/seed.py"]
           env:
-            - name: DB_URL
-              value: "postgresql://{{ .Values.secrets.database.POSTGRES_USER }}:$(DB_PASSWORD)@{{ include "pakalspot-chart.fullname" . }}-postgres:5432/{{ .Values.database.config.POSTGRES_DB }}"
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
@@ -96,8 +92,6 @@ spec:
               containerPort: {{ .Values.backend.service.targetPort }}
               protocol: TCP
           env:
-            - name: DB_URL
-              value: "postgresql://{{ .Values.secrets.database.POSTGRES_USER }}:$(DB_PASSWORD)@{{ include "pakalspot-chart.fullname" . }}-postgres:5432/{{ .Values.database.config.POSTGRES_DB }}"
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
