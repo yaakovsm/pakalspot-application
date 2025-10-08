@@ -84,6 +84,11 @@ jobs:
           echo "Testing backend endpoint..."
           curl --fail http://localhost:8000/docs || (echo "Backend did not respond properly" && exit 1)
 
+      - name: Wait for frontend to be ready
+        run: |
+          echo "Waiting for frontend..."
+          timeout 60 bash -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 2; done'
+        
       - name: Test frontend HTTP response
         run: |
           echo "Testing frontend endpoint..."
