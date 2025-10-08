@@ -85,7 +85,7 @@ docker run -p 5173:5173 -v $(pwd):/app pakalspot-frontend:dev
 docker build -t pakalspot-frontend:prod .
 
 # Run production container
-docker run -p 3000:80 pakalspot-frontend:prod
+docker run -p 80:80 pakalspot-frontend:prod
 
 # Or use docker-compose
 docker-compose up frontend

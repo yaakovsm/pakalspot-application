@@ -22,6 +22,6 @@ spec:
           curl -f http://{{ include "pakalspot-chart.fullname" . }}-backend:8000/api/health && echo "Backend health: OK" || echo "Backend health: FAILED"
           
           echo "Testing frontend health..."
-          curl -f http://{{ include "pakalspot-chart.fullname" . }}-frontend:5173/ && echo "Frontend health: OK" || echo "Frontend health: FAILED"
+          curl -f http://{{ include "pakalspot-chart.fullname" . }}-frontend:80/ && echo "Frontend health: OK" || echo "Frontend health: FAILED"
           
           echo "All health checks completed!"

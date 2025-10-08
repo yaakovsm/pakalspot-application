@@ -130,6 +130,20 @@ kubectl -n pakalspot port-forward svc/pakalspot-pakalspot-chart-frontend 8080:80
 # Open browser to http://localhost:8080
 ```
 
+### Local Development with Docker Compose
+
+For local development, the frontend runs on port 3000 to avoid conflicts:
+
+```bash
+# Start all services
+docker compose up
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# Database: localhost:5432
+```
+
 ### Key Features
 
 - **Static Frontend**: Nginx serves pre-built React app (no runtime builds)

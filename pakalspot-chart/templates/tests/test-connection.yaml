@@ -25,6 +25,6 @@ spec:
           nc -z {{ include "pakalspot-chart.fullname" . }}-backend 8000 && echo "Backend service: OK" || echo "Backend service: FAILED"
           
           echo "Testing frontend service..."
-          nc -z {{ include "pakalspot-chart.fullname" . }}-frontend 5173 && echo "Frontend service: OK" || echo "Frontend service: FAILED"
+          nc -z {{ include "pakalspot-chart.fullname" . }}-frontend 80 && echo "Frontend service: OK" || echo "Frontend service: FAILED"
           
           echo "All tests completed!"

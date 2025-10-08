@@ -87,7 +87,7 @@ jobs:
       - name: Test frontend HTTP response
         run: |
           echo "Testing frontend endpoint..."
-          curl --fail http://localhost:5173 || (echo "Frontend did not respond properly" && exit 1)
+          curl --fail http://localhost:3000 || (echo "Frontend did not respond properly" && exit 1)
 
       - name: Shut down containers
         env:
