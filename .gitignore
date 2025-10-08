@@ -25,3 +25,7 @@ dist/
 # Media
 Media/*
 !Media/.gitkeep
+
+# ignore archives
+*.zip
+project.zip
