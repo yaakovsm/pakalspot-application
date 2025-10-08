@@ -84,7 +84,7 @@ backend:
   
   livenessProbe:
     httpGet:
-      path: /api/health
+      path: /docs
       port: 8000
     initialDelaySeconds: 60
     periodSeconds: 10
@@ -93,7 +93,7 @@ backend:
   
   readinessProbe:
     httpGet:
-      path: /api/health
+      path: /docs
       port: 8000
     initialDelaySeconds: 30
     periodSeconds: 5

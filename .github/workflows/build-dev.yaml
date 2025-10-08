@@ -1,0 +1,75 @@
+name: Build and Push Development Images
+
+on:
+  push:
+    branches: [dev]
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "FULL_SHA=${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          file: ./Backend/Dockerfile
+          push: true
+          tags: |
+            yaakovsm/pakalspot-backend:dev-${{ github.sha }}
+            yaakovsm/pakalspot-backend:dev-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Frontend
+          file: ./Frontend/Dockerfile
+          push: true
+          tags: |
+            yaakovsm/pakalspot-frontend:dev-${{ github.sha }}
+            yaakovsm/pakalspot-frontend:dev-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create Kubernetes secrets
+        run: |
+          # Create secrets for the cluster
+          kubectl create secret generic pakalspot-secrets \
+            --from-literal=MAPS_API_KEY="${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" \
+            --from-literal=S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}" \
+            --from-literal=S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}" \
+            --from-literal=SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
+            --from-literal=DB_URL="postgresql://pakalspot_user:jcoffeebrew@pakalspot-pakalspot-chart-postgres:5432/pakalspot_db" \
+            --dry-run=client -o yaml | kubectl apply -f -
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
+      - name: Output image information
+        run: |
+          echo "Backend image: yaakovsm/pakalspot-backend:dev-${{ github.sha }}"
+          echo "Frontend image: yaakovsm/pakalspot-frontend:dev-${{ github.sha }}"
+          echo "Latest dev tags updated: dev-latest"

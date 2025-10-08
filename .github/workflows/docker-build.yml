@@ -165,6 +165,7 @@ jobs:
           docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }} > digest-frontend.txt
 
       - name: Create Kubernetes secrets
+        if: ${{ secrets.KUBECONFIG != '' }}
         run: |
           # Create secrets for the cluster
           kubectl create secret generic pakalspot-secrets \
