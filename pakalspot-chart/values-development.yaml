@@ -18,6 +18,12 @@ frontend:
     requests:
       cpu: 100m
       memory: 128Mi
+  env:
+    VITE_HOST: "0.0.0.0"
+    VITE_ALLOWED_HOSTS: "all"
+    VITE_API_URL: "/api"
+  envRuntime:
+    GOOGLE_MAPS_API_KEY: "AIzaSyCwCjeTEmRel_nG1MGsC5sacEFGuipEs8k"
 
 # Backend configuration for development
 backend:
@@ -58,6 +64,9 @@ ingress:
     - host: pakalspot.local
       paths:
         - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /media
           pathType: Prefix
           service: backend
         - path: /

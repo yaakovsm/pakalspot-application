@@ -207,6 +207,9 @@ ingress:
         - path: /api
           pathType: Prefix
           service: backend
+        - path: /media
+          pathType: Prefix
+          service: backend
         - path: /
           pathType: Prefix
           service: frontend
