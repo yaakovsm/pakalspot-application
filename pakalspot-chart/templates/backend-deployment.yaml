@@ -1,0 +1,136 @@
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pakalspot-chart.fullname" . }}-backend
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pakalspot-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        {{- include "pakalspot-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backend
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pakalspot-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.backend.initContainers.dbMigrate.enabled }}
+      initContainers:
+        - name: wait-for-db
+          image: postgres:16
+          command:
+            - bash
+            - -lc
+            - |
+              until pg_isready -h {{ include "pakalspot-chart.fullname" . }}-postgres -p 5432 -U {{ .Values.secrets.database.POSTGRES_USER }}; do
+                echo "waiting for database...";
+                sleep 2;
+              done
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+                  key: POSTGRES_PASSWORD
+        - name: db-migrate
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          command: ["python", "-c"]
+          args: ["from app.models import Base; from app.core.database import engine; Base.metadata.create_all(bind=engine); print('Database tables created successfully')"]
+          env:
+            - name: DB_URL
+              value: "postgresql://{{ .Values.secrets.database.POSTGRES_USER }}:$(DB_PASSWORD)@{{ include "pakalspot-chart.fullname" . }}-postgres:5432/{{ .Values.database.config.POSTGRES_DB }}"
+            {{- range $key, $value := .Values.backend.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ include "pakalspot-chart.fullname" . }}-backend-secrets
+            - secretRef:
+                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- if .Values.backend.initContainers.dbSeed.enabled }}
+        - name: db-seed
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          command: ["python", "/app/app/db/seed.py"]
+          env:
+            - name: DB_URL
+              value: "postgresql://{{ .Values.secrets.database.POSTGRES_USER }}:$(DB_PASSWORD)@{{ include "pakalspot-chart.fullname" . }}-postgres:5432/{{ .Values.database.config.POSTGRES_DB }}"
+            {{- range $key, $value := .Values.backend.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ include "pakalspot-chart.fullname" . }}-backend-secrets
+            - secretRef:
+                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: DB_URL
+              value: "postgresql://{{ .Values.secrets.database.POSTGRES_USER }}:$(DB_PASSWORD)@{{ include "pakalspot-chart.fullname" . }}-postgres:5432/{{ .Values.database.config.POSTGRES_DB }}"
+            {{- range $key, $value := .Values.backend.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ include "pakalspot-chart.fullname" . }}-backend-secrets
+            - secretRef:
+                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+          {{- with .Values.backend.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backend.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backend.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

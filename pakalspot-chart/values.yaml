@@ -1,0 +1,276 @@
+# Global configuration
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Application configuration
+app:
+  name: pakalspot
+  environment: development
+  namespace: pakalspot
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: yaakovsm/pakalspot-frontend
+    tag: nginx
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  env:
+    VITE_HOST: "0.0.0.0"
+    VITE_ALLOWED_HOSTS: "all"
+    VITE_API_URL: "/api"
+  envRuntime:
+    GOOGLE_MAPS_API_KEY: ""
+
+# Backend configuration
+backend:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: yaakovsm/pakalspot-backend
+    tag: latest
+    pullPolicy: Always
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 8000
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  env:
+    JWT_EXPIRY: "43200"
+    API_PREFIX: "/api"
+    S3_BUCKET: "pakalspot-photos"
+    DEBUG: "true"
+    ENVIRONMENT: "development"
+  secrets:
+    S3_ACCESS_KEY_ID: ""
+    S3_SECRET_ACCESS_KEY: ""
+    S3_ENDPOINT: "https://s3.amazonaws.com"
+  
+  # Database migration and seeding
+  initContainers:
+    dbMigrate:
+      enabled: true
+      command: ["python", "-c", "from app.models import Base; from app.core.database import engine; Base.metadata.create_all(bind=engine); print('Database tables created successfully')"]
+    
+    dbSeed:
+      enabled: true
+      command: ["python", "/app/app/db/seed.py"]
+
+# Database configuration (PostgreSQL with PostGIS)
+database:
+  enabled: true
+  type: postgresql
+  
+  # Use StatefulSet for database
+  statefulSet:
+    enabled: true
+    replicaCount: 1
+  
+  image:
+    repository: postgis/postgis
+    tag: "15-3.3"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 5432
+    targetPort: 5432
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  
+  livenessProbe:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  # Persistent storage
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+  
+  # Database configuration
+  config:
+    POSTGRES_DB: "pakalspot_db"
+    POSTGRES_PORT: "5432"
+  
+  # Security context for database
+  securityContext:
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+
+# Secrets configuration
+secrets:
+  backend:
+    SECRET_KEY: "your-super-secret-key-here-change-in-production"
+    DB_PASSWORD: "jcoffeebrew"
+    S3_ACCESS_KEY: "AKIASU5665ZS3XYDVF4Y"
+    S3_SECRET_KEY: "l/taYFmfqqCCn5UO5OZTAqTx5GLzFVJ4Cn5aYsIh"
+  
+  database:
+    POSTGRES_USER: "pakalspot_user"
+    POSTGRES_PASSWORD: "jcoffeebrew"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  
+  hosts:
+    - host: pakalspot.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+  
+  tls: []
+
+# Service Account
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Container Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+# Node selection
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Network Policies
+networkPolicy:
+  enabled: false
+  ingress: []
+  egress: []
+
+# Monitoring
+monitoring:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+  

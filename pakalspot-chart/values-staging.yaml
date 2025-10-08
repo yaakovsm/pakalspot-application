@@ -1,0 +1,61 @@
+# Staging environment values
+app:
+  environment: staging
+
+# Frontend configuration for staging
+frontend:
+  replicaCount: 1
+  image:
+    tag: "nginx"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 300m
+      memory: 384Mi
+    requests:
+      cpu: 150m
+      memory: 192Mi
+
+# Backend configuration for staging
+backend:
+  replicaCount: 2
+  image:
+    tag: "staging"
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 750m
+      memory: 768Mi
+    requests:
+      cpu: 375m
+      memory: 384Mi
+  env:
+    DEBUG: "true"
+    ENVIRONMENT: "staging"
+
+# Database configuration for staging
+database:
+  statefulSet:
+    replicaCount: 1
+  resources:
+    limits:
+      cpu: 750m
+      memory: 1.5Gi
+    requests:
+      cpu: 375m
+      memory: 768Mi
+  persistence:
+    size: 20Gi
+
+# Ingress configuration for staging
+ingress:
+  enabled: true
+  hosts:
+    - host: staging.pakalspot.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend

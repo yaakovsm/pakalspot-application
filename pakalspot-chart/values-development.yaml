@@ -1,0 +1,61 @@
+# Development environment values
+app:
+  environment: development
+
+# Frontend configuration for development
+frontend:
+  replicaCount: 1
+  image:
+    tag: nginx
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Backend configuration for development
+backend:
+  replicaCount: 1
+  image:
+    tag: latest
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    DEBUG: "true"
+    ENVIRONMENT: "development"
+
+# Database configuration for development
+database:
+  statefulSet:
+    replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  persistence:
+    size: 10Gi
+
+# Ingress configuration for development
+ingress:
+  enabled: true
+  hosts:
+    - host: pakalspot.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend

@@ -1,10 +1,10 @@
 import os
 import psycopg2
 from sqlalchemy import create_engine, text
+from app.core.settings import settings
 
 # Database connection
-DB_URL = 'postgresql://pakalspot_user:jcoffeebrew@db:5432/pakalspot_db'
-engine = create_engine(DB_URL)
+engine = create_engine(settings.DB_URL)
 
 try:
     with engine.connect() as conn:

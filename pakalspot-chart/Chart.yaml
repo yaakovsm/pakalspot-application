@@ -1,0 +1,36 @@
+apiVersion: v2
+name: pakalspot-chart
+description: A Helm chart for Pakalspot application stack (Frontend, Backend, PostgreSQL)
+
+# A chart can be either an 'application' or a 'library' chart.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+version: 1.0.0
+
+# This is the version number of the application being deployed.
+appVersion: "1.0.0"
+
+# Chart metadata
+home: https://github.com/yaakovsm/pakalspot
+sources:
+  - https://github.com/yaakovsm/pakalspot
+maintainers:
+  - name: Yaakov Sm
+    email: yaakovsm@example.com
+keywords:
+  - pakalspot
+  - fullstack
+  - postgresql
+  - fastapi
+  - react
+  - vite
+
+# Dependencies (if any)
+dependencies: []
+
+# Annotations
+annotations:
+  category: Application
+  licenses: MIT
