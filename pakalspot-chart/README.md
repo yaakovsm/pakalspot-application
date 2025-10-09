@@ -26,7 +26,7 @@ This Helm chart deploys the Pakalspot application stack on Kubernetes, including
 
 1. **Clone and navigate to the chart directory**:
    ```bash
-   cd pakalspot-chart
+   cd ../pakalspot-chart
    ```
 
 2. **Make the deployment script executable**:

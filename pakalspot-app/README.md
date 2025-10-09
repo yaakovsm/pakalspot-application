@@ -19,7 +19,7 @@ docker compose exec backend python app/db/seed.py
 ### Kubernetes Deployment
 ```bash
 # Deploy to Kubernetes
-cd pakalspot-chart
+cd ../pakalspot-chart
 ./deploy.sh development install
 ```
 
@@ -117,9 +117,9 @@ Use the deployment script for local testing:
 
 2. **Deploy with Helm:**
    ```bash
-   helm upgrade --install pakalspot ./pakalspot-chart \
+   helm upgrade --install pakalspot ../pakalspot-chart \
      -n pakalspot --create-namespace \
-     -f pakalspot-chart/values.yaml \
+     -f ../pakalspot-chart/values.yaml \
      --set frontend.image.repository=your-registry/pakalspot-frontend \
      --set frontend.image.tag=nginx \
      --set backend.image.repository=your-registry/pakalspot-backend \
@@ -193,15 +193,15 @@ docker compose up
 
 ### Render Manifests
 ```bash
-helm template pakalspot ./pakalspot-chart -f pakalspot-chart/values.yaml | head
+helm template pakalspot ../pakalspot-chart -f ../pakalspot-chart/values.yaml | head
 ```
 
 ### Deploy/Upgrade
 ```bash
 # Deploy to development
-helm upgrade --install pakalspot ./pakalspot-chart \
+helm upgrade --install pakalspot ../pakalspot-chart \
   -n pakalspot --create-namespace \
-  -f pakalspot-chart/values-development.yaml
+  -f ../pakalspot-chart/values-development.yaml
 
 # Check pods/services
 kubectl get pods,svc -n pakalspot

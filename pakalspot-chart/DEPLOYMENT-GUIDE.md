@@ -94,8 +94,8 @@ helm version
 
 ### Quick Start
 ```bash
-# Navigate to chart directory
-cd pakalspot-chart
+# Navigate to chart directory (from pakalspot-app)
+cd ../pakalspot-chart
 
 # Make scripts executable
 chmod +x deploy.sh validate-chart.sh cleanup-templates.sh
@@ -286,7 +286,7 @@ Your Helm chart is now production-ready with:
 
 You can now deploy your application using:
 ```bash
-cd pakalspot-chart
+cd ../pakalspot-chart
 chmod +x *.sh
 ./validate-chart.sh
 ./deploy.sh development install

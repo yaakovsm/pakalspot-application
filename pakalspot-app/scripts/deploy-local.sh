@@ -28,9 +28,9 @@ cd ..
 
 # Deploy with Helm
 echo "Deploying with Helm..."
-helm upgrade --install pakalspot ./pakalspot-chart \
+helm upgrade --install pakalspot ../pakalspot-chart \
   -n pakalspot --create-namespace \
-  -f pakalspot-chart/values.yaml \
+  -f ../pakalspot-chart/values.yaml \
   --set frontend.image.repository=$REGISTRY/pakalspot-frontend \
   --set frontend.image.tag=$TAG \
   --set backend.image.repository=$REGISTRY/pakalspot-backend \

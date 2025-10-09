@@ -14,8 +14,6 @@
 - Comprehensive testing scripts
 
 ### 📁 **New Files Created**
-- `values-secure.yaml` - Secure production template
-- `security-hardening.sh` - Security validation script
 - `test-deployment.sh` - Comprehensive testing
 - Network policies and resource quotas
 
@@ -23,13 +21,14 @@
 
 ### Deploy Securely
 ```bash
-cd pakalspot-chart
+cd ../pakalspot-chart
 ./deploy.sh development install
 ```
 
 ### Run Security Check
 ```bash
-./security-hardening.sh
+# Security is now built into the Helm chart templates
+# No additional security script needed
 ```
 
 ### Test Everything
@@ -52,7 +51,6 @@ cd pakalspot-chart
 ## Key Files to Study
 - `templates/frontend-deployment.yaml` - Security contexts
 - `templates/network-policy.yaml` - Network security
-- `values-secure.yaml` - Production configuration
-- `security-hardening.sh` - Security validation
+- Environment-specific values files in GitOps repository
 
 Your project is now production-ready with proper security, resource management, and testing! 🚀
