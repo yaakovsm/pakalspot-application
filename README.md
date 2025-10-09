@@ -1,12 +1,27 @@
 # PakalSpot
 
-A FastAPI + SQLAlchemy + Alembic + PostgreSQL project for discovering coffee spots in Israel.
+A FastAPI + React + PostgreSQL project for discovering coffee spots in Israel, with production-ready Kubernetes deployment.
 
-## Project Structure
+## Quick Start
 
-- `Backend/` - FastAPI backend with PostgreSQL database
-- `Frontend/` - React frontend application
-- `k8s-local/` - Kubernetes deployment configurations
+### Local Development
+```bash
+# Start all services
+docker compose up -d
+
+# Run database migrations
+docker compose exec backend alembic upgrade head
+
+# Seed the database
+docker compose exec backend python app/db/seed.py
+```
+
+### Kubernetes Deployment
+```bash
+# Deploy to Kubernetes
+cd pakalspot-chart
+./deploy.sh development install
+```
 
 ## Database Seeding
 

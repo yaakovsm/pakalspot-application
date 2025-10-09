@@ -1,0 +1,225 @@
+# Secure production values - removes hardcoded secrets
+# This file should be used with external secret management
+
+app:
+  name: pakalspot
+  environment: production
+  namespace: pakalspot
+
+# Frontend configuration for production
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: ghcr.io/yaakovsm/pakalspot-frontend
+    tag: "v1.0.0"  # Use semantic versioning
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    VITE_HOST: "0.0.0.0"
+    VITE_ALLOWED_HOSTS: "pakalspot.com"
+    VITE_API_URL: "/api"
+  # Runtime secrets managed externally
+  envRuntime:
+    GOOGLE_MAPS_API_KEY: ""  # Will be injected via external secrets
+
+# Backend configuration for production
+backend:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: ghcr.io/yaakovsm/pakalspot-backend
+    tag: "v1.0.0"  # Use semantic versioning
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    DEBUG: "false"
+    ENVIRONMENT: "production"
+    API_PREFIX: "/api"
+    JWT_EXPIRY: "1440"  # 24 hours for production
+    S3_BUCKET: "pakalspot-photos"
+  # All secrets managed externally
+  secrets:
+    SECRET_KEY: ""  # External secret
+    S3_ACCESS_KEY: ""  # External secret
+    S3_SECRET_KEY: ""  # External secret
+    S3_ENDPOINT: ""  # External secret
+    DB_URL: ""  # External secret
+
+# Database configuration for production
+database:
+  enabled: true
+  type: postgresql
+  statefulSet:
+    enabled: true
+    replicaCount: 1
+  image:
+    repository: postgis/postgis
+    tag: "15-3.3"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: "fast-ssd"
+    accessMode: ReadWriteOnce
+  config:
+    POSTGRES_DB: "pakalspot_db"
+    POSTGRES_PORT: "5432"
+  # Database secrets managed externally
+  secrets:
+    POSTGRES_USER: ""  # External secret
+    POSTGRES_PASSWORD: ""  # External secret
+
+# Ingress configuration for production
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: pakalspot.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /media
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+  tls:
+    enabled: true
+    secretName: pakalspot-tls
+    hosts:
+      - pakalspot.com
+
+# Enhanced security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+# Network policies for security
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 443
+
+# Resource quotas
+resourceQuotas:
+  enabled: true
+  limits:
+    requests.cpu: "4"
+    requests.memory: "8Gi"
+    limits.cpu: "8"
+    limits.memory: "16Gi"
+    persistentvolumeclaims: "10"
+
+# Autoscaling for production
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Monitoring (to be implemented later by student)
+monitoring:
+  enabled: false
+
+# Backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: "7d"
+  storage:
+    size: "10Gi"
+    storageClass: "standard"
+
+# Service Account with RBAC
+serviceAccount:
+  create: true
+  automount: true
+  annotations:
+    iam.gke.io/gcp-service-account: pakalspot@project.iam.gserviceaccount.com
+  name: "pakalspot-service-account"
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Node selection and affinity
+nodeSelector:
+  kubernetes.io/os: linux
+  node-role.kubernetes.io/worker: ""
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values: [backend, frontend]
+          topologyKey: kubernetes.io/hostname
+
+# Tolerations for dedicated nodes
+tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "pakalspot"
+    effect: "NoSchedule"

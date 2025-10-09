@@ -113,8 +113,9 @@ deploy_chart() {
                 --timeout 10m
             ;;
         dry-run)
-            helm upgrade $RELEASE_NAME $CHART_PATH \
+            helm install $RELEASE_NAME $CHART_PATH \
                 --namespace pakalspot \
+                --create-namespace \
                 --values $values_file \
                 --dry-run \
                 --debug

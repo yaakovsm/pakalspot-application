@@ -265,11 +265,7 @@ networkPolicy:
   ingress: []
   egress: []
 
-# Monitoring
+# Monitoring (to be implemented later by student)
 monitoring:
   enabled: false
-  serviceMonitor:
-    enabled: false
-    interval: 30s
-    scrapeTimeout: 10s
   

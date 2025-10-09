@@ -63,9 +63,10 @@ ingress:
           pathType: Prefix
           service: frontend
   tls:
-    - secretName: pakalspot-tls
-      hosts:
-        - pakalspot.com
+    enabled: true
+    secretName: pakalspot-tls
+    hosts:
+      - pakalspot.com
 
 # Security enhancements for production
 podSecurityContext:

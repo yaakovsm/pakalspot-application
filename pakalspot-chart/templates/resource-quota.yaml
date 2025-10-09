@@ -1,0 +1,11 @@
+{{- if .Values.resourceQuotas.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ include "pakalspot-chart.fullname" . }}-resource-quota
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+spec:
+  hard:
+    {{- toYaml .Values.resourceQuotas.limits | nindent 4 }}
+{{- end }}
