@@ -57,7 +57,7 @@ frontend:
     VITE_ALLOWED_HOSTS: "all"
     VITE_API_URL: "/api"
   envRuntime:
-    GOOGLE_MAPS_API_KEY: "AIzaSyCwCjeTEmRel_nG1MGsC5sacEFGuipEs8k"
+    GOOGLE_MAPS_API_KEY: ""
 
 # Backend configuration
 backend:
@@ -250,20 +250,6 @@ tolerations: []
 
 # Affinity rules
 affinity: {}
-
-# Autoscaling
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 80
-
-# Network Policies
-networkPolicy:
-  enabled: false
-  ingress: []
-  egress: []
 
 # Monitoring (to be implemented later by student)
 monitoring:
