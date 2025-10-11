@@ -82,7 +82,7 @@ Once the backend is running, you can access the interactive API documentation at
 Set the following environment variables for deployment:
 
 ```bash
-export GOOGLE_MAPS_API_KEY="your_google_maps_api_key"
+export VITE_GOOGLE_MAPS_API_KEY="your_google_maps_api_key"
 export S3_ACCESS_KEY_ID="your_s3_access_key"
 export S3_SECRET_ACCESS_KEY="your_s3_secret_key"
 export S3_ENDPOINT="https://s3.amazonaws.com" 
@@ -123,7 +123,7 @@ Use the deployment script for local testing:
      --set frontend.image.tag=nginx \
      --set backend.image.repository=your-registry/pakalspot-backend \
      --set backend.image.tag=latest \
-     --set frontend.envRuntime.GOOGLE_MAPS_API_KEY="$GOOGLE_MAPS_API_KEY" \
+     --set frontend.envRuntime.VITE_GOOGLE_MAPS_API_KEY="$VITE_GOOGLE_MAPS_API_KEY" \
      --set backend.secrets.S3_ACCESS_KEY_ID="$S3_ACCESS_KEY_ID" \
      --set backend.secrets.S3_SECRET_ACCESS_KEY="$S3_SECRET_ACCESS_KEY" \
      --set backend.secrets.S3_ENDPOINT="$S3_ENDPOINT"

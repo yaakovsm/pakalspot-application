@@ -13,7 +13,7 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
 import googleMapsLoader from '../utils/googleMapsLoader';
-import { GOOGLE_MAPS_API_KEY } from '../config/env';
+import { VITE_GOOGLE_MAPS_API_KEY } from '../config/env';
 
 // Israel map configuration
 const ISRAEL_CENTER: google.maps.LatLngLiteral = { lat: 31.3, lng: 34.8 };
@@ -50,9 +50,9 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
     const initMap = async () => {
       try {
         // Load Google Maps API with proper configuration
-        const apiKey = GOOGLE_MAPS_API_KEY;
+        const apiKey = VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
-          console.error('Google Maps API key is not configured. Please set GOOGLE_MAPS_API_KEY in your environment variables.');
+          console.error('Google Maps API key is not configured. Please set VITE_GOOGLE_MAPS_API_KEY in your environment variables.');
           return;
         }
 

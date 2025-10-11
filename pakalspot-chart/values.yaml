@@ -18,7 +18,7 @@ frontend:
   
   image:
     repository: yaakovsm/pakalspot-frontend
-    tag: dev-71bfaff
+    tag: dev-a3a9eb8
     pullPolicy: IfNotPresent
   
   service:
@@ -57,7 +57,7 @@ frontend:
     VITE_ALLOWED_HOSTS: "all"
     VITE_API_URL: "/api"
   envRuntime:
-    GOOGLE_MAPS_API_KEY: ""
+    VITE_GOOGLE_MAPS_API_KEY: ""
 
 # Backend configuration
 backend:
@@ -66,7 +66,7 @@ backend:
   
   image:
     repository: yaakovsm/pakalspot-backend
-    tag: dev-71bfaff
+    tag: dev-a3a9eb8
     pullPolicy: IfNotPresent
   
   service:

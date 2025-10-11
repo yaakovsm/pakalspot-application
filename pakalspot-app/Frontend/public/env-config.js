@@ -1,3 +1,3 @@
 window.__ENV = {
-  GOOGLE_MAPS_API_KEY: ""
+  VITE_GOOGLE_MAPS_API_KEY: ""
 };
