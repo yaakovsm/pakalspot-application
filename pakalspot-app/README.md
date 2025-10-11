@@ -85,8 +85,7 @@ Set the following environment variables for deployment:
 export GOOGLE_MAPS_API_KEY="your_google_maps_api_key"
 export S3_ACCESS_KEY_ID="your_s3_access_key"
 export S3_SECRET_ACCESS_KEY="your_s3_secret_key"
-export S3_ENDPOINT="https://s3.amazonaws.com"  # or your S3-compatible endpoint
-```
+export S3_ENDPOINT="https://s3.amazonaws.com" 
 
 ### Quick Deployment
 
