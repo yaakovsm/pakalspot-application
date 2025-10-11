@@ -123,19 +123,23 @@ jobs:
         run: |
           DEPLOY_ENV=${{ steps.env.outputs.deploy_env }}
           echo "Cloning GitOps repo (branch: $GITOPS_BRANCH)..."
-          git clone https://$GITHUB_TOKEN@github.com/${GITOPS_REPO}
+          git clone https://github.com/${GITOPS_REPO}
           cd pakalspot-gitops
           git checkout $GITOPS_BRANCH
           cd environments/$DEPLOY_ENV
-
+      
           echo "Updating $DEPLOY_ENV values.yaml with tag $IMAGE_TAG..."
           yq -iy ".frontend.image.tag = \"$IMAGE_TAG\"" values.yaml
           yq -iy ".backend.image.tag = \"$IMAGE_TAG\"" values.yaml
-
+      
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          git config credential.helper store
+          echo "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
+      
           git add values.yaml
           git commit -m "[$DEPLOY_ENV] Update image tag to $IMAGE_TAG [skip ci]" || echo "No changes to commit"
           git push origin $GITOPS_BRANCH
-
+      
           echo "GitOps repo updated successfully for $DEPLOY_ENV with tag $IMAGE_TAG"
+      
