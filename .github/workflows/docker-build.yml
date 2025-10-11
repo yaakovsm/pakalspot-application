@@ -99,38 +99,43 @@ jobs:
       GITOPS_REPO: yaakovsm/pakalspot-gitops
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       IMAGE_TAG: ${{ needs.build.outputs.IMAGE_TAG }}
+      GITOPS_BRANCH: main
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
       - name: Install yq
         run: |
           sudo apt-get update
           sudo apt-get install -y yq
 
-      - name: Determine GitOps branch
-        id: branch
+      - name: Determine environment folder
+        id: env
         run: |
-          GITOPS_BRANCH="main"
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            DEPLOY_ENV="prod"
+          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
+            DEPLOY_ENV="staging"
+          else
+            DEPLOY_ENV="dev"
+          fi
+          echo "deploy_env=$DEPLOY_ENV" >> $GITHUB_OUTPUT
 
-
-      - name: Clone GitOps repo
+      - name: Clone and update GitOps repo
         run: |
-          GITOPS_BRANCH=${{ steps.branch.outputs.branch }}
+          DEPLOY_ENV=${{ steps.env.outputs.deploy_env }}
           echo "Cloning GitOps repo (branch: $GITOPS_BRANCH)..."
           git clone https://$GITHUB_TOKEN@github.com/${GITOPS_REPO}
-          cd pakalspot-gitops/environments/$GITOPS_BRANCH
+          cd pakalspot-gitops
+          git checkout $GITOPS_BRANCH
+          cd environments/$DEPLOY_ENV
 
-          echo "Updating values.yaml with tag $IMAGE_TAG..."
+          echo "Updating $DEPLOY_ENV values.yaml with tag $IMAGE_TAG..."
           yq -iy ".frontend.image.tag = \"$IMAGE_TAG\"" values.yaml
           yq -iy ".backend.image.tag = \"$IMAGE_TAG\"" values.yaml
 
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add values.yaml
-          git commit -m "Update image tag to $IMAGE_TAG [skip ci]" || echo "No changes to commit"
+          git commit -m "[$DEPLOY_ENV] Update image tag to $IMAGE_TAG [skip ci]" || echo "No changes to commit"
           git push origin $GITOPS_BRANCH
 
-          echo "GitOps repo updated successfully with tag $IMAGE_TAG"
-
+          echo "GitOps repo updated successfully for $DEPLOY_ENV with tag $IMAGE_TAG"
