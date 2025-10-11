@@ -112,13 +112,8 @@ jobs:
       - name: Determine GitOps branch
         id: branch
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
-            echo "branch=prod" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
-            echo "branch=staging" >> $GITHUB_OUTPUT
-          else
-            echo "branch=dev" >> $GITHUB_OUTPUT
-          fi
+          GITOPS_BRANCH="main"
+
 
       - name: Clone GitOps repo
         run: |
