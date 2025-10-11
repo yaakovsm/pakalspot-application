@@ -45,7 +45,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-secrets
+                name: {{ include "pakalspot-chart.fullname" . }}-secrets
           {{- with .Values.frontend.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
