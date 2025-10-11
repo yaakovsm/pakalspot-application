@@ -97,7 +97,7 @@ jobs:
     needs: [build, test]
     env:
       GITOPS_REPO: yaakovsm/pakalspot-gitops
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
       IMAGE_TAG: ${{ needs.build.outputs.IMAGE_TAG }}
       GITOPS_BRANCH: main
 
