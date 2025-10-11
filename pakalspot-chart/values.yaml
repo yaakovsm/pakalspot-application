@@ -11,26 +11,6 @@ app:
   environment: development
   namespace: pakalspot
 
-# External Secrets Configuration
-externalSecrets:
-  enabled: true
-  refreshInterval: "1h"
-  github:
-    repository: "yaakovsm/pakalspot-application"
-  secrets:
-    DOCKER_USERNAME:
-      remoteKey: "DOCKER_USERNAME"
-    DOCKER_PASSWORD:
-      remoteKey: "DOCKER_PASSWORD"
-    JWT_SECRET_KEY:
-      remoteKey: "JWT_SECRET_KEY"
-    S3_ACCESS_KEY:
-      remoteKey: "S3_ACCESS_KEY"
-    S3_SECRET_KEY:
-      remoteKey: "S3_SECRET_KEY"
-    GOOGLE_MAPS_API_KEY:
-      remoteKey: "VITE_GOOGLE_MAPS_API_KEY"
-
 # Frontend configuration
 frontend:
   enabled: true
@@ -126,7 +106,7 @@ backend:
     S3_BUCKET: "pakalspot-photos"
     DEBUG: "true"
     ENVIRONMENT: "development"
-  # Secrets are now managed by External Secrets Operator
+  # Secrets are now managed by CI/CD pipeline via pakalspot-secrets
   
   # Database migration and seeding
   initContainers:
@@ -207,7 +187,7 @@ database:
     fsGroup: 999
 
 # Secrets configuration
-# Backend secrets are now managed by External Secrets Operator
+# Backend secrets are now managed by CI/CD pipeline via pakalspot-secrets
 # Database secrets remain in this chart for local development
 secrets:
   database:

@@ -60,7 +60,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-secrets
+                name: pakalspot-secrets
             - secretRef:
                 name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
           securityContext:
@@ -77,7 +77,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-secrets
+                name: pakalspot-secrets
             - secretRef:
                 name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
           securityContext:
@@ -99,7 +99,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-secrets
+                name: pakalspot-secrets
             - secretRef:
                 name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
           {{- with .Values.backend.livenessProbe }}

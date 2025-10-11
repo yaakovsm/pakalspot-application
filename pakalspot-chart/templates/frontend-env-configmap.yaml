@@ -7,5 +7,5 @@ metadata:
 data:
   env-config.js: |
     window.__ENV = {
-      GOOGLE_MAPS_API_KEY: "{{ .Values.frontend.envRuntime.GOOGLE_MAPS_API_KEY | default "" }}"
+      GOOGLE_MAPS_API_KEY: "{{ .Values.frontend.envRuntime.GOOGLE_MAPS_API_KEY }}"
     };
