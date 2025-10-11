@@ -128,8 +128,8 @@ jobs:
           cd pakalspot-gitops/environments/$GITOPS_BRANCH
 
           echo "Updating values.yaml with tag $IMAGE_TAG..."
-          yq -i ".frontend.image.tag = \"$IMAGE_TAG\"" values.yaml
-          yq -i ".backend.image.tag = \"$IMAGE_TAG\"" values.yaml
+          yq -iy ".frontend.image.tag = \"$IMAGE_TAG\"" values.yaml
+          yq -iy ".backend.image.tag = \"$IMAGE_TAG\"" values.yaml
 
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
