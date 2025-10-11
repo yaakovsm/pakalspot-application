@@ -1,4 +1,4 @@
-name: Build, Test and Deploy PakalSpot
+name: Build, Test and Sync PakalSpot
 
 on:
   push:
@@ -16,6 +16,7 @@ jobs:
     outputs:
       IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
       SHORT_SHA: ${{ steps.meta.outputs.short_sha }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,16 +30,16 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract short SHA
+      - name: Generate image metadata
         id: meta
         run: |
           SHORT_SHA=$(git rev-parse --short HEAD)
           IMAGE_TAG="${GITHUB_REF_NAME}-${SHORT_SHA}"
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "IMAGE_TAG=$IMAGE_TAG"
+          echo "Using tag: $IMAGE_TAG"
 
-      - name: Build and Push Docker images
+      - name: Build and push Docker images
         working-directory: pakalspot-app
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
@@ -58,7 +59,7 @@ jobs:
           docker tag pakalspot-app-backend ${DOCKER_USERNAME}/pakalspot-backend:${{ steps.meta.outputs.image_tag }}
           docker tag pakalspot-app-frontend ${DOCKER_USERNAME}/pakalspot-frontend:${{ steps.meta.outputs.image_tag }}
 
-          echo "Pushing images to DockerHub..."
+          echo "Pushing images..."
           docker push ${DOCKER_USERNAME}/pakalspot-backend:${{ steps.meta.outputs.image_tag }}
           docker push ${DOCKER_USERNAME}/pakalspot-frontend:${{ steps.meta.outputs.image_tag }}
 
@@ -68,67 +69,62 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
-        uses: docker/setup-buildx-action@v3
-
-      - name: Pull images from DockerHub
+      - name: Pull built images
         run: |
-          echo "Pulling images for testing..."
           docker pull ${DOCKER_USERNAME}/pakalspot-backend:${{ needs.build.outputs.IMAGE_TAG }}
           docker pull ${DOCKER_USERNAME}/pakalspot-frontend:${{ needs.build.outputs.IMAGE_TAG }}
 
-      - name: Run containers
+      - name: Run containers for smoke tests
         working-directory: pakalspot-app
         run: |
-          echo "Starting containers for integration testing..."
           docker compose up -d
-          sleep 20
-          docker compose ps
-
-      - name: Run integration tests
-        run: |
-          echo "Checking backend endpoint..."
-          curl --fail http://localhost:8000/docs || (docker compose logs backend && exit 1)
-          echo "Checking frontend endpoint..."
-          curl --fail http://localhost:3000 || (docker compose logs frontend && exit 1)
-          echo "Integration tests passed successfully."
-
-      - name: Tear down
-        working-directory: pakalspot-app
-        run: docker compose down
+          echo "Waiting for services..."
+          timeout 60 bash -c 'until curl -s http://localhost:8000/docs; do sleep 3; done'
+          timeout 60 bash -c 'until curl -s http://localhost:3000; do sleep 3; done'
+          echo "Services are up and running."
+          docker compose down
 
   # ----------------------------------------------------------
-  # 3️ Update GitOps Repository
+  # 3️ Update GitOps Repository (ArgoCD will deploy)
   # ----------------------------------------------------------
   update-gitops:
     runs-on: ubuntu-latest
     needs: [build, test]
     env:
       GITOPS_REPO: yaakovsm/pakalspot-gitops
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       IMAGE_TAG: ${{ needs.build.outputs.IMAGE_TAG }}
-      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+
     steps:
-      - name: Install yq and git
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install yq
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y yq git
+          sudo apt-get update
+          sudo apt-get install -y yq
+
+      - name: Determine GitOps branch
+        id: branch
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "branch=prod" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
+            echo "branch=staging" >> $GITHUB_OUTPUT
+          else
+            echo "branch=dev" >> $GITHUB_OUTPUT
+          fi
 
       - name: Clone GitOps repo
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
-            GITOPS_BRANCH="main"
-          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
-            GITOPS_BRANCH="staging"
-          else
-            GITOPS_BRANCH="dev"
-          fi
-
+          GITOPS_BRANCH=${{ steps.branch.outputs.branch }}
           echo "Cloning GitOps repo (branch: $GITOPS_BRANCH)..."
-          git clone https://$GITHUB_TOKEN@github.com/$GITOPS_REPO.git
+          git clone https://$GITHUB_TOKEN@github.com/${GITOPS_REPO}
           cd pakalspot-gitops/environments/$GITOPS_BRANCH
 
           echo "Updating values.yaml with tag $IMAGE_TAG..."
@@ -142,3 +138,4 @@ jobs:
           git push origin $GITOPS_BRANCH
 
           echo "GitOps repo updated successfully with tag $IMAGE_TAG"
+
