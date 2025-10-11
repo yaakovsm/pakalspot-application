@@ -64,6 +64,9 @@ spec:
             - name: frontend-env
               mountPath: /usr/share/nginx/html/env-config.js
               subPath: env-config.js
+            # ✅ Writable directory for Nginx cache
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
       volumes:
         - name: frontend-env
           configMap:
@@ -71,6 +74,8 @@ spec:
             items:
               - key: env-config.js
                 path: env-config.js
+        - name: nginx-cache
+          emptyDir: {}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -84,5 +89,3 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}
-
-
