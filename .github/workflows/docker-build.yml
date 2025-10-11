@@ -187,9 +187,8 @@ jobs:
           docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }} > digest-backend.txt
           docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }} > digest-frontend.txt
 
-      - name: Create Kubernetes secrets
+      - name: Create Kubernetes secrets (only when kubeconfig is valid)
         run: |
-          # Create secrets for the cluster (only if KUBECONFIG is available)
           if [[ "${GITHUB_REF##*/}" == "main" ]]; then
             NAMESPACE="pakalspot-prod"
           elif [[ "${GITHUB_REF##*/}" == "staging" ]]; then
@@ -197,17 +196,25 @@ jobs:
           else
             NAMESPACE="pakalspot-dev"
           fi
-          kubectl create secret generic pakalspot-secrets \
-            -n $NAMESPACE \
-            --from-literal=MAPS_API_KEY="${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" \
-            --from-literal=S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}" \
-            --from-literal=S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}" \
-            --from-literal=SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
-            --from-literal=DB_URL="postgresql://pakalspot_user:jcoffeebrew@pakalspot-pakalspot-chart-postgres:5432/pakalspot_db" \
-            --dry-run=client -o yaml | kubectl apply -f -
-            echo "Kubernetes secrets created successfully for $NAMESPACE"
+
+          echo "Deploying secrets to namespace: $NAMESPACE"
+
+          if kubectl cluster-info > /dev/null 2>&1; then
+            kubectl create secret generic pakalspot-secrets \
+              -n $NAMESPACE \
+              --from-literal=MAPS_API_KEY="${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" \
+              --from-literal=S3_ACCESS_KEY="${{ secrets.S3_ACCESS_KEY }}" \
+              --from-literal=S3_SECRET_KEY="${{ secrets.S3_SECRET_KEY }}" \
+              --from-literal=SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
+              --from-literal=DB_URL="postgresql://pakalspot_user:jcoffeebrew@pakalspot-${NAMESPACE}-pakalspot-chart-postgres:5432/pakalspot_db" \
+              --dry-run=client -o yaml | kubectl apply -f -
+            echo "✅ Kubernetes secrets created successfully for $NAMESPACE"
+          else
+            echo "⚠️ No Kubernetes connection detected (likely local K3s). Skipping secret creation."
+          fi
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
 
       - name: Upload digest artifacts
         uses: actions/upload-artifact@v4
