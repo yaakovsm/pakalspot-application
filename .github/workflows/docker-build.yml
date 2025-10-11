@@ -35,9 +35,20 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
-          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
         run: |
-          docker compose build
+          # Clean up any existing containers and images
+          docker compose down --remove-orphans || true
+          docker system prune -f || true
+          
+          # Build the services with specific tags
+          docker compose build --no-cache
+          
+          # Verify images were built
+          echo "Built images:"
+          docker images | grep pakalspot-app
+          
+          # Tag the built images for DockerHub
           docker tag pakalspot-app_backend ${DOCKER_USERNAME}/pakalspot-backend:dev-${{ env.SHORT_SHA }}
           docker tag pakalspot-app_frontend ${DOCKER_USERNAME}/pakalspot-frontend:dev-${{ env.SHORT_SHA }}
 
@@ -47,11 +58,19 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
-          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
-          MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
         run: |
+          # List available images before starting
+          echo "Available images before starting services:"
+          docker images | grep pakalspot-app
+          
+          # Start the services
           docker compose up -d
+          
+          # Wait and check status
           sleep 15
+          echo "Service status:"
+          docker compose ps
 
       - name: Wait for database to be ready
         working-directory: pakalspot-app
