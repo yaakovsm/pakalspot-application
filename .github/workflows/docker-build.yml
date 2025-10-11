@@ -143,6 +143,6 @@ jobs:
 
           git add values.yaml
           git commit -m "[$DEPLOY_ENV] Update image tag to $IMAGE_TAG [skip ci]" || echo "No changes to commit"
-          git push https://github.com/${GITOPS_REPO}.git HEAD:$GITOPS_BRANCH
+          git push origin $GITOPS_BRANCH
 
           echo "GitOps repo updated successfully for $DEPLOY_ENV with tag $IMAGE_TAG"
