@@ -2,11 +2,14 @@
 // This utility handles proper async loading of the Google Maps API
 
 interface GoogleMapsLoaderOptions {
-  apiKey: string;
+  apiKey?: string;
   language?: string;
   region?: string;
   libraries?: string[];
 }
+
+// ✅ Load key from environment
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 class GoogleMapsLoader {
   private static instance: GoogleMapsLoader;
@@ -23,34 +26,40 @@ class GoogleMapsLoader {
     return GoogleMapsLoader.instance;
   }
 
-  async load(options: GoogleMapsLoaderOptions): Promise<void> {
+  async load(options: GoogleMapsLoaderOptions = {}): Promise<void> {
+    // ✅ Inject the key automatically if not provided
+    if (!options.apiKey) {
+      if (!GOOGLE_MAPS_API_KEY) {
+        console.error("Google Maps API key is not configured. Please set VITE_GOOGLE_MAPS_API_KEY in your environment variables.");
+        return;
+      }
+      options.apiKey = GOOGLE_MAPS_API_KEY;
+    }
+
     // Check if we need to reload with different language
-    if (this.isLoaded && this.currentOptions && 
-        this.currentOptions.language !== options.language) {
-      // Language changed, need to reload
+    if (
+      this.isLoaded &&
+      this.currentOptions &&
+      this.currentOptions.language !== options.language
+    ) {
       this.isLoaded = false;
       this.loadPromise = null;
       this.currentOptions = null;
-      
+
       // Remove existing script
       const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
       if (existingScript) {
         existingScript.remove();
       }
-      
+
       // Clear Google Maps from window
       if (window.google) {
         delete window.google;
       }
     }
 
-    if (this.isLoaded) {
-      return Promise.resolve();
-    }
-
-    if (this.loadPromise) {
-      return this.loadPromise;
-    }
+    if (this.isLoaded) return Promise.resolve();
+    if (this.loadPromise) return this.loadPromise;
 
     this.currentOptions = options;
     this.loadPromise = this.loadScript(options);
@@ -75,7 +84,7 @@ class GoogleMapsLoader {
       // Build the API URL
       const libraries = options.libraries ? options.libraries.join(',') : '';
       const params = new URLSearchParams({
-        key: options.apiKey,
+        key: options.apiKey!,
         ...(options.language && { language: options.language }),
         ...(options.region && { region: options.region }),
         ...(libraries && { libraries }),
@@ -86,13 +95,11 @@ class GoogleMapsLoader {
 
       // Handle script load
       script.onload = () => {
-        // Wait for Google Maps to be fully initialized
         const checkGoogleMaps = () => {
           if (window.google && window.google.maps && window.google.maps.MapTypeId) {
             this.isLoaded = true;
             resolve();
           } else {
-            // Wait a bit more for the API to fully initialize
             setTimeout(checkGoogleMaps, 100);
           }
         };
