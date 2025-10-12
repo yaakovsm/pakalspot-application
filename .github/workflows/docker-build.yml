@@ -55,11 +55,9 @@ jobs:
             --build-arg SECRET_KEY=$SECRET_KEY \
             --progress=plain
 
-          echo "Tagging images..."
+          echo "Tagging and pushing images..."
           docker tag pakalspot-app-backend ${DOCKER_USERNAME}/pakalspot-backend:${{ steps.meta.outputs.image_tag }}
           docker tag pakalspot-app-frontend ${DOCKER_USERNAME}/pakalspot-frontend:${{ steps.meta.outputs.image_tag }}
-
-          echo "Pushing images..."
           docker push ${DOCKER_USERNAME}/pakalspot-backend:${{ steps.meta.outputs.image_tag }}
           docker push ${DOCKER_USERNAME}/pakalspot-frontend:${{ steps.meta.outputs.image_tag }}
 
@@ -138,11 +136,12 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITOPS_REPO}.git
+          # Store credentials safely (prevents masking + No such URL)
+          git config credential.helper store
+          echo "https://x-access-token:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
 
           git add values.yaml
           git commit -m "[$DEPLOY_ENV] Update image tag to $IMAGE_TAG [skip ci]" || echo "No changes to commit"
           git push origin $GITOPS_BRANCH
 
           echo "GitOps repo updated successfully for $DEPLOY_ENV with tag $IMAGE_TAG"
-
