@@ -132,7 +132,7 @@ def list_spots(db: Session = Depends(get_db)):
             "photos": photos_data
         })
     
-    return result
+    return {"data": result}
 
 
 @router.get("/{spot_id}", response_model=schemas.SpotOut)
