@@ -95,7 +95,6 @@ jobs:
     needs: [build, test]
     env:
       GITOPS_REPO: yaakovsm/pakalspot-gitops
-      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
       IMAGE_TAG: ${{ needs.build.outputs.IMAGE_TAG }}
       GITOPS_BRANCH: main
 
@@ -106,7 +105,14 @@ jobs:
       - name: Install yq
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y yq git
+          sudo apt-get install -y yq git openssh-client
+
+      - name: Setup SSH for GitHub
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GITOPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - name: Determine environment
         id: env
@@ -120,11 +126,11 @@ jobs:
           fi
           echo "deploy_env=$DEPLOY_ENV" >> $GITHUB_OUTPUT
 
-      - name: Clone and update GitOps repo
+      - name: Clone and update GitOps repo (via SSH)
         run: |
           DEPLOY_ENV=${{ steps.env.outputs.deploy_env }}
           echo "Cloning GitOps repo (branch: $GITOPS_BRANCH)..."
-          git clone https://github.com/${GITOPS_REPO}
+          git clone git@github.com:${GITOPS_REPO}.git
           cd pakalspot-gitops
           git checkout $GITOPS_BRANCH
           cd environments/$DEPLOY_ENV
@@ -135,10 +141,6 @@ jobs:
 
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-
-          # Store credentials safely (prevents masking + No such URL)
-          git config credential.helper store
-          echo "https://x-access-token:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
 
           git add values.yaml
           git commit -m "[$DEPLOY_ENV] Update image tag to $IMAGE_TAG [skip ci]" || echo "No changes to commit"
