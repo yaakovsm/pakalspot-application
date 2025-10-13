@@ -20,6 +20,9 @@ class Settings(BaseSettings):
 	# API Configuration (hard-coded)
 	API_PREFIX: str = "/api"
 	
+	# Base URL for media files
+	BASE_URL: str = os.getenv("BASE_URL", "http://pakalspot.local")
+	
 	# Development Settings (hard-coded)
 	DEBUG: bool = True
 	ENVIRONMENT: str = "development"

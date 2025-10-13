@@ -26,7 +26,7 @@ def update_photo_urls():
         for photo in photos:
             # Update the URL to use the correct backend URL
             old_url = photo.url
-            photo.url = f"http://localhost:8000/media/{photo.object_key.split('/')[-1]}"
+            photo.url = f"http://pakalspot.local/media/{photo.object_key.split('/')[-1]}"
             photo.thumbnail_url = photo.url
             
             print(f"Updated photo URL: {old_url} -> {photo.url}")

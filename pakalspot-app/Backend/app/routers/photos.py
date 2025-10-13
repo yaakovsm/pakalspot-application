@@ -49,7 +49,7 @@ def generate_upload_url(
         raise HTTPException(status_code=500, detail=str(e))
 
     # Save photo metadata in DB
-    photo = models.Photo(spot_id=spot.id, object_key=key, url=f"{settings.S3_ENDPOINT}/{settings.S3_BUCKET}/{key}")
+    photo = models.Photo(spot_id=spot.id, object_key=key, url=f"{settings.BASE_URL}/media/{key.split('/')[-1]}")
     db.add(photo)
     db.commit()
     db.refresh(photo)
