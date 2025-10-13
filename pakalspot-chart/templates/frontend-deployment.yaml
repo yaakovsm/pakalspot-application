@@ -30,6 +30,26 @@ spec:
       serviceAccountName: {{ include "pakalspot-chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: generate-env-config
+          image: busybox:1.35
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "window.__ENV = {" > /shared/env-config.js
+              echo "  GOOGLE_MAPS_API_KEY: \"$GOOGLE_MAPS_API_KEY\"," >> /shared/env-config.js
+              echo "  VITE_GOOGLE_MAPS_API_KEY: \"$GOOGLE_MAPS_API_KEY\"," >> /shared/env-config.js
+              echo "  API_URL: \"/api\"" >> /shared/env-config.js
+              echo "};" >> /shared/env-config.js
+          env:
+            - name: GOOGLE_MAPS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pakalspot-frontend-env
+                  key: GOOGLE_MAPS_API_KEY
+          volumeMounts:
+            - name: shared-env
+              mountPath: /shared
       containers:
         - name: frontend
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
@@ -61,7 +81,7 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           volumeMounts:
-            - name: frontend-env
+            - name: shared-env
               mountPath: /usr/share/nginx/html/env-config.js
               subPath: env-config.js
             - name: nginx-cache
@@ -69,12 +89,8 @@ spec:
             - name: nginx-run
               mountPath: /run
       volumes:
-        - name: frontend-env
-          secret:
-            secretName: pakalspot-frontend-env
-            items:
-              - key: env-config.js
-                path: env-config.js
+        - name: shared-env
+          emptyDir: {}
         - name: nginx-cache
           emptyDir: {}
         - name: nginx-run
