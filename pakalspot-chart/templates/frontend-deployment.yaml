@@ -45,7 +45,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-secrets
+                name: pakalspot-frontend-env
           {{- with .Values.frontend.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -70,8 +70,8 @@ spec:
               mountPath: /run
       volumes:
         - name: frontend-env
-          configMap:
-            name: {{ include "pakalspot-chart.fullname" . }}-frontend-env
+          secret:
+            secretName: pakalspot-frontend-env
             items:
               - key: env-config.js
                 path: env-config.js
