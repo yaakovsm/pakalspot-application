@@ -4,8 +4,6 @@
     COPY package.json bun.lockb* ./
     RUN bun install --frozen-lockfile
     COPY . .
-    ARG VITE_GOOGLE_MAPS_API_KEY
-    ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
     RUN bun run build
     
     # --- run stage ---
