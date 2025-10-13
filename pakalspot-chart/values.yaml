@@ -1,6 +1,8 @@
 # Global configuration
 global:
   imageRegistry: ""
+  image:
+    tag: "dev-a3a9eb8"
   imagePullSecrets:
     - name: ghcr-pull
   storageClass: ""
@@ -8,7 +10,7 @@ global:
 # Application configuration
 app:
   name: pakalspot
-  environment: development
+  environment: dev
   namespace: pakalspot
 
 # Frontend configuration
