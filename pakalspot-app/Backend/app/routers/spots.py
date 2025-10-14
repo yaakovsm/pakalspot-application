@@ -139,13 +139,14 @@ def list_spots(db: Session = Depends(get_db)):
             "lat": lat,
             "lon": lon,
             "location_name": spot.location_name,
-            "created_at": spot.created_at,
+            "createdAt": spot.created_at,  # Use camelCase for frontend compatibility
+            "created_at": spot.created_at,  # Keep snake_case for backend compatibility
             "owner_id": spot.user_id,
             "createdBy": user_data,
             "photos": photos_data
         })
     
-    return {"data": result}
+    return result
 
 
 @router.get("/{spot_id}", response_model=schemas.SpotOut)
@@ -196,7 +197,8 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
         "lat": lat,
         "lon": lon,
         "location_name": spot.location_name,
-        "created_at": spot.created_at,
+        "createdAt": spot.created_at,  # Use camelCase for frontend compatibility
+        "created_at": spot.created_at,  # Keep snake_case for backend compatibility
         "owner_id": spot.user_id,
         "createdBy": user_data,
         "photos": photos_data
