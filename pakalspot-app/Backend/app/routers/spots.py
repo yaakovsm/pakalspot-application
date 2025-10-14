@@ -92,7 +92,7 @@ def create_spot(
 
 @router.get("/", response_model=List[schemas.SpotOut])
 def list_spots(db: Session = Depends(get_db)):
-    spots = db.query(models.Spot).all()
+    spots = db.query(models.Spot).join(models.User).all()
     result = []
     
     for spot in spots:
@@ -118,6 +118,18 @@ def list_spots(db: Session = Depends(get_db)):
                 "created_at": photo.created_at
             })
             
+        # Get user information
+        user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+        user_data = None
+        if user:
+            user_data = {
+                "id": user.id,
+                "email": user.email,
+                "display_name": user.display_name,
+                "username": user.display_name,  # Alias for frontend compatibility
+                "created_at": user.created_at
+            }
+        
         result.append({
             "id": spot.id,
             "title": spot.title,
@@ -129,6 +141,7 @@ def list_spots(db: Session = Depends(get_db)):
             "location_name": spot.location_name,
             "created_at": spot.created_at,
             "owner_id": spot.user_id,
+            "createdBy": user_data,
             "photos": photos_data
         })
     
@@ -162,6 +175,18 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
             "created_at": photo.created_at
         })
     
+    # Get user information
+    user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+    user_data = None
+    if user:
+        user_data = {
+            "id": user.id,
+            "email": user.email,
+            "display_name": user.display_name,
+            "username": user.display_name,  # Alias for frontend compatibility
+            "created_at": user.created_at
+        }
+    
     return {
         "id": spot.id,
         "title": spot.title,
@@ -173,6 +198,7 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
         "location_name": spot.location_name,
         "created_at": spot.created_at,
         "owner_id": spot.user_id,
+        "createdBy": user_data,
         "photos": photos_data
     }
 

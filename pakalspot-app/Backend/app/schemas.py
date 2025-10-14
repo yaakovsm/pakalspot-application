@@ -123,6 +123,7 @@ class SpotOut(BaseModel):
     location_name: Optional[str] = None
     created_at: datetime
     owner_id: uuid.UUID
+    createdBy: Optional[UserOut] = None  # User information
     photos: Optional[List[PhotoOut]] = []
 
     class Config:
