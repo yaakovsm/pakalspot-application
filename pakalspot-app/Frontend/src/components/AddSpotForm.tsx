@@ -67,13 +67,38 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
   };
 
   const handleFileSelect = (files: FileList | null) => {
-    if (!files) return;
+    if (!files) {
+      console.log('No files selected');
+      return;
+    }
+    
+    console.log('Files selected:', files.length);
     
     const newFiles = Array.from(files).filter(file => 
       file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024 // 5MB limit
     );
     
-    setSelectedPhotos(prev => [...prev, ...newFiles].slice(0, 5)); // Max 5 photos
+    console.log('Valid files after filtering:', newFiles.length);
+    
+    if (newFiles.length === 0) {
+      toast({
+        title: "Invalid files",
+        description: "Please select valid image files under 5MB each.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSelectedPhotos(prev => {
+      const updated = [...prev, ...newFiles].slice(0, 5); // Max 5 photos
+      console.log('Updated selected photos:', updated.length);
+      return updated;
+    });
+    
+    toast({
+      title: "Photos added",
+      description: `${newFiles.length} photo(s) added successfully.`,
+    });
   };
 
   const removePhoto = (index: number) => {
@@ -95,7 +120,9 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     e.stopPropagation();
     setDragActive(false);
     
-    handleFileSelect(e.dataTransfer.files);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelect(e.dataTransfer.files);
+    }
   };
 
   const getCurrentLocation = async () => {
@@ -383,14 +410,23 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 type="file"
                 multiple
                 accept="image/*"
-                onChange={(e) => handleFileSelect(e.target.files)}
+                onChange={(e) => {
+                  handleFileSelect(e.target.files);
+                  // Reset the input value to allow selecting the same files again
+                  e.target.value = '';
+                }}
                 className="hidden"
                 id="photo-upload"
               />
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => document.getElementById('photo-upload')?.click()}
+                onClick={() => {
+                  const input = document.getElementById('photo-upload') as HTMLInputElement;
+                  if (input) {
+                    input.click();
+                  }
+                }}
               >
                 Select Photos
               </Button>
@@ -398,6 +434,14 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 Max 5 photos, 5MB each
               </p>
             </div>
+
+            {/* Debug Info - Remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                <p>Debug: selectedPhotos.length = {selectedPhotos.length}</p>
+                <p>selectedPhotos: {JSON.stringify(selectedPhotos.map(f => f.name))}</p>
+              </div>
+            )}
 
             {/* Selected Photos */}
             {selectedPhotos.length > 0 && (
@@ -407,12 +451,17 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {selectedPhotos.map((file, index) => (
-                    <div key={index} className="relative group">
+                    <div key={`${file.name}-${index}`} className="relative group">
                       <img
                         src={URL.createObjectURL(file)}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
+                        className="w-full h-24 object-cover rounded-lg border"
+                        onLoad={() => console.log(`Image ${index + 1} loaded successfully`)}
+                        onError={() => console.error(`Failed to load image ${index + 1}`)}
                       />
+                      <div className="absolute top-1 left-1 bg-black/50 text-white text-xs px-1 py-0.5 rounded">
+                        {Math.round(file.size / 1024)}KB
+                      </div>
                       <Button
                         type="button"
                         variant="destructive"
