@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -50,6 +50,14 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
   const [dragActive, setDragActive] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<GeocodeResult | null>(null);
   const [showCoordinateInputs, setShowCoordinateInputs] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      imageUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [imageUrls]);
 
   const handleInputChange = (field: keyof CreateSpotRequest, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -92,6 +100,15 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     setSelectedPhotos(prev => {
       const updated = [...prev, ...newFiles].slice(0, 5); // Max 5 photos
       console.log('Updated selected photos:', updated.length);
+      
+      // Create object URLs for the new files
+      const newUrls = newFiles.map(file => URL.createObjectURL(file));
+      setImageUrls(prevUrls => {
+        // Clean up old URLs that are no longer needed
+        const currentUrls = [...prevUrls, ...newUrls].slice(0, 5);
+        return currentUrls;
+      });
+      
       return updated;
     });
     
@@ -102,7 +119,20 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
   };
 
   const removePhoto = (index: number) => {
-    setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
+    setSelectedPhotos(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      
+      // Clean up the corresponding URL
+      setImageUrls(prevUrls => {
+        const urlToRevoke = prevUrls[index];
+        if (urlToRevoke) {
+          URL.revokeObjectURL(urlToRevoke);
+        }
+        return prevUrls.filter((_, i) => i !== index);
+      });
+      
+      return updated;
+    });
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -451,13 +481,20 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {selectedPhotos.map((file, index) => (
-                    <div key={`${file.name}-${index}`} className="relative group">
+                    <div key={`photo-${file.name}-${file.size}-${index}`} className="relative group">
                       <img
-                        src={URL.createObjectURL(file)}
+                        src={imageUrls[index] || URL.createObjectURL(file)}
                         alt={`Preview ${index + 1}`}
                         className="w-full h-24 object-cover rounded-lg border"
                         onLoad={() => console.log(`Image ${index + 1} loaded successfully`)}
-                        onError={() => console.error(`Failed to load image ${index + 1}`)}
+                        onError={(e) => {
+                          console.error(`Failed to load image ${index + 1}:`, e);
+                          // Fallback to creating a new URL if the managed one fails
+                          const target = e.target as HTMLImageElement;
+                          if (!imageUrls[index]) {
+                            target.src = URL.createObjectURL(file);
+                          }
+                        }}
                       />
                       <div className="absolute top-1 left-1 bg-black/50 text-white text-xs px-1 py-0.5 rounded">
                         {Math.round(file.size / 1024)}KB
