@@ -83,7 +83,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     console.log('Files selected:', files.length);
     
     const newFiles = Array.from(files).filter(file => 
-      file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024 // 5MB limit
+      file.type.startsWith('image/') && file.size <= 10 * 1024 * 1024 // 10MB limit
     );
     
     console.log('Valid files after filtering:', newFiles.length);
@@ -91,7 +91,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     if (newFiles.length === 0) {
       toast({
         title: "Invalid files",
-        description: "Please select valid image files under 5MB each.",
+        description: "Please select valid image files under 10MB each.",
         variant: "destructive",
       });
       return;
@@ -461,7 +461,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 Select Photos
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
-                Max 5 photos, 5MB each
+                Max 5 photos, 10MB each
               </p>
             </div>
 
