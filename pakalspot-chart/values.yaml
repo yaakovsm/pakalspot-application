@@ -18,7 +18,7 @@ frontend:
   
   image:
     repository: yaakovsm/pakalspot-frontend
-    tag: ""
+    tag: "4d9909e"
     pullPolicy: IfNotPresent
   
   service:
@@ -66,7 +66,7 @@ backend:
   
   image:
     repository: yaakovsm/pakalspot-backend
-    tag: ""
+    tag: "4d9909e"
     pullPolicy: IfNotPresent
   
   service:
