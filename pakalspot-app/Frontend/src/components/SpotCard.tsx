@@ -3,9 +3,12 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Spot } from '../types/spot';
-import { Heart, Info, MapPin, Eye } from 'lucide-react';
+import { Star, Info, MapPin, Eye } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
+import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/use-toast';
 
 interface SpotCardProps {
   spot: Spot;
@@ -17,18 +20,40 @@ interface SpotCardProps {
 
 const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, onInfoHover, className }) => {
   const { selectSpot, favoriteSpot, unfavoriteSpot } = useSpots();
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     try {
       if (spot.isFavorited) {
         await unfavoriteSpot(spot.id);
+        toast({
+          title: t('spots.removed_from_favorites'),
+          description: t('spots.removed_from_favorites_desc'),
+        });
       } else {
         await favoriteSpot(spot.id);
+        toast({
+          title: t('spots.added_to_favorites'),
+          description: t('spots.added_to_favorites_desc'),
+        });
       }
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
+      toast({
+        title: t('common.error'),
+        description: t('spots.favorites_update_failed'),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -118,7 +143,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
               onClick={handleFavoriteToggle}
               className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
             >
-              <Heart className={`w-4 h-4 ${spot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+              <Star className={`w-4 h-4 ${spot.isFavorited ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
             </Button>
             
             <Button
