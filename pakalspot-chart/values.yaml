@@ -2,7 +2,7 @@
 global:
   imageRegistry: ""
   image:
-    tag: "dev-508b907"
+    tag: ""
   imagePullSecrets:
     - name: ghcr-pull
   storageClass: ""
@@ -20,7 +20,7 @@ frontend:
   
   image:
     repository: yaakovsm/pakalspot-frontend
-    tag: dev-508b907
+    tag: ""
     pullPolicy: IfNotPresent
   
   service:
@@ -68,7 +68,7 @@ backend:
   
   image:
     repository: yaakovsm/pakalspot-backend
-    tag: dev-508b907
+    tag: ""
     pullPolicy: IfNotPresent
   
   service:
