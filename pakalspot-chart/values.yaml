@@ -1,8 +1,6 @@
 # Global configuration
 global:
   imageRegistry: ""
-  image:
-    tag: ""
   imagePullSecrets:
     - name: ghcr-pull
   storageClass: ""
