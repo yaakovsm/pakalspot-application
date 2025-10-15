@@ -3,7 +3,7 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Spot } from '../types/spot';
-import { Star, Info, MapPin, Eye } from 'lucide-react';
+import { Heart, Info, MapPin, Eye } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
@@ -143,7 +143,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
               onClick={handleFavoriteToggle}
               className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
             >
-              <Star className={`w-4 h-4 ${spot.isFavorited ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+              <Heart className={`w-4 h-4 ${spot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
             </Button>
             
             <Button

@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/badge';
 import Header from '../components/Header';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
-import { ArrowLeft, MapPin, Star, ThumbsUp, ThumbsDown, Calendar, User, Share2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Heart, ThumbsUp, ThumbsDown, Calendar, User, Share2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -250,7 +250,7 @@ const SpotDetails: React.FC = () => {
                         size="icon"
                         onClick={handleFavoriteToggle}
                       >
-                        <Star className={`w-5 h-5 ${selectedSpot.isFavorited ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                        <Heart className={`w-5 h-5 ${selectedSpot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
                       </Button>
                       <Button
                         variant="ghost"
