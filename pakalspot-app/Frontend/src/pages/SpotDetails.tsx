@@ -4,6 +4,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import Header from '../components/Header';
+import AuthDialog from '../components/AuthDialog';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { ArrowLeft, MapPin, Heart, ThumbsUp, ThumbsDown, Calendar, User, Share2 } from 'lucide-react';
@@ -18,6 +19,7 @@ const SpotDetails: React.FC = () => {
   const { selectedSpot, selectSpot, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -34,7 +36,7 @@ const SpotDetails: React.FC = () => {
 
   const handleFavoriteToggle = async () => {
     if (!isAuthenticated) {
-      navigate('/login');
+      setShowAuthDialog(true);
       return;
     }
 
@@ -65,7 +67,7 @@ const SpotDetails: React.FC = () => {
 
   const handleLike = async (isLike: boolean) => {
     if (!isAuthenticated) {
-      navigate('/login');
+      setShowAuthDialog(true);
       return;
     }
 
@@ -364,6 +366,15 @@ const SpotDetails: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        title={t('auth.sign_in_required')}
+        description={t('auth.favorites_sign_in_description')}
+        actionText={t('auth.sign_in')}
+        cancelText={t('common.cancel')}
+      />
     </div>
   );
 };

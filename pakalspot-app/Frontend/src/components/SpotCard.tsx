@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
+import AuthDialog from './AuthDialog';
 
 interface SpotCardProps {
   spot: Spot;
@@ -24,12 +25,13 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      navigate('/login');
+      setShowAuthDialog(true);
       return;
     }
 
@@ -159,6 +161,15 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
           </div>
         </div>
       </CardContent>
+      
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        title={t('auth.sign_in_required')}
+        description={t('auth.favorites_sign_in_description')}
+        actionText={t('auth.sign_in')}
+        cancelText={t('common.cancel')}
+      />
     </Card>
   );
 };

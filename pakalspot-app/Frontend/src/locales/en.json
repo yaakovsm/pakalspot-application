@@ -52,7 +52,11 @@
       "registration_failed": "Registration failed",
       "login_failed": "Login failed",
       "invalid_credentials": "Invalid email or password",
-      "something_went_wrong": "Something went wrong. Please try again"
+      "something_went_wrong": "Something went wrong. Please try again",
+      "sign_in_required": "You must sign in to add this store to your favorites",
+      "sign_in_required_description": "Please sign in to your account to save spots to your favorites",
+      "favorites_sign_in_description": "Please sign in to your account to save spots to your favorites",
+      "add_spot_sign_in_description": "Please sign in to your account to add new spots"
     },
     "spots": {
       "title": "Our Spots",

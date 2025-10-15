@@ -8,12 +8,15 @@ declare global {
 }
 
 import { useSpots } from '../hooks/useSpots';
+import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { Spot } from '../types/spot';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Heart, ThumbsUp, ThumbsDown } from 'lucide-react';
 import googleMapsLoader from '../utils/googleMapsLoader';
 import { VITE_GOOGLE_MAPS_API_KEY } from '../config/env';
+import AuthDialog from './AuthDialog';
 
 // Israel map configuration
 const ISRAEL_CENTER: google.maps.LatLngLiteral = { lat: 31.3, lng: 34.8 };
@@ -41,7 +44,10 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
   const selectedMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
   
   const { spots, selectedSpot, selectSpot, userLocation, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
+  const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   // Initialize map
   useEffect(() => {
@@ -305,6 +311,11 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
   // Removed showSpotInfoWindow function - no longer needed
 
   const handleFavoriteSpot = async (spotId: string, isFavorited: boolean) => {
+    if (!isAuthenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
+
     try {
       if (isFavorited) await unfavoriteSpot(spotId);
       else await favoriteSpot(spotId);
@@ -376,12 +387,21 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
               </div>
               
               <span className="text-xs text-muted-foreground capitalize">
-                {selectedSpot.type}
+                {selectedSpot.spot_type}
               </span>
             </div>
           </CardContent>
         </Card>
       )}
+      
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        title={t('auth.sign_in_required')}
+        description={t('auth.favorites_sign_in_description')}
+        actionText={t('auth.sign_in')}
+        cancelText={t('common.cancel')}
+      />
     </div>
   );
 };

@@ -5,8 +5,10 @@ import Sidebar from '../components/Sidebar';
 import MapView from '../components/MapView';
 import AddSpotForm from '../components/AddSpotForm';
 import SpotDetailSidebar from '../components/SpotDetailSidebar';
+import AuthDialog from '../components/AuthDialog';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/button';
 import { Plus, Menu, X } from 'lucide-react';
 import { Spot } from '../types/spot';
@@ -14,11 +16,13 @@ import { Spot } from '../types/spot';
 const Home: React.FC = () => {
   const { fetchSpots, setUserLocation, selectedSpot } = useSpots();
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showDetailSidebar, setShowDetailSidebar] = useState(false);
   const [isClosingSidebar, setIsClosingSidebar] = useState(false);
   const [isOpeningSidebar, setIsOpeningSidebar] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [hoveredSpot, setHoveredSpot] = useState<Spot | null>(null);
 
   useEffect(() => {
@@ -56,8 +60,7 @@ const Home: React.FC = () => {
 
   const handleAddSpot = () => {
     if (!isAuthenticated) {
-      // Redirect to login or show login modal
-      window.location.href = '/login';
+      setShowAuthDialog(true);
       return;
     }
     setShowAddForm(true);
@@ -164,6 +167,16 @@ const Home: React.FC = () => {
           />
         </DialogContent>
       </Dialog>
+      
+      {/* Authentication Dialog */}
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        title={t('auth.sign_in_required')}
+        description={t('auth.add_spot_sign_in_description')}
+        actionText={t('auth.sign_in')}
+        cancelText={t('common.cancel')}
+      />
     </div>
   );
 };

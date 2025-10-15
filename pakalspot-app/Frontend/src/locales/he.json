@@ -52,7 +52,11 @@
       "registration_failed": "ההרשמה נכשלה",
       "login_failed": "ההתחברות נכשלה",
       "invalid_credentials": "אימייל או סיסמה לא נכונים",
-      "something_went_wrong": "משהו השתבש. אנא נסו שוב"
+      "something_went_wrong": "משהו השתבש. אנא נסו שוב",
+      "sign_in_required": "עליכם להתחבר כדי להוסיף את המקום הזה למועדפים",
+      "sign_in_required_description": "אנא התחברו לחשבון שלכם כדי לשמור מקומות במועדפים",
+      "favorites_sign_in_description": "אנא התחברו לחשבון שלכם כדי לשמור מקומות במועדפים",
+      "add_spot_sign_in_description": "אנא התחברו לחשבון שלכם כדי להוסיף מקומות חדשים"
     },
     "spots": {
       "title": "המקומות שלנו",
