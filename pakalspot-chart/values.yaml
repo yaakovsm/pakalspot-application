@@ -2,7 +2,7 @@
 global:
   imageRegistry: ""
   image:
-    tag: ""
+    tag: "8c6a3d3"
   imagePullSecrets:
     - name: ghcr-pull
   storageClass: ""
@@ -20,7 +20,7 @@ frontend:
   
   image:
     repository: yaakovsm/pakalspot-frontend
-    tag: ""
+    tag: "8c6a3d3"
     pullPolicy: IfNotPresent
   
   service:
@@ -68,7 +68,7 @@ backend:
   
   image:
     repository: yaakovsm/pakalspot-backend
-    tag: ""
+    tag: "8c6a3d3"
     pullPolicy: IfNotPresent
   
   service:
