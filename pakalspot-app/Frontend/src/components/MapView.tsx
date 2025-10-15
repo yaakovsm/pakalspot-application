@@ -11,7 +11,7 @@ import { useSpots } from '../hooks/useSpots';
 import { Spot } from '../types/spot';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Heart, ThumbsUp, ThumbsDown } from 'lucide-react';
 import googleMapsLoader from '../utils/googleMapsLoader';
 import { VITE_GOOGLE_MAPS_API_KEY } from '../config/env';
 
@@ -344,7 +344,7 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
                 onClick={() => handleFavoriteSpot(selectedSpot.id, selectedSpot.isFavorited)}
                 className="flex-shrink-0"
               >
-                <Star className={`w-5 h-5 ${selectedSpot.isFavorited ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                <Heart className={`w-5 h-5 ${selectedSpot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
               </Button>
             </div>
             

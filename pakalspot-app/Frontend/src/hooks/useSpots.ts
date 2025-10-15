@@ -115,14 +115,18 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
     try {
       await spotsAPI.favoriteSpot(spotId);
       
-      set((state) => ({
-        spots: state.spots.map((spot) =>
-          spot.id === spotId ? { ...spot, isFavorited: true } : spot
-        ),
-        selectedSpot: state.selectedSpot?.id === spotId
-          ? { ...state.selectedSpot, isFavorited: true }
-          : state.selectedSpot,
-      }));
+      set((state) => {
+        const spotToFavorite = state.spots.find(spot => spot.id === spotId);
+        return {
+          spots: state.spots.map((spot) =>
+            spot.id === spotId ? { ...spot, isFavorited: true } : spot
+          ),
+          selectedSpot: state.selectedSpot?.id === spotId
+            ? { ...state.selectedSpot, isFavorited: true }
+            : state.selectedSpot,
+          favorites: spotToFavorite ? [...state.favorites, { ...spotToFavorite, isFavorited: true }] : state.favorites,
+        };
+      });
     } catch (error) {
       console.error('Failed to favorite spot:', error);
     }
