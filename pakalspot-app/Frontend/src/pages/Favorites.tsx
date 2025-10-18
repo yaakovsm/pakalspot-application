@@ -6,20 +6,19 @@ import SpotCard from '../components/SpotCard';
 import { Button } from '../components/ui/button';
 import { Heart, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Favorites: React.FC = () => {
   const { favorites, fetchFavorites, selectSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
+    if (isAuthenticated) {
+      fetchFavorites();
     }
-    
-    fetchFavorites();
-  }, [isAuthenticated, fetchFavorites, navigate]);
+  }, [isAuthenticated, fetchFavorites]);
 
   const handleViewDetails = (spot: any) => {
     selectSpot(spot);
@@ -27,11 +26,34 @@ const Favorites: React.FC = () => {
   };
 
   if (!isAuthenticated) {
-    return null; // Will redirect to login
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                <Heart className="w-12 h-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                {t('auth.sign_in_to_view_favorites')}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                {t('auth.favorites_sign_in_description')}
+              </p>
+              <Button variant="hero" onClick={() => navigate('/')} className="gap-2">
+                <MapPin className="w-4 h-4" />
+                {t('spots.explore_spots')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div dir="rtl" className="min-h-screen bg-background">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -42,9 +64,9 @@ const Favorites: React.FC = () => {
               <Heart className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Your Favorites</h1>
+              <h1 className="text-3xl font-bold text-foreground">{t('favorites.title')}</h1>
               <p className="text-muted-foreground">
-                {favorites.length} spot{favorites.length !== 1 ? 's' : ''} you've saved
+                {t('favorites.spots_saved_plural', { count: favorites.length })}
               </p>
             </div>
           </div>
@@ -66,14 +88,14 @@ const Favorites: React.FC = () => {
                 <Heart className="w-12 h-12 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
-                No favorites yet
+                {t('favorites.no_favorites_yet')}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                Start exploring and save spots you love. They'll appear here for easy access.
+                {t('favorites.start_exploring_description')}
               </p>
               <Button variant="hero" onClick={() => navigate('/')} className="gap-2">
                 <MapPin className="w-4 h-4" />
-                Discover Spots
+                {t('favorites.discover_spots')}
               </Button>
             </div>
           )}

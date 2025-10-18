@@ -342,10 +342,6 @@ const SpotDetails: React.FC = () => {
                       <span className="ml-2 font-medium">{selectedSpot.createdBy?.username || t('spots.unknown')}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t('spots.added_on')}:</span>
-                      <span className="ml-2">{new Date(selectedSpot.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <div>
                       <span className="text-muted-foreground">{t('spots.popularity')}:</span>
                       <span className="ml-2 font-medium">{selectedSpot.popularity || 0} {t('spots.views')}</span>
                     </div>

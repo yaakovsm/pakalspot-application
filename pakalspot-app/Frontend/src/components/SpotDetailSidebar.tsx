@@ -194,10 +194,6 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
                 <span className="font-medium">{spot.createdBy?.username || t('spots.unknown')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('spots.added_on')}:</span>
-                <span>{new Date(spot.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('spots.popularity')}:</span>
                 <span className="font-medium flex items-center gap-1">
                   <Eye className="w-3 h-3" />

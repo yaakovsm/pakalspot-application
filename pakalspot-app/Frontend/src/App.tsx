@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
 import Home from "./pages/Home";
-import HomePage from "./pages/HomePage";
+import About from "./pages/About";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Favorites from "./pages/Favorites";
@@ -26,7 +26,7 @@ const AppContent = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/favorites" element={<Favorites />} />

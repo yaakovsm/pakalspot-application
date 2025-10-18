@@ -123,17 +123,18 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
               {spot.description}
             </p>
             
-            {/* Distance and meta info */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {spot.distance && (
+            {/* Distance info */}
+            {spot.distance && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <span>
                   {spot.distance < 1 ? `${Math.round(spot.distance * 1000)}m away` : `${spot.distance.toFixed(1)}km away`}
                 </span>
-              )}
-              {spot.distance && <span>•</span>}
-              <span>{t('spots.by')} {spot.createdBy?.username || t('spots.unknown')}</span>
-              <span>•</span>
-              <span>{new Date(spot.createdAt).toLocaleDateString()}</span>
+              </div>
+            )}
+            
+            {/* Author info - centered */}
+            <div className="text-center text-xs text-muted-foreground">
+              <span>{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
             </div>
           </div>
           

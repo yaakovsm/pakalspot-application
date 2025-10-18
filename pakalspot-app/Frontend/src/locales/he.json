@@ -55,8 +55,17 @@
       "something_went_wrong": "משהו השתבש. אנא נסו שוב",
       "sign_in_required": "עליכם להתחבר כדי להוסיף את המקום הזה למועדפים",
       "sign_in_required_description": "אנא התחברו לחשבון שלכם כדי לשמור מקומות במועדפים",
-      "favorites_sign_in_description": "אנא התחברו לחשבון שלכם כדי לשמור מקומות במועדפים",
+      "sign_in_to_view_favorites": "התחברו כדי לראות את המועדפים שלכם",
+      "favorites_sign_in_description": "אנא התחברו לחשבון שלכם כדי לראות ולנהל את המקומות המועדפים שלכם",
       "add_spot_sign_in_description": "אנא התחברו לחשבון שלכם כדי להוסיף מקומות חדשים"
+    },
+    "favorites": {
+      "title": "המועדפים שלכם",
+      "spots_saved": "{{count}} מקום שמרתם",
+      "spots_saved_plural": "{{count}} מקומות שמרתם",
+      "no_favorites_yet": "עדיין אין מועדפים",
+      "start_exploring_description": "התחילו לגלות ושמרו מקומות שאתם אוהבים. הם יופיעו כאן לגישה קלה.",
+      "discover_spots": "גלו מקומות"
     },
     "spots": {
       "title": "המקומות שלנו",
@@ -79,7 +88,9 @@
       "spots_count_plural": "{{count}} מקומות",
       "no_spots_found": "לא נמצאו מקומות התואמים לחיפוש שלך",
       "add_first_spot": "הוסף את המקום הראשון",
+      "explore_spots": "גלה מקומות",
       "by": "על ידי",
+      "created_by": "נוסף על ידי",
       "unknown": "לא ידוע",
       "view_details": "צפה בפרטים",
       "back_to_map": "חזרה למפה",
@@ -87,7 +98,6 @@
       "coordinates": "קואורדינטות",
       "spot_info": "מידע על המקום",
       "added_by": "נוסף על ידי",
-      "added_on": "נוסף בתאריך",
       "views": "צפיות",
       "view_on_map": "צפה במפה",
       "removed_from_favorites": "הוסר מהמועדפים",

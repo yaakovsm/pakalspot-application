@@ -55,8 +55,17 @@
       "something_went_wrong": "Something went wrong. Please try again",
       "sign_in_required": "You must sign in to add this store to your favorites",
       "sign_in_required_description": "Please sign in to your account to save spots to your favorites",
-      "favorites_sign_in_description": "Please sign in to your account to save spots to your favorites",
+      "sign_in_to_view_favorites": "Sign in to view your favorites",
+      "favorites_sign_in_description": "Please sign in to your account to view and manage your favorite spots",
       "add_spot_sign_in_description": "Please sign in to your account to add new spots"
+    },
+    "favorites": {
+      "title": "Your Favorites",
+      "spots_saved": "{{count}} spot you've saved",
+      "spots_saved_plural": "{{count}} spots you've saved",
+      "no_favorites_yet": "No favorites yet",
+      "start_exploring_description": "Start exploring and save spots you love. They'll appear here for easy access.",
+      "discover_spots": "Discover Spots"
     },
     "spots": {
       "title": "Our Spots",
@@ -79,7 +88,9 @@
       "spots_count_plural": "{{count}} spots",
       "no_spots_found": "No spots found matching your search",
       "add_first_spot": "Add the first spot",
+      "explore_spots": "Explore Spots",
       "by": "by",
+      "created_by": "created by",
       "unknown": "Unknown",
       "view_details": "View Details",
       "back_to_map": "Back to Map",
@@ -87,7 +98,6 @@
       "coordinates": "Coordinates",
       "spot_info": "Spot Info",
       "added_by": "Added by",
-      "added_on": "Added on",
       "views": "views",
       "view_on_map": "View on Map",
       "removed_from_favorites": "Removed from favorites",

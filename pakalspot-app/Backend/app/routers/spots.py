@@ -8,12 +8,18 @@ from app.services.geocoding import geocoding_service
 from typing import List, Optional
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
+import os
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 
 
+def is_admin_user(user: models.User) -> bool:
+    """Check if user is an admin user."""
+    return user.email == "yaakovsm@gmail.com"
+
+
 @router.post("/", response_model=schemas.SpotOut)
-def create_spot(
+async def create_spot(
     title: str = Form(...),
     description: str = Form(...),
     type: str = Form(...),
@@ -64,6 +70,40 @@ def create_spot(
     db.commit()
     db.refresh(spot)
     
+    # Handle photo uploads if provided
+    if photos:
+        import os
+        import uuid
+        from fastapi import UploadFile
+        
+        # Ensure media directory exists
+        media_dir = "media"
+        os.makedirs(media_dir, exist_ok=True)
+        
+        for photo in photos:
+            if photo and photo.filename:
+                # Generate unique filename
+                file_extension = os.path.splitext(photo.filename)[1]
+                unique_filename = f"{uuid.uuid4()}{file_extension}"
+                file_path = os.path.join(media_dir, unique_filename)
+                
+                # Save file to disk
+                with open(file_path, "wb") as buffer:
+                    content = await photo.read()
+                    buffer.write(content)
+                
+                # Create photo record in database
+                photo_url = f"http://localhost:8000/media/{unique_filename}"
+                photo_record = models.Photo(
+                    spot_id=spot.id,
+                    object_key=f"media/{unique_filename}",
+                    url=photo_url,
+                    thumbnail_url=photo_url  # Using same URL for thumbnail for now
+                )
+                db.add(photo_record)
+        
+        db.commit()
+    
     # Extract coordinates from geometry for response
     try:
         # Convert geometry to shapely Point to extract coordinates
@@ -88,6 +128,172 @@ def create_spot(
         "created_at": spot.created_at,
         "owner_id": spot.user_id
     }
+
+
+@router.put("/{spot_id}", response_model=schemas.SpotOut)
+async def update_spot(
+    spot_id: str,
+    title: str = Form(...),
+    description: str = Form(...),
+    type: str = Form(...),
+    latitude: float = Form(...),
+    longitude: float = Form(...),
+    region: str = Form(...),
+    location_name: Optional[str] = Form(None),
+    photos: Optional[List[UploadFile]] = File(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Update a spot. Only the owner or admin can edit."""
+    # Get the spot
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    
+    # Check authorization: owner or admin
+    if spot.user_id != current_user.id and not is_admin_user(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to edit this spot")
+    
+    # Convert frontend field names to backend enum values
+    try:
+        spot_type = models.SpotType(type)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
+    
+    try:
+        # Handle both lowercase and capitalized region names
+        region_lower = region.lower()
+        region_mapping = {
+            'negev': models.Region.negev,
+            'galilee': models.Region.galilee,
+            'golan': models.Region.golan,
+            'shfela': models.Region.shfela,
+            'sharon': models.Region.sharon,
+            'shomron': models.Region.shomron,
+            'jerusalem': models.Region.jerusalem,
+            'arava': models.Region.arava,
+        }
+        region_enum = region_mapping.get(region_lower)
+        if not region_enum:
+            raise ValueError(f"Invalid region: {region}")
+    except (ValueError, KeyError):
+        raise HTTPException(status_code=400, detail=f"Invalid region: {region}")
+    
+    # Update spot fields
+    spot.title = title
+    spot.description = description
+    spot.spot_type = spot_type
+    spot.region = region_enum
+    spot.location_name = location_name
+    
+    # Update geometry
+    point = from_shape(Point(longitude, latitude), srid=4326)
+    spot.geom = point
+    
+    db.commit()
+    db.refresh(spot)
+    
+    # Handle photo uploads if provided
+    if photos:
+        import os
+        import uuid
+        from fastapi import UploadFile
+        
+        # Ensure media directory exists
+        media_dir = "media"
+        os.makedirs(media_dir, exist_ok=True)
+        
+        # Delete existing photos for this spot
+        existing_photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        for photo in existing_photos:
+            # Delete file from disk
+            try:
+                if os.path.exists(photo.object_key):
+                    os.remove(photo.object_key)
+            except Exception:
+                pass  # Ignore file deletion errors
+            db.delete(photo)
+        
+        for photo in photos:
+            if photo and photo.filename:
+                # Generate unique filename
+                file_extension = os.path.splitext(photo.filename)[1]
+                unique_filename = f"{uuid.uuid4()}{file_extension}"
+                file_path = os.path.join(media_dir, unique_filename)
+                
+                # Save file to disk
+                with open(file_path, "wb") as buffer:
+                    content = await photo.read()
+                    buffer.write(content)
+                
+                # Create photo record in database
+                photo_url = f"http://localhost:8000/media/{unique_filename}"
+                photo_record = models.Photo(
+                    spot_id=spot.id,
+                    object_key=f"media/{unique_filename}",
+                    url=photo_url,
+                    thumbnail_url=photo_url  # Using same URL for thumbnail for now
+                )
+                db.add(photo_record)
+        
+        db.commit()
+    
+    # Extract coordinates from geometry for response
+    try:
+        # Convert geometry to shapely Point to extract coordinates
+        from shapely.wkt import loads
+        geom_wkt = db.execute(func.ST_AsText(spot.geom)).scalar()
+        point = loads(geom_wkt)
+        lon, lat = point.x, point.y
+    except Exception:
+        # Use the original coordinates as fallback
+        lon, lat = longitude, latitude
+    
+    # Return the spot data in the expected format
+    return {
+        "id": spot.id,
+        "title": spot.title,
+        "description": spot.description,
+        "spot_type": spot.spot_type,
+        "region": spot.region,
+        "lat": lat,
+        "lon": lon,
+        "location_name": spot.location_name,
+        "created_at": spot.created_at,
+        "owner_id": spot.user_id
+    }
+
+
+@router.delete("/{spot_id}")
+def delete_spot(
+    spot_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Delete a spot. Only the owner or admin can delete."""
+    # Get the spot
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    
+    # Check authorization: owner or admin
+    if spot.user_id != current_user.id and not is_admin_user(current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this spot")
+    
+    # Delete associated photos from disk
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    for photo in photos:
+        try:
+            if os.path.exists(photo.object_key):
+                os.remove(photo.object_key)
+        except Exception:
+            pass  # Ignore file deletion errors
+    
+    # Delete the spot (photos will be deleted by cascade)
+    db.delete(spot)
+    db.commit()
+    
+    return {"message": "Spot deleted successfully"}
 
 
 @router.get("/", response_model=List[schemas.SpotOut])
