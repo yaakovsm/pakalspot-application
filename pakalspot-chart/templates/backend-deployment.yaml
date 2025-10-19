@@ -86,8 +86,8 @@ spec:
       {{- end }}
       containers:
         - name: backend
-          image: {{ include "pakalspot.image" (dict "root" . "service" "backend") | quote }}
-          imagePullPolicy: {{ include "pakalspot.imagePullPolicy" (dict "root" . "service" "backend") }}
+          image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
+          imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
           ports:
             - name: http
               containerPort: {{ .Values.backend.service.targetPort }}
