@@ -13,6 +13,7 @@ geoalchemy2==0.15.2
 requests==2.32.3
 email-validator==2.1.1
 shapely==2.0.4
+prometheus-fastapi-instrumentator==6.5.0
 
 # Testing dependencies
 pytest==8.0.0

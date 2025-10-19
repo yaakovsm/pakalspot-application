@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from app.routers import auth, spots, photos, utils
 from app.core.database import engine
 from app.models import Base
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Create DB tables if not using Alembic yet
 # (when you add migrations, you can remove this line)
@@ -33,7 +34,9 @@ app.include_router(spots.router, prefix="/api")
 app.include_router(photos.router, prefix="/api")
 app.include_router(utils.router, prefix="/api")
 
+# Enable Prometheus metrics
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to PakalSpot API 🚀"}
+    return {"message": "Welcome to PakalSpot API"}
