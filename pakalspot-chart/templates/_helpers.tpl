@@ -60,3 +60,63 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+
+{{/* ====================================================================== */}}
+{{/*                           DRY IMAGE HELPERS                            */}}
+{{/* ====================================================================== */}}
+
+{{/*
+Resolve image tag with precedence:
+1) service-specific tag (e.g., .Values.frontend.image.tag)
+2) global.image.tag
+3) .Chart.AppVersion (fallback)
+Usage:
+  {{ include "pakalspot-chart.imageTag" (dict "root" . "service" "frontend") }}
+*/}}
+{{- define "pakalspot-chart.imageTag" -}}
+{{- $root := .root -}}
+{{- $svc  := .service -}}
+{{- $vals := $root.Values -}}
+{{- $svcVals := index $vals $svc | default dict -}}
+{{- $svcImg  := index $svcVals "image" | default dict -}}
+{{- $svcTag  := index $svcImg "tag" | default "" -}}
+{{- $global  := index $vals "global" | default dict -}}
+{{- $globImg := index $global "image" | default dict -}}
+{{- $globTag := index $globImg "tag" | default "" -}}
+{{- default (default $root.Chart.AppVersion $globTag) $svcTag -}}
+{{- end -}}
+
+{{/*
+Build full image reference "<repository>:<tag>" for a given service.
+Optionally prefixes repository with global.imageRegistry if provided.
+Usage:
+  {{ include "pakalspot-chart.image" (dict "root" . "service" "frontend") }}
+*/}}
+{{- define "pakalspot-chart.image" -}}
+{{- $root := .root -}}
+{{- $svc  := .service -}}
+{{- $vals := $root.Values -}}
+{{- $svcVals := index $vals $svc | default dict -}}
+{{- $svcImg  := index $svcVals "image" | default dict -}}
+{{- $repo    := index $svcImg "repository" -}}
+{{- $tag     := include "pakalspot-chart.imageTag" (dict "root" $root "service" $svc) -}}
+{{- $global  := index $vals "global" | default dict -}}
+{{- $reg     := index $global "imageRegistry" | default "" -}}
+{{- $repoFull := ternary (printf "%s/%s" $reg $repo) $repo (ne $reg "") -}}
+{{- printf "%s:%s" $repoFull $tag -}}
+{{- end -}}
+
+{{/*
+Image pull policy for a given service (defaults to IfNotPresent)
+Usage:
+  {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "frontend") }}
+*/}}
+{{- define "pakalspot-chart.imagePullPolicy" -}}
+{{- $root := .root -}}
+{{- $svc  := .service -}}
+{{- $vals := $root.Values -}}
+{{- $svcVals := index $vals $svc | default dict -}}
+{{- $svcImg  := index $svcVals "image" | default dict -}}
+{{- index $svcImg "pullPolicy" | default "IfNotPresent" -}}
+{{- end -}}
