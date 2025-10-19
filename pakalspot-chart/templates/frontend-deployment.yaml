@@ -18,7 +18,7 @@ spec:
       labels:
         {{- include "pakalspot-chart.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: frontend
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.frontend.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
