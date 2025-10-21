@@ -1,13 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.routers import auth, spots, photos, utils
 from app.core.database import engine
 from app.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter
 
-# Create DB tables if not using Alembic yet
-# (when you add migrations, you can remove this line)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -16,25 +15,32 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS setup (allow frontend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: restrict to your frontend domain in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static files for media
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
-# Routers
 app.include_router(auth.router, prefix="/api")
 app.include_router(spots.router, prefix="/api")
 app.include_router(photos.router, prefix="/api")
 app.include_router(utils.router, prefix="/api")
 
-# Enable Prometheus metrics
+app_requests_total = Counter(
+    "app_requests_total",
+    "Total number of requests to the PakalSpot backend"
+)
+
+@app.middleware("http")
+async def count_requests(request: Request, call_next):
+    app_requests_total.inc()
+    response = await call_next(request)
+    return response
+
 Instrumentator().instrument(app).expose(app)
 
 @app.get("/")
