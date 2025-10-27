@@ -253,7 +253,7 @@ tolerations: []
 # Affinity rules
 affinity: {}
 
-# Monitoring (to be implemented later by student)
+# Monitoring 
 monitoring:
-  enabled: false
+  enabled: true
   
