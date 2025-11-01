@@ -1,19 +1,10 @@
-{{- if .Values.frontend.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "pakalspot-chart.fullname" . }}-frontend
-  labels:
-    {{- include "pakalspot-chart.labels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
+  name: {{ .Values.frontend.appname }}
 spec:
-  type: {{ .Values.frontend.service.type }}
+  selector:
+    app: {{ .Values.frontend.appname }}
   ports:
     - port: {{ .Values.frontend.service.port }}
       targetPort: {{ .Values.frontend.service.targetPort }}
-      protocol: TCP
-      name: http
-  selector:
-    {{- include "pakalspot-chart.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
-{{- end }}

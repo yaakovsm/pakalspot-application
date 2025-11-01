@@ -3,8 +3,7 @@ kind: Pod
 metadata:
   name: "{{ include "pakalspot-chart.fullname" . }}-test-connection"
   labels:
-    {{- include "pakalspot-chart.labels" . | nindent 4 }}
-    app.kubernetes.io/component: test
+    {{- include "pakalspot-chart.componentLabels" (dict "root" . "component" "test") | nindent 4 }}
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-weight": "1"

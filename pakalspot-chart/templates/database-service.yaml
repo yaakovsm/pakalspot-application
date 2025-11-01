@@ -1,19 +1,10 @@
-{{- if .Values.database.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "pakalspot-chart.fullname" . }}-postgres
-  labels:
-    {{- include "pakalspot-chart.labels" . | nindent 4 }}
-    app.kubernetes.io/component: database
+  name: {{ .Values.database.appname }}
 spec:
-  type: {{ .Values.database.service.type }}
+  selector:
+    app: {{ .Values.database.appname }}
   ports:
     - port: {{ .Values.database.service.port }}
       targetPort: {{ .Values.database.service.targetPort }}
-      protocol: TCP
-      name: postgres
-  selector:
-    {{- include "pakalspot-chart.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: database
-{{- end }}

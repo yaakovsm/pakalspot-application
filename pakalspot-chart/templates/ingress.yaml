@@ -1,4 +1,3 @@
-{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -10,8 +9,8 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.ingress.className }}
-  ingressClassName: {{ .Values.ingress.className }}
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
   {{- end }}
   {{- if and .Values.ingress.tls.enabled .Values.ingress.tls }}
   tls:
@@ -36,4 +35,3 @@ spec:
                   number: {{ if eq .service "backend" }}{{ $.Values.backend.service.port }}{{ else }}{{ $.Values.frontend.service.port }}{{ end }}
           {{- end }}
     {{- end }}
-{{- end }}

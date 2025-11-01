@@ -1,5 +1,0 @@
-{{- /* 
-This template is intentionally empty. 
-The namespace is created by Helm using the --create-namespace flag.
-This file exists to prevent Helm from complaining about missing templates.
-*/ -}}

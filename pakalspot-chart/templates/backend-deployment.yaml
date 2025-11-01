@@ -1,35 +1,25 @@
-{{- if .Values.backend.enabled }}
 {{ include "noLatest" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "pakalspot-chart.fullname" . }}-backend
   labels:
-    {{- include "pakalspot-chart.labels" . | nindent 4 }}
-    app.kubernetes.io/component: backend
+    {{- include "pakalspot-chart.componentLabels" (dict "root" . "component" "backend") | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
-      {{- include "pakalspot-chart.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: backend
+      {{- include "pakalspot-chart.componentSelectorLabels" (dict "root" . "component" "backend") | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "pakalspot-chart.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: backend
+        {{- include "pakalspot-chart.componentSelectorLabels" (dict "root" . "component" "backend") | nindent 8 }}
       {{- with .Values.backend.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "pakalspot-chart.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- include "pakalspot-chart.podSpec" . | nindent 6 }}
       {{- if .Values.backend.initContainers.dbMigrate.enabled }}
       initContainers:
         - name: wait-for-db
@@ -49,8 +39,8 @@ spec:
                   name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
                   key: POSTGRES_PASSWORD
         - name: db-migrate
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
+          imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
           command: ["python", "-c"]
           args: ["from app.models import Base; from app.core.database import engine; Base.metadata.create_all(bind=engine); print('Database tables created successfully')"]
           env:
@@ -67,8 +57,8 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- if .Values.backend.initContainers.dbSeed.enabled }}
         - name: db-seed
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
+          imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
           command: ["python", "/app/app/db/seed.py"]
           env:
             {{- range $key, $value := .Values.backend.env }}
@@ -116,16 +106,3 @@ spec:
           {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-{{- end }}
