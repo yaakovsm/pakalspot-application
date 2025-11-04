@@ -1,25 +1,33 @@
+{{- if .Values.database.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "pakalspot-chart.fullname" . }}-postgres
   labels:
-    {{- include "pakalspot-chart.componentLabels" (dict "root" . "component" "database") | nindent 4 }}
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
 spec:
   serviceName: {{ include "pakalspot-chart.fullname" . }}-postgres
   replicas: {{ .Values.database.statefulSet.replicaCount }}
   selector:
     matchLabels:
-      {{- include "pakalspot-chart.componentSelectorLabels" (dict "root" . "component" "database") | nindent 6 }}
+      {{- include "pakalspot-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: database
   template:
     metadata:
       labels:
-        {{- include "pakalspot-chart.componentSelectorLabels" (dict "root" . "component" "database") | nindent 8 }}
-      {{- with .Values.database.podAnnotations }}
+        {{- include "pakalspot-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: database
+      {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      {{- include "pakalspot-chart.podSpec" . | nindent 6 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pakalspot-chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.database.securityContext | nindent 8 }}
       containers:
@@ -60,14 +68,27 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
       spec:
         accessModes: ["ReadWriteOnce"]
-        {{- with .Values.database.persistence.storageClass }}
-        storageClassName: {{ . }}
+        {{- if .Values.database.persistence.storageClass }}
+        storageClassName: {{ .Values.database.persistence.storageClass }}
         {{- end }}
         resources:
           requests:
             storage: {{ .Values.database.persistence.size }}
+{{- end }}

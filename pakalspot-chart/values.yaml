@@ -16,7 +16,6 @@ app:
 # Frontend configuration
 frontend:
   enabled: true
-  appname: pakalspot-frontend
   replicaCount: 1
   
   image:
@@ -65,7 +64,6 @@ frontend:
 # Backend configuration
 backend:
   enabled: true
-  appname: pakalspot-backend
   replicaCount: 1
   
   image:
@@ -125,7 +123,6 @@ backend:
 # Database configuration (PostgreSQL with PostGIS)
 database:
   enabled: true
-  appname: pakalspot-postgres
   type: postgresql
   
   # Use StatefulSet for database
