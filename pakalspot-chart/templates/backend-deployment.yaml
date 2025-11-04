@@ -36,7 +36,7 @@ spec:
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+                  name: pakalspot-secrets
                   key: POSTGRES_PASSWORD
         - name: db-migrate
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
@@ -50,9 +50,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-backend-secrets
-            - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+                name: pakalspot-secrets
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- if .Values.backend.initContainers.dbSeed.enabled }}
@@ -67,9 +65,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-backend-secrets
-            - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+                name: pakalspot-secrets
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
@@ -89,9 +85,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-backend-secrets
-            - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+                name: pakalspot-secrets
           {{- with .Values.backend.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
