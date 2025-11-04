@@ -20,6 +20,11 @@ spec:
       {{- end }}
     spec:
       {{- include "pakalspot-chart.podSpec" . | nindent 6 }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       {{- if .Values.backend.initContainers.dbMigrate.enabled }}
       initContainers:
         - name: wait-for-db
@@ -50,7 +55,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-secrets
+                name: pakalspot-dev-db-secrets
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- if .Values.backend.initContainers.dbSeed.enabled }}
@@ -65,7 +70,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-secrets
+                name: pakalspot-dev-db-secrets
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
@@ -85,7 +90,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: pakalspot-secrets
+                name: pakalspot-dev-db-secrets
           {{- with .Values.backend.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
