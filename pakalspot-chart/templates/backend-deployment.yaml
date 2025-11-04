@@ -36,7 +36,7 @@ spec:
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pakalspot-secrets
+                  name: pakalspot-dev-db-secrets
                   key: POSTGRES_PASSWORD
         - name: db-migrate
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
