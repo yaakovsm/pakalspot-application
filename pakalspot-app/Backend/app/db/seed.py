@@ -8,13 +8,13 @@ import sys
 import os
 import json
 from pathlib import Path
-from sqlalchemy.orm import Session
-from geoalchemy2 import WKTElement
-from app.enums import parse_region, parse_spot_type
 
 # Add the app directory to the path so we can import from app
 sys.path.append('/app')
 
+from sqlalchemy.orm import Session
+from geoalchemy2 import WKTElement
+from app.enums import parse_region, parse_spot_type
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.models import User, Spot, Photo, SpotType, Region
