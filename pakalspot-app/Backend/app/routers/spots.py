@@ -9,6 +9,7 @@ from typing import List, Optional
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 import os
+from app.enums import parse_region, parse_spot_type
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 
@@ -33,27 +34,13 @@ async def create_spot(
 ):
     # Convert frontend field names to backend enum values
     try:
-        spot_type = models.SpotType(type)
+        spot_type = parse_spot_type(type)
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
     
     try:
-        # Handle both lowercase and capitalized region names
-        region_lower = region.lower()
-        region_mapping = {
-            'negev': models.Region.negev,
-            'galilee elion': models.Region.galilee_elion,
-            'golan': models.Region.golan,
-            'shfela': models.Region.shfela,
-            'sharon': models.Region.sharon,
-            'shomron': models.Region.shomron,
-            'jerusalem': models.Region.jerusalem,
-            'arava': models.Region.arava,
-        }
-        region_enum = region_mapping.get(region_lower)
-        if not region_enum:
-            raise ValueError(f"Invalid region: {region}")
-    except (ValueError, KeyError):
+        region_enum = parse_region(region)
+    except Exception:
         raise HTTPException(status_code=400, detail=f"Invalid region: {region}")
     
     point = from_shape(Point(longitude, latitude), srid=4326)
@@ -156,7 +143,7 @@ async def update_spot(
     
     # Convert frontend field names to backend enum values
     try:
-        spot_type = models.SpotType(type)
+        spot_type = parse_spot_type(type)
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
     

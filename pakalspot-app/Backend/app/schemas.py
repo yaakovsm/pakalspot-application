@@ -3,29 +3,30 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from enum import Enum
+from app.models import Region as RegionEnum, SpotType as SpotTypeEnum
 
 
 # ----------------------
 # Enums
 # ----------------------
 class SpotType(str, Enum):
-    waterfall = "waterfall"
-    spring = "spring"
-    viewpoint = "viewpoint"
-    forest = "forest"
-    desert = "desert"
+    waterfall = SpotTypeEnum.waterfall.value
+    spring = SpotTypeEnum.spring.value
+    viewpoint = SpotTypeEnum.viewpoint.value
+    forest = SpotTypeEnum.forest.value
+    desert = SpotTypeEnum.desert.value
 
 
 class Region(str, Enum):
-    negev = "Negev"
-    galilee_elion = "Galilee Elion"
-    galilee_tahton = "Galilee Tahton"
-    golan = "Golan"
-    shfela = "Shfela"
-    sharon = "Sharon"
-    shomron = "Shomron"
-    jerusalem = "Jerusalem"
-    arava = "Arava"
+    negev = RegionEnum.negev.value
+    galilee_elion = RegionEnum.galilee_elion.value
+    galilee_tahton = RegionEnum.galilee_tahton.value
+    golan = RegionEnum.golan.value
+    shfela = RegionEnum.shfela.value
+    sharon = RegionEnum.sharon.value
+    shomron = RegionEnum.shomron.value
+    jerusalem = RegionEnum.jerusalem.value
+    arava = RegionEnum.arava.value
 
 
 # ----------------------

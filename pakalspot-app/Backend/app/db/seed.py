@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from sqlalchemy.orm import Session
 from geoalchemy2 import WKTElement
+from app.enums import parse_region, parse_spot_type
 
 # Add the app directory to the path so we can import from app
 sys.path.append('/app')
@@ -44,49 +45,6 @@ def load_spots_data() -> list[dict]:
         return []
     
     return spots_data
-
-
-def parse_spot_type(spot_type_str: str) -> SpotType:
-    """Parse spot type string (e.g., 'viewpoint|forest') into SpotType enum."""
-    if '|' in spot_type_str:
-        # Multiple types - combine them
-        types = [t.strip() for t in spot_type_str.split('|')]
-        result = None
-        for t in types:
-            try:
-                enum_val = SpotType[t]
-                if result is None:
-                    result = enum_val
-                else:
-                    result = result | enum_val
-            except KeyError:
-                print(f"Warning: Unknown spot type '{t}', skipping")
-        return result if result else SpotType.viewpoint
-    else:
-        try:
-            return SpotType[spot_type_str]
-        except KeyError:
-            print(f"Warning: Unknown spot type '{spot_type_str}', defaulting to viewpoint")
-            return SpotType.viewpoint
-
-
-def parse_region(region_str: str) -> Region:
-    """Parse region string into Region enum by value or name."""
-    # Strip whitespace
-    region_str = region_str.strip()
-    
-    # First try to find by value (what's in JSON like "Galilee Elion")
-    for region in Region:
-        if region.value == region_str:
-            return region
-    
-    # Try by name (key like "galilee_elion")
-    try:
-        return Region[region_str]
-    except KeyError:
-        print(f"Warning: Unknown region '{region_str}', defaulting to golan")
-        print(f"Available regions: {[r.name for r in Region]}")
-        return Region.golan
 
 
 def create_admin_user(db: Session) -> User:
