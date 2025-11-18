@@ -73,7 +73,10 @@ def parse_spot_type(spot_type_str: str) -> SpotType:
 def parse_region(region_str: str) -> Region:
     """Parse region string into Region enum."""
     try:
-        return Region[region_str]
+        # Get the enum by name (key)
+        region_enum = Region[region_str]
+        # Return the enum object - SQLAlchemy will use its .value when saving
+        return region_enum
     except KeyError:
         print(f"Warning: Unknown region '{region_str}', defaulting to golan")
         return Region.golan
