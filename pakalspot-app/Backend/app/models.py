@@ -80,9 +80,9 @@ class Spot(Base):
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    spot_type: Mapped[SpotType] = mapped_column(Enum(SpotType), nullable=False)
+    spot_type: Mapped[SpotType] = mapped_column(Enum(SpotType, native_enum=False, length=50), nullable=False)
     region: Mapped[Region] = mapped_column(
-    Enum(Region, values_callable=lambda x: [e.value for e in x]),
+    Enum(Region, native_enum=False, length=50),
     nullable=False
 )
     location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
