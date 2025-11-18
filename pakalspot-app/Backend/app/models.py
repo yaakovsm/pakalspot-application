@@ -14,6 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
+from sqlalchemy import TypeDecorator, String
 
 
 # ----------------------
@@ -26,6 +27,37 @@ class Base(DeclarativeBase):
 # ----------------------
 # Enums
 # ----------------------
+class EnumValueType(TypeDecorator):
+    """Store enum as its value (string) instead of name."""
+    impl = String
+    cache_ok = True
+    
+    def __init__(self, enum_class, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.enum_class = enum_class
+    
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, self.enum_class):
+            return value.value
+        return value
+    
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, str):
+            # Try to find enum by value first
+            for enum_item in self.enum_class:
+                if enum_item.value == value:
+                    return enum_item
+            # Fallback to name lookup
+            try:
+                return self.enum_class[value]
+            except KeyError:
+                return None
+        return value
+        
 class SpotType(enum.Enum):
     waterfall = "waterfall"
     spring = "spring"
@@ -80,11 +112,8 @@ class Spot(Base):
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    spot_type: Mapped[SpotType] = mapped_column(Enum(SpotType, native_enum=False, length=50), nullable=False)
-    region: Mapped[Region] = mapped_column(
-    Enum(Region, native_enum=False, length=50),
-    nullable=False
-)
+    spot_type: Mapped[SpotType] = mapped_column(EnumValueType(SpotType, length=50), nullable=False)
+    region: Mapped[Region] = mapped_column(EnumValueType(Region, length=50), nullable=False)
     location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
