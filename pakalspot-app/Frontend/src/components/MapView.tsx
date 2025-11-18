@@ -165,39 +165,115 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
   }, [userLocation]);
 
   // Add spot markers
-  useEffect(() => {
-    if (!map.current || !spots.length) return;
+useEffect(() => {
+  if (!map.current || !spots.length) return;
 
-    markersRef.current.forEach(marker => {
-      if ('setMap' in marker) {
-        marker.setMap(null);
-      } else {
-        (marker as any).map = null;
+  markersRef.current.forEach(marker => {
+    if ('setMap' in marker) {
+      marker.setMap(null);
+    } else {
+      (marker as any).map = null;
+    }
+  });
+  markersRef.current = [];
+
+  spots.forEach(spot => {
+    // Use regular Marker with transparent logo for all cases
+    const marker = new google.maps.Marker({
+      position: { lat: spot.lat, lng: spot.lon },
+      map: map.current,
+      title: spot.title,
+      icon: {
+        url: '/PakalSpot_Transperent_logo.png',
+        scaledSize: new google.maps.Size(32, 32),
+        anchor: new google.maps.Point(16, 16)
       }
     });
-    markersRef.current = [];
 
+    marker.addListener('click', () => {
+      selectSpot(spot);
+      // Removed showSpotInfoWindow to eliminate map overlay card
+    });
+
+    markersRef.current.push(marker);
+  });
+
+  // Fit bounds to show all spots if no spot is currently selected
+  if (!selectedSpot && spots.length > 0) {
+    const bounds = new google.maps.LatLngBounds();
     spots.forEach(spot => {
-      // Use regular Marker with transparent logo for all cases
-      const marker = new google.maps.Marker({
-        position: { lat: spot.lat, lng: spot.lon },
+      bounds.extend({ lat: spot.lat, lng: spot.lon });
+    });
+    // Add padding around the bounds
+    map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+  }
+}, [spots, selectSpot, selectedSpot]);
+
+// Handle selected spot
+useEffect(() => {
+  if (!map.current) return;
+
+  // Remove existing selected marker
+  if (selectedMarkerRef.current) {
+    if ('setMap' in selectedMarkerRef.current) {
+      selectedMarkerRef.current.setMap(null);
+    } else {
+      (selectedMarkerRef.current as any).map = null;
+    }
+    selectedMarkerRef.current = null;
+  }
+
+  if (selectedSpot) {
+    // Pan to selected spot and zoom in
+    map.current.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lon });
+    map.current.setZoom(15);
+
+    // Create a special marker for the selected spot using the transparent logo
+    const selectedElement = document.createElement('div');
+    selectedElement.style.width = '40px';
+    selectedElement.style.height = '40px';
+    selectedElement.style.backgroundImage = 'url(/PakalSpot_Transperent_logo.png)';
+    selectedElement.style.backgroundSize = 'contain';
+    selectedElement.style.backgroundRepeat = 'no-repeat';
+    selectedElement.style.backgroundPosition = 'center';
+    selectedElement.style.cursor = 'pointer';
+    selectedElement.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
+    selectedElement.style.border = '3px solid #ffffff';
+    selectedElement.style.borderRadius = '50%';
+
+    let selectedMarker;
+    if (google.maps.marker?.AdvancedMarkerElement) {
+      selectedMarker = new google.maps.marker.AdvancedMarkerElement({
+        position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
         map: map.current,
-        title: spot.title,
+        content: selectedElement
+      });
+    } else {
+      // Fallback to regular Marker with logo
+      selectedMarker = new google.maps.Marker({
+        position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
+        map: map.current,
         icon: {
           url: '/PakalSpot_Transperent_logo.png',
-          scaledSize: new google.maps.Size(32, 32),
-          anchor: new google.maps.Point(16, 16)
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 20)
         }
       });
+    }
 
-      marker.addListener('click', () => {
-        selectSpot(spot);
-        // Removed showSpotInfoWindow to eliminate map overlay card
+    selectedMarkerRef.current = selectedMarker;
+  } else {
+    // When no spot is selected, fit bounds to show all spots
+    if (spots.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      spots.forEach(spot => {
+        bounds.extend({ lat: spot.lat, lng: spot.lon });
       });
-
-      markersRef.current.push(marker);
-    });
-  }, [spots, selectSpot]);
+      // Add padding around the bounds
+      map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+    }
+  }
+}, [selectedSpot, spots]);
 
   // Handle selected spot
   useEffect(() => {

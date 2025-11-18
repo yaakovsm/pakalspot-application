@@ -71,14 +71,21 @@ def parse_spot_type(spot_type_str: str) -> SpotType:
 
 
 def parse_region(region_str: str) -> Region:
-    """Parse region string into Region enum."""
+    """Parse region string into Region enum by value or name."""
+    # Strip whitespace
+    region_str = region_str.strip()
+    
+    # First try to find by value (what's in JSON like "Galilee Elion")
+    for region in Region:
+        if region.value == region_str:
+            return region
+    
+    # Try by name (key like "galilee_elion")
     try:
-        # Get the enum by name (key)
-        region_enum = Region[region_str]
-        # Return the enum object - SQLAlchemy will use its .value when saving
-        return region_enum
+        return Region[region_str]
     except KeyError:
         print(f"Warning: Unknown region '{region_str}', defaulting to golan")
+        print(f"Available regions: {[r.name for r in Region]}")
         return Region.golan
 
 
@@ -113,7 +120,7 @@ def create_admin_user(db: Session) -> User:
 
 
 def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]:
-    """Create initial spots if they don't exist."""
+    """Create initial spots."""
     # Load spots data from external file
     spots_data = load_spots_data()
     
@@ -124,13 +131,6 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
     created_spots = []
     
     for spot_data in spots_data:
-        # Check if spot already exists
-        existing_spot = db.query(Spot).filter(Spot.title == spot_data["title"]).first()
-        if existing_spot:
-            print(f"Spot '{spot_data['title']}' already exists")
-            created_spots.append(existing_spot)
-            continue
-        
         # Parse enums from strings
         spot_type = parse_spot_type(spot_data["spot_type"])
         region = parse_region(spot_data["region"])
@@ -138,7 +138,7 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
         # Create geometry point from latitude and longitude
         geom = WKTElement(f"POINT({spot_data['longitude']} {spot_data['latitude']})", srid=4326)
         
-        # Create spot
+        # Create new spot
         spot = Spot(
             user_id=admin_user.id,
             title=spot_data["title"],
@@ -153,7 +153,7 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
         db.commit()
         db.refresh(spot)
         created_spots.append(spot)
-        print(f"Created spot: {spot.title}")
+        print(f"Created spot: {spot.title} (region: {region.value})")
     
     return created_spots, spots_data
 
