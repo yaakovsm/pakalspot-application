@@ -6,6 +6,8 @@ This script creates initial data including an admin user, spots, and photos.
 
 import sys
 import os
+import json
+from pathlib import Path
 from sqlalchemy.orm import Session
 from geoalchemy2 import WKTElement
 
@@ -15,7 +17,66 @@ sys.path.append('/app')
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.models import User, Spot, Photo, SpotType, Region
+from app.core.settings import Settings
 import hashlib
+
+
+def load_spots_data() -> list[dict]:
+    """Load spots data from JSON file."""
+    # Try multiple possible paths
+    possible_paths = [
+        Path('/app/app/db/init_spots.json'),
+        Path(__file__).parent / 'init_spots.json',
+        Path('app/db/init_spots.json'),
+    ]
+    
+    spots_data = None
+    for path in possible_paths:
+        if path.exists():
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                spots_data = data.get('spots', data)  # Support both {'spots': [...]} and [...]
+            print(f"Loaded spots data from {path}")
+            break
+    
+    if spots_data is None:
+        print("Warning: init_spots.json not found, using empty list")
+        return []
+    
+    return spots_data
+
+
+def parse_spot_type(spot_type_str: str) -> SpotType:
+    """Parse spot type string (e.g., 'viewpoint|forest') into SpotType enum."""
+    if '|' in spot_type_str:
+        # Multiple types - combine them
+        types = [t.strip() for t in spot_type_str.split('|')]
+        result = None
+        for t in types:
+            try:
+                enum_val = SpotType[t]
+                if result is None:
+                    result = enum_val
+                else:
+                    result = result | enum_val
+            except KeyError:
+                print(f"Warning: Unknown spot type '{t}', skipping")
+        return result if result else SpotType.viewpoint
+    else:
+        try:
+            return SpotType[spot_type_str]
+        except KeyError:
+            print(f"Warning: Unknown spot type '{spot_type_str}', defaulting to viewpoint")
+            return SpotType.viewpoint
+
+
+def parse_region(region_str: str) -> Region:
+    """Parse region string into Region enum."""
+    try:
+        return Region[region_str]
+    except KeyError:
+        print(f"Warning: Unknown region '{region_str}', defaulting to golan")
+        return Region.golan
 
 
 def create_admin_user(db: Session) -> User:
@@ -50,28 +111,12 @@ def create_admin_user(db: Session) -> User:
 
 def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]:
     """Create initial spots if they don't exist."""
-    spots_data = [
-        {
-            "title": "בריכת משושים",
-            "description": "בריכה יפיפיה בשמורת הטבע יהודיה, הליכה של כשעה עד לבריכה נדירה שאפשר להכין לידה קפה",
-            "spot_type": SpotType.spring,
-            "region": Region.golan,
-            "location_name": "בריכת משושים",
-            "latitude": 32.936512,
-            "longitude": 35.6998754,
-            "photo": "IMG_5307.JPG"
-        },
-        {
-            "title": "תצפית מעל הים",
-            "description": "תצפית מדהימה מעל הים, מושלמת להכין לידה קפה.",
-            "spot_type": SpotType.viewpoint,
-            "region": Region.sharon,
-            "location_name": "ארסוף",
-            "latitude": 32.20630,
-            "longitude": 34.81124,
-            "photo": "IMG_1936.JPG"
-        }
-    ]
+    # Load spots data from external file
+    spots_data = load_spots_data()
+    
+    if not spots_data:
+        print("No spots data found. Skipping spot creation.")
+        return [], []
     
     created_spots = []
     
@@ -83,6 +128,10 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
             created_spots.append(existing_spot)
             continue
         
+        # Parse enums from strings
+        spot_type = parse_spot_type(spot_data["spot_type"])
+        region = parse_region(spot_data["region"])
+        
         # Create geometry point from latitude and longitude
         geom = WKTElement(f"POINT({spot_data['longitude']} {spot_data['latitude']})", srid=4326)
         
@@ -91,9 +140,9 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
             user_id=admin_user.id,
             title=spot_data["title"],
             description=spot_data["description"],
-            spot_type=spot_data["spot_type"],
-            region=spot_data["region"],
-            location_name=spot_data["location_name"],
+            spot_type=spot_type,
+            region=region,
+            location_name=spot_data.get("location_name"),
             geom=geom
         )
         
@@ -108,6 +157,12 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
 
 def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> None:
     """Create photos for each spot if they don't exist."""
+    # Get BASE_URL from settings (should be frontend URL)
+    settings = Settings()
+    base_url = settings.BASE_URL.rstrip('/')  # Remove trailing slash if present
+    
+    # Photos are in frontend public directory
+    photo_base_path = "/PakalSpot init photos"
     
     for i, spot in enumerate(spots):
         # Check if photos already exist for this spot
@@ -116,22 +171,42 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
             print(f"Photos already exist for spot '{spot.title}'")
             continue
         
-        # Get the specific photo for this spot from the spots_data
-        photo_filename = spots_data[i]["photo"]
-        photo_url = f"http://localhost:8000/media/{photo_filename}"
+        # Get photos for this spot - support both list and comma-separated string
+        photos_data = spots_data[i].get("photos", [])
+        if isinstance(photos_data, str):
+            # Handle comma-separated string
+            photo_filenames = [p.strip() for p in photos_data.split(',')]
+        elif isinstance(photos_data, list):
+            # Handle list
+            photo_filenames = photos_data
+        else:
+            # Fallback: try to get from "photo" field (old format)
+            photo_data = spots_data[i].get("photo", "")
+            if photo_data:
+                photo_filenames = [p.strip() for p in photo_data.split(',')]
+            else:
+                print(f"No photos found for spot '{spot.title}'")
+                continue
         
-        photo = Photo(
-            spot_id=spot.id,
-            object_key=f"media/{photo_filename}",
-            url=photo_url,
-            thumbnail_url=photo_url  # Using same URL for thumbnail for now
-        )
-        
-        db.add(photo)
-        print(f"Created photo for spot '{spot.title}': {photo_filename}")
+        # Create photo records for each photo
+        for photo_filename in photo_filenames:
+            if not photo_filename:
+                continue
+            
+            # Photos are in frontend public directory
+            photo_url = f"{base_url}{photo_base_path}/{photo_filename}"
+            
+            photo = Photo(
+                spot_id=spot.id,
+                object_key=f"{photo_base_path}/{photo_filename}",
+                url=photo_url,
+                thumbnail_url=photo_url
+            )
+            
+            db.add(photo)
+            print(f"Created photo for spot '{spot.title}': {photo_filename}")
     
     db.commit()
-
 
 def main():
     """Main seeding function."""
@@ -150,10 +225,12 @@ def main():
         # Create photos
         create_photos(db, spots, spots_data)
         
-        print("Database seeded successfully! 🚀")
+        print("Database seeded successfully!")
         
     except Exception as e:
         print(f"Error during seeding: {e}")
+        import traceback
+        traceback.print_exc()
         db.rollback()
         raise
     finally:

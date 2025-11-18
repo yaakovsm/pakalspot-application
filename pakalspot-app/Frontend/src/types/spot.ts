@@ -63,7 +63,8 @@ export type SpotType =
 
 export type IsraeliRegion = 
   | 'negev'
-  | 'galilee'
+  | 'galilee elion'
+  | 'galilee tahton'
   | 'golan'
   | 'shfela'
   | 'sharon'

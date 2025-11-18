@@ -42,7 +42,7 @@ async def create_spot(
         region_lower = region.lower()
         region_mapping = {
             'negev': models.Region.negev,
-            'galilee': models.Region.galilee,
+            'galilee elion': models.Region.galilee_elion,
             'golan': models.Region.golan,
             'shfela': models.Region.shfela,
             'sharon': models.Region.sharon,
@@ -165,7 +165,8 @@ async def update_spot(
         region_lower = region.lower()
         region_mapping = {
             'negev': models.Region.negev,
-            'galilee': models.Region.galilee,
+            'galilee elion': models.Region.galilee_elion,
+            'galilee tahton': models.Region.galilee_tahton,
             'golan': models.Region.golan,
             'shfela': models.Region.shfela,
             'sharon': models.Region.sharon,

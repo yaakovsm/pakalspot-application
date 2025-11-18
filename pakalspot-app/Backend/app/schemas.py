@@ -18,7 +18,8 @@ class SpotType(str, Enum):
 
 class Region(str, Enum):
     negev = "Negev"
-    galilee = "Galilee"
+    galilee_elion = "Galilee Elion"
+    galilee_tahton = "Galilee Tahton"
     golan = "Golan"
     shfela = "Shfela"
     sharon = "Sharon"
