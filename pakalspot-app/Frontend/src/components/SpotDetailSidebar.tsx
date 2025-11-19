@@ -3,7 +3,7 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Spot } from '../types/spot';
-import { X, Heart, MapPin, User, Calendar, Eye, Share2 } from 'lucide-react';
+import { X, Heart, MapPin, Share2 } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useTranslation } from 'react-i18next';
 
@@ -177,42 +177,33 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
           </CardContent>
         </Card>
 
-        {/* Spot Info */}
+        {/* How to Get There */}
         <Card className="mb-4">
           <CardContent className="p-4">
-            <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-              <User className="w-4 h-4" />
-              {t('spots.spot_info')}
+            <h3 className="font-semibold text-foreground mb-3">
+              {t('spots.how_to_get_there')}
             </h3>
             
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('spots.added_by')}:</span>
-                <span className="font-medium">{spot.createdBy?.username || t('spots.unknown')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('spots.popularity')}:</span>
-                <span className="font-medium flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  {spot.popularity || 0}
-                </span>
-              </div>
-            </div>
+            {spot.how_to_get_there && (
+              <p className="text-foreground leading-relaxed mb-4">
+                {spot.how_to_get_there}
+              </p>
+            )}
+
+            {/* Get Directions Button */}
+            <Button 
+              variant="default" 
+              onClick={() => {
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}`;
+                window.open(url, '_blank');
+              }}
+              className="w-full gap-2"
+            >
+              <MapPin className="w-4 h-4" />
+              {t('spots.get_directions')}
+            </Button>
           </CardContent>
         </Card>
-
-        {/* Get Directions Button */}
-        <Button 
-          variant="default" 
-          onClick={() => {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}`;
-            window.open(url, '_blank');
-          }}
-          className="w-full gap-2"
-        >
-          <MapPin className="w-4 h-4" />
-          Get Directions
-        </Button>
       </div>
     </div>
   );

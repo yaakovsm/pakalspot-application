@@ -131,7 +131,9 @@
       "create_spot": "צור מקום",
       "spot_created_success": "הצלחה!",
       "spot_created_success_desc": "המקום שלך נוצר בהצלחה",
-      "spot_creation_failed": "יצירת המקום נכשלה. אנא נסו שוב"
+      "spot_creation_failed": "יצירת המקום נכשלה. אנא נסו שוב",
+      "how_to_get_there": "איך מגיעים?",
+      "get_directions": "ניווט לספוט"
     },
     "spot_types": {
       "waterfall": "מפל",

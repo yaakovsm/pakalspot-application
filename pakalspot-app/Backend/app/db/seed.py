@@ -99,6 +99,8 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
             user_id=admin_user.id,
             title=spot_data["title"],
             description=spot_data["description"],
+            subtitle=spot_data.get("subtitle"),
+            how_to_get_there=spot_data.get("how_to_get_there"),
             spot_type=spot_type,
             location_name=spot_data.get("location_name"),
             geom=geom

@@ -26,6 +26,8 @@ export interface Spot {
   id: string;
   title: string;
   description: string;
+  subtitle?: string;
+  how_to_get_there?: string;
   spot_type: SpotType;
   lat: number;
   lon: number;

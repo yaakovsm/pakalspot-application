@@ -142,6 +142,8 @@ class Spot(Base):
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    subtitle: Mapped[str] = mapped_column(Text, nullable=True)  # Optional subtitle
+    how_to_get_there: Mapped[str] = mapped_column(Text, nullable=True)  # Optional directions
     spot_type: Mapped[SpotType] = mapped_column(EnumValueType(SpotType, length=50), nullable=False)
     location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)

@@ -120,7 +120,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
             </div>
             
             <p className="text-muted-foreground text-sm mb-2 line-clamp-1">
-              {spot.description}
+              {spot.subtitle}
             </p>
             
             {/* Distance info */}

@@ -131,7 +131,9 @@
       "create_spot": "Create Spot",
       "spot_created_success": "Success!",
       "spot_created_success_desc": "Your spot has been created successfully",
-      "spot_creation_failed": "Failed to create spot. Please try again"
+      "spot_creation_failed": "Failed to create spot. Please try again",
+      "how_to_get_there": "How to get there",
+      "get_directions": "Get Directions"
     },
     "spot_types": {
       "waterfall": "Waterfall",

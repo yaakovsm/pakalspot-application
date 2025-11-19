@@ -102,6 +102,8 @@ class SpotOut(BaseModel):
     id: uuid.UUID
     title: str
     description: str
+    subtitle: Optional[str] = None
+    how_to_get_there: Optional[str] = None
     spot_type: SpotType
     lat: float
     lon: float
