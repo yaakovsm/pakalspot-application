@@ -49,9 +49,6 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
       if (filters.types.length > 0) {
         params.type = filters.types.join(',');
       }
-      if (filters.region) {
-        params.region = filters.region;
-      }
       params.sortBy = filters.sortBy;
 
       const response = await spotsAPI.getSpots(params);

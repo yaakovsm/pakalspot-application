@@ -14,10 +14,9 @@ sys.path.append('/app')
 
 from sqlalchemy.orm import Session
 from geoalchemy2 import WKTElement
-from app.enums import parse_region, parse_spot_type
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
-from app.models import User, Spot, Photo, SpotType, Region
+from app.models import User, Spot, Photo, SpotType, parse_spot_type
 from app.core.settings import Settings
 import hashlib
 
@@ -91,7 +90,6 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
     for spot_data in spots_data:
         # Parse enums from strings
         spot_type = parse_spot_type(spot_data["spot_type"])
-        region = parse_region(spot_data["region"])
         
         # Create geometry point from latitude and longitude
         geom = WKTElement(f"POINT({spot_data['longitude']} {spot_data['latitude']})", srid=4326)
@@ -102,7 +100,6 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
             title=spot_data["title"],
             description=spot_data["description"],
             spot_type=spot_type,
-            region=region,
             location_name=spot_data.get("location_name"),
             geom=geom
         )
@@ -111,7 +108,7 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
         db.commit()
         db.refresh(spot)
         created_spots.append(spot)
-        print(f"Created spot: {spot.title} (region: {region.value})")
+        print(f"Created spot: {spot.title}")
     
     return created_spots, spots_data
 

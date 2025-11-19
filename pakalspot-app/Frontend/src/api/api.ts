@@ -64,7 +64,6 @@ export const spotsAPI = {
     lng?: number;
     radius?: number;
     type?: string;
-    region?: string;
     sortBy?: string;
   }): Promise<AxiosResponse<Spot[]>> =>
     api.get('/spots', { params }),
@@ -79,7 +78,6 @@ export const spotsAPI = {
     formData.append('type', data.type);
     formData.append('latitude', data.latitude.toString());
     formData.append('longitude', data.longitude.toString());
-    formData.append('region', data.region);
     
     if (data.locationName) {
       formData.append('location_name', data.locationName);

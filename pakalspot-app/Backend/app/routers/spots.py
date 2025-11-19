@@ -9,7 +9,7 @@ from typing import List, Optional
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 import os
-from app.enums import parse_region, parse_spot_type
+from app.models import SpotType, parse_spot_type
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 
@@ -26,7 +26,6 @@ async def create_spot(
     type: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    region: str = Form(...),
     location_name: Optional[str] = Form(None),
     photos: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
@@ -38,17 +37,11 @@ async def create_spot(
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
     
-    try:
-        region_enum = parse_region(region)
-    except Exception:
-        raise HTTPException(status_code=400, detail=f"Invalid region: {region}")
-    
     point = from_shape(Point(longitude, latitude), srid=4326)
     spot = models.Spot(
         title=title,
         description=description,
         spot_type=spot_type,
-        region=region_enum,
         location_name=location_name,
         geom=point,
         user_id=current_user.id,
@@ -108,7 +101,6 @@ async def create_spot(
         "title": spot.title,
         "description": spot.description,
         "spot_type": spot.spot_type,
-        "region": spot.region,
         "lat": lat,
         "lon": lon,
         "location_name": spot.location_name,
@@ -125,7 +117,6 @@ async def update_spot(
     type: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    region: str = Form(...),
     location_name: Optional[str] = Form(None),
     photos: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
@@ -147,31 +138,10 @@ async def update_spot(
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
     
-    try:
-        # Handle both lowercase and capitalized region names
-        region_lower = region.lower()
-        region_mapping = {
-            'negev': models.Region.negev,
-            'galilee elion': models.Region.galilee_elion,
-            'galilee tahton': models.Region.galilee_tahton,
-            'golan': models.Region.golan,
-            'shfela': models.Region.shfela,
-            'sharon': models.Region.sharon,
-            'shomron': models.Region.shomron,
-            'jerusalem': models.Region.jerusalem,
-            'arava': models.Region.arava,
-        }
-        region_enum = region_mapping.get(region_lower)
-        if not region_enum:
-            raise ValueError(f"Invalid region: {region}")
-    except (ValueError, KeyError):
-        raise HTTPException(status_code=400, detail=f"Invalid region: {region}")
-    
     # Update spot fields
     spot.title = title
     spot.description = description
     spot.spot_type = spot_type
-    spot.region = region_enum
     spot.location_name = location_name
     
     # Update geometry
@@ -243,7 +213,6 @@ async def update_spot(
         "title": spot.title,
         "description": spot.description,
         "spot_type": spot.spot_type,
-        "region": spot.region,
         "lat": lat,
         "lon": lon,
         "location_name": spot.location_name,
@@ -329,7 +298,6 @@ def list_spots(db: Session = Depends(get_db)):
             "title": spot.title,
             "description": spot.description,
             "spot_type": spot.spot_type,
-            "region": spot.region,
             "lat": lat,
             "lon": lon,
             "location_name": spot.location_name,
@@ -387,7 +355,6 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
         "title": spot.title,
         "description": spot.description,
         "spot_type": spot.spot_type,
-        "region": spot.region,
         "lat": lat,
         "lon": lon,
         "location_name": spot.location_name,
@@ -494,8 +461,6 @@ def update_spot(
         spot.description = spot_update.description
     if spot_update.spot_type is not None:
         spot.spot_type = spot_update.spot_type
-    if spot_update.region is not None:
-        spot.region = spot_update.region
     if spot_update.lat is not None and spot_update.lon is not None:
         # Update geometry
         from shapely.geometry import Point
@@ -531,7 +496,6 @@ def update_spot(
         "title": spot.title,
         "description": spot.description,
         "spot_type": spot.spot_type,
-        "region": spot.region,
         "lat": lat,
         "lon": lon,
         "location_name": spot.location_name,

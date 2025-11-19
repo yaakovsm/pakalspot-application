@@ -81,8 +81,6 @@
       "newest": "Newest",
       "oldest": "Oldest",
       "distance_from_location": "Distance from your location",
-      "region": "Region",
-      "all_regions": "All Regions",
       "types": "Types",
       "spots_count": "{{count}} spot",
       "spots_count_plural": "{{count}} spots",
@@ -152,16 +150,6 @@
       "cafe": "Cafe",
       "camping": "Camping",
       "other": "Other"
-    },
-    "regions": {
-      "negev": "Negev",
-      "galilee": "Galilee",
-      "golan": "Golan Heights",
-      "shfela": "Shfela",
-      "sharon": "Sharon",
-      "shomron": "Shomron",
-      "jerusalem": "Jerusalem",
-      "arava": "Arava"
     },
     "distance_options": {
       "5km": "5km",

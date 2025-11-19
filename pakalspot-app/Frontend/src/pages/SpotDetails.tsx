@@ -139,20 +139,6 @@ const SpotDetails: React.FC = () => {
     return typeColors[type] || typeColors.other;
   };
 
-  const getRegionLabel = (region: string) => {
-    const regionLabels: { [key: string]: string } = {
-      negev: 'Negev',
-      galilee: 'Galilee',
-      golan: 'Golan Heights',
-      shfela: 'Shfela',
-      sharon: 'Sharon',
-      shomron: 'Shomron',
-      jerusalem: 'Jerusalem Area',
-      arava: 'Arava',
-    };
-    return regionLabels[region] || region;
-  };
-
   if (!selectedSpot) {
     return null;
   }
@@ -240,9 +226,6 @@ const SpotDetails: React.FC = () => {
                         <Badge className={`${getTypeColor(selectedSpot.spot_type)} text-white`}>
                           {t(`spot_types.${selectedSpot.spot_type}`)}
                         </Badge>
-                        <Badge variant="outline">
-                          {t(`regions.${selectedSpot.region}`)}
-                        </Badge>
                       </div>
                     </div>
                     
@@ -304,10 +287,6 @@ const SpotDetails: React.FC = () => {
                   </h3>
                   
                   <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">{t('spots.region')}:</span>
-                      <span className="ml-2 font-medium">{getRegionLabel(selectedSpot.region)}</span>
-                    </div>
                     <div>
                       <span className="text-muted-foreground">{t('spots.coordinates')}:</span>
                       <span className="ml-2 font-mono text-xs">

@@ -5,19 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class GeocodingService:
-    """Service for geocoding location names to coordinates and determining regions"""
-    
-    # Israeli region boundaries (approximate)
-    REGION_BOUNDARIES = {
-        'negev': {'lat_min': 29.5, 'lat_max': 31.0, 'lng_min': 34.0, 'lng_max': 35.0},
-        'galilee': {'lat_min': 32.5, 'lat_max': 33.4, 'lng_min': 35.0, 'lng_max': 35.6},
-        'golan': {'lat_min': 32.8, 'lat_max': 33.4, 'lng_min': 35.6, 'lng_max': 35.9},
-        'shfela': {'lat_min': 31.0, 'lat_max': 32.0, 'lng_min': 34.5, 'lng_max': 35.0},
-        'sharon': {'lat_min': 32.0, 'lat_max': 32.5, 'lng_min': 34.5, 'lng_max': 35.0},
-        'shomron': {'lat_min': 31.5, 'lat_max': 32.5, 'lng_min': 35.0, 'lng_max': 35.5},
-        'jerusalem': {'lat_min': 31.5, 'lat_max': 32.0, 'lng_min': 35.0, 'lng_max': 35.5},
-        'arava': {'lat_min': 29.5, 'lat_max': 31.0, 'lng_min': 35.0, 'lng_max': 35.5},
-    }
+    """Service for geocoding location names to coordinates"""
     
     def __init__(self):
         self.nominatim_base_url = "https://nominatim.openstreetmap.org"
@@ -73,17 +61,15 @@ class GeocodingService:
     
     def geocode_location(self, location_name: str) -> Optional[Dict]:
         """
-        Geocode a specific location name to get coordinates and region
+        Geocode a specific location name to get coordinates
         """
         results = self.search_locations(location_name, limit=1)
         if results:
             result = results[0]
-            region = self._determine_region(result['lat'], result['lng'])
             return {
                 'name': result['name'],
                 'lat': result['lat'],
                 'lng': result['lng'],
-                'region': region,
                 'address': result['address']
             }
         return None
@@ -117,15 +103,6 @@ class GeocodingService:
         
         return ', '.join(components)
     
-    def _determine_region(self, lat: float, lng: float) -> str:
-        """Determine Israeli region based on coordinates"""
-        for region, bounds in self.REGION_BOUNDARIES.items():
-            if (bounds['lat_min'] <= lat <= bounds['lat_max'] and 
-                bounds['lng_min'] <= lng <= bounds['lng_max']):
-                return region
-        
-        # Default fallback
-        return 'jerusalem'
     
     def reverse_geocode(self, lat: float, lng: float) -> Optional[Dict]:
         """
@@ -155,12 +132,10 @@ class GeocodingService:
             result = response.json()
             
             if result and 'display_name' in result:
-                region = self._determine_region(lat, lng)
                 return {
                     'name': result.get('display_name', ''),
                     'lat': lat,
                     'lng': lng,
-                    'region': region,
                     'address': self._format_address(result.get('address', {}))
                 }
             

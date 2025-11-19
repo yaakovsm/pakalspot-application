@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Slider } from './ui/slider';
 import { useSpots } from '../hooks/useSpots';
-import { SpotType, IsraeliRegion } from '../types/spot';
+import { SpotType } from '../types/spot';
 import { Search, Filter, MapPin, Plus } from 'lucide-react';
 import SpotCard from './SpotCard';
 import { useTranslation } from 'react-i18next';
@@ -25,10 +25,6 @@ const spotTypes: SpotType[] = [
   'camping', 'other'
 ];
 
-const israeliRegions: IsraeliRegion[] = [
-  'negev', 'galilee', 'golan', 'shfela', 'sharon', 'shomron', 'jerusalem', 'arava'
-];
-
 const distanceOptions = [
   { value: 5, label: '5km' },
   { value: 10, label: '10km' },
@@ -44,7 +40,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [maxDistance, setMaxDistance] = useState([filters.maxDistance || 100]);
-  const [selectedRegion, setSelectedRegion] = useState<IsraeliRegion | 'all'>('all');
 
   const handleViewDetails = (spot: any) => {
     selectSpot(spot);
@@ -82,11 +77,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
   const handleDistanceChange = (value: number[]) => {
     setMaxDistance(value);
     updateFilters({ maxDistance: value[0] });
-  };
-
-  const handleRegionChange = (region: IsraeliRegion | 'all') => {
-    setSelectedRegion(region);
-    updateFilters({ region: region === 'all' ? undefined : region });
   };
 
   return (
@@ -167,25 +157,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
               </Select>
             </div>
 
-            {/* Region */}
-            <div>
-              <label className="text-sm font-medium text-sidebar-foreground mb-2 block">
-                {t('spots.region')}
-              </label>
-              <Select value={selectedRegion} onValueChange={handleRegionChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('spots.all_regions')}</SelectItem>
-                  {israeliRegions.map(region => (
-                    <SelectItem key={region} value={region}>
-                      {t(`regions.${region}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Distance Slider (backup) */}
             <div className="hidden">

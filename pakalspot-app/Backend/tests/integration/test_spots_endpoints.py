@@ -68,7 +68,6 @@ class TestSpotsEndpoints:
             "title": "Test Spot",
             "description": "A beautiful test spot",
             "spot_type": "viewpoint",
-            "region": "galilee",
             "lat": 32.5,
             "lon": 35.0
         }
@@ -80,7 +79,6 @@ class TestSpotsEndpoints:
         assert data["title"] == spot_data["title"]
         assert data["description"] == spot_data["description"]
         assert data["spot_type"] == spot_data["spot_type"]
-        assert data["region"] == spot_data["region"]
         assert "id" in data
         assert "created_at" in data
     
@@ -90,7 +88,6 @@ class TestSpotsEndpoints:
             "title": "Test Spot",
             "description": "A beautiful test spot",
             "spot_type": "viewpoint",
-            "region": "galilee",
             "lat": 32.5,
             "lon": 35.0
         }
@@ -108,7 +105,7 @@ class TestSpotsEndpoints:
         spot_data = {
             "title": "Test Spot",
             "description": "A beautiful test spot"
-            # Missing spot_type, region, lat, lon
+            # Missing spot_type, lat, lon
         }
         
         response = client.post("/spots/", json=spot_data, headers=headers)
@@ -124,7 +121,6 @@ class TestSpotsEndpoints:
             "title": "Test Spot",
             "description": "A beautiful test spot",
             "spot_type": "viewpoint",
-            "region": "galilee",
             "lat": 32.5,
             "lon": 35.0
         }
@@ -149,7 +145,6 @@ class TestSpotsEndpoints:
             "title": "Test Spot",
             "description": "A beautiful test spot",
             "spot_type": "viewpoint",
-            "region": "galilee",
             "lat": 32.5,
             "lon": 35.0
         }
@@ -181,7 +176,6 @@ class TestSpotsEndpoints:
             "title": "Test Spot",
             "description": "A beautiful test spot",
             "spot_type": "viewpoint",
-            "region": "galilee",
             "lat": 999.0,  # Invalid latitude
             "lon": 35.0
         }
@@ -200,7 +194,6 @@ class TestSpotsEndpoints:
             "title": "Test Spot",
             "description": "A beautiful test spot",
             "spot_type": "invalid_type",
-            "region": "galilee",
             "lat": 32.5,
             "lon": 35.0
         }
@@ -213,7 +206,6 @@ class TestSpotsEndpoints:
             "title": "Test Spot",
             "description": "A beautiful test spot",
             "spot_type": "viewpoint",
-            "region": "invalid_region",
             "lat": 32.5,
             "lon": 35.0
         }

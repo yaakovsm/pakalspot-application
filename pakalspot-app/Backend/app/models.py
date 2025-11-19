@@ -66,16 +66,46 @@ class SpotType(enum.Enum):
     desert = "desert"
 
 
-class Region(enum.Enum):
-    negev = "Negev"
-    galilee_elion = "Galilee Elion"
-    galilee_tahton = "Galilee Tahton"
-    golan = "Golan"
-    shfela = "Shfela"
-    sharon = "Sharon"
-    shomron = "Shomron"
-    jerusalem = "Jerusalem"
-    arava = "Arava"
+def parse_spot_type(spot_type_str: str) -> SpotType:
+    """
+    Parse spot type string into SpotType enum (case-insensitive).
+    For multiple types (viewpoint|forest), uses the first valid one.
+    """
+    if not spot_type_str:
+        return SpotType.viewpoint
+    
+    spot_type_str = spot_type_str.strip()
+    
+    # Handle multiple types separated by |
+    if '|' in spot_type_str:
+        types = [t.strip() for t in spot_type_str.split('|')]
+        for t in types:
+            try:
+                return SpotType[t]
+            except KeyError:
+                try:
+                    for st in SpotType:
+                        if st.name.lower() == t.lower():
+                            return st
+                except:
+                    continue
+        return SpotType.viewpoint
+    
+    # Single type - try exact match
+    try:
+        return SpotType[spot_type_str]
+    except KeyError:
+        pass
+    
+    # Try case-insensitive match
+    spot_type_lower = spot_type_str.lower()
+    for st in SpotType:
+        if st.name.lower() == spot_type_lower or st.value.lower() == spot_type_lower:
+            return st
+    
+    # Default fallback
+    print(f"Warning: Unknown spot type '{spot_type_str}', defaulting to viewpoint")
+    return SpotType.viewpoint
 
 
 # ----------------------
@@ -113,7 +143,6 @@ class Spot(Base):
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     spot_type: Mapped[SpotType] = mapped_column(EnumValueType(SpotType, length=50), nullable=False)
-    region: Mapped[Region] = mapped_column(EnumValueType(Region, length=50), nullable=False)
     location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)
     created_at: Mapped[datetime] = mapped_column(

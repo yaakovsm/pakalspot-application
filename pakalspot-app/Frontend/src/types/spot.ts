@@ -29,7 +29,6 @@ export interface Spot {
   spot_type: SpotType;
   lat: number;
   lon: number;
-  region: IsraeliRegion;
   createdBy?: User;
   photos?: Photo[];
   likes?: Like[];
@@ -61,20 +60,9 @@ export type SpotType =
   | 'camping'
   | 'other';
 
-export type IsraeliRegion = 
-  | 'negev'
-  | 'galilee elion'
-  | 'galilee tahton'
-  | 'golan'
-  | 'shfela'
-  | 'sharon'
-  | 'shomron'
-  | 'jerusalem'
-  | 'arava';
 
 export interface SpotFilters {
   types: SpotType[];
-  region?: IsraeliRegion;
   maxDistance?: number; // in km
   minPopularity?: number;
   sortBy: 'distance' | 'popularity' | 'newest' | 'oldest';
@@ -86,7 +74,6 @@ export interface CreateSpotRequest {
   type: SpotType;
   latitude: number;
   longitude: number;
-  region: IsraeliRegion;
   locationName?: string;
   photos?: File[];
 }
@@ -108,7 +95,6 @@ export interface GeocodeResult {
   name: string;
   lat: number;
   lng: number;
-  region: string;
   address: string;
 }
 

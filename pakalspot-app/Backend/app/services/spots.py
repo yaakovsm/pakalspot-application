@@ -16,7 +16,6 @@ def create_spot(db: Session, user_id: str, payload: SpotCreate) -> models.Spot:
 		title=payload.title,
 		description=payload.description,
 		type=payload.type,
-		region=payload.region,
 		geom=geom_point,
 	)
 	db.add(spot)
@@ -31,14 +30,11 @@ def search_spots(
 	lng: Optional[float] = None,
 	radius_m: Optional[int] = None,
 	type: Optional[str] = None,
-	region: Optional[str] = None,
 	sort_by: Optional[str] = None,
 ) -> List[models.Spot]:
 	q = db.query(models.Spot)
 	if type:
 		q = q.filter(models.Spot.type == type)
-	if region:
-		q = q.filter(models.Spot.region == region)
 	if lat is not None and lng is not None and radius_m is not None:
 		# ST_DWithin(geom::geography, geography(Point(lng, lat)), radius)
 		point = func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326)

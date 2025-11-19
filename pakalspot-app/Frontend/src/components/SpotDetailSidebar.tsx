@@ -146,9 +146,6 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
           </h1>
           
           <div className="flex items-center gap-2 mb-4">
-            <Badge variant="outline">
-              {t(`regions.${spot.region}`)}
-            </Badge>
           </div>
           
           <div className="flex gap-2">

@@ -81,8 +81,6 @@
       "newest": "החדשים ביותר",
       "oldest": "הישנים ביותר",
       "distance_from_location": "מרחק מהמיקום שלך",
-      "region": "אזור",
-      "all_regions": "כל האזורים",
       "types": "סוגים",
       "spots_count": "{{count}} מקום",
       "spots_count_plural": "{{count}} מקומות",
@@ -152,17 +150,6 @@
       "cafe": "קפה",
       "camping": "קמפינג",
       "other": "אחר"
-    },
-    "regions": {
-      "negev": "נגב",
-      "galilee-elion": "גליל עליון",
-      "galilee-tahton": "גליל תחתון",
-      "golan": "רמת הגולן",
-      "shfela": "שפלה",
-      "sharon": "שרון",
-      "shomron": "שומרון",
-      "jerusalem": "ירושלים",
-      "arava": "ערבה"
     },
     "distance_options": {
       "5km": "5 ק״מ",

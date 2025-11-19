@@ -132,14 +132,12 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     try {
       console.log('Selecting location:', location);
       // Use the data we already have from search results
-      // Determine region based on coordinates (simplified approach)
-      const region = determineRegionFromCoordinates(location.lat, location.lng);
+     
       
       const geocodeResult: GeocodeResult = {
         name: location.name,
         lat: location.lat,
         lng: location.lng,
-        region: region,
         address: location.address
       };
       
@@ -151,7 +149,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       
       toast({
         title: "Location selected",
-        description: `Selected ${geocodeResult.name} in ${region}`,
+        description: `Selected ${geocodeResult.name}`,
       });
     } catch (error) {
       console.error('Error selecting location:', error);
@@ -161,22 +159,6 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
         variant: "destructive",
       });
     }
-  };
-
-  // Helper function to determine region from coordinates
-  const determineRegionFromCoordinates = (lat: number, lng: number): string => {
-    // Israeli region boundaries (approximate)
-    if (lng >= 35.6 && lng <= 35.9 && lat >= 32.8 && lat <= 33.4) return 'golan';
-    if (lng >= 35.0 && lng <= 35.6 && lat >= 32.5 && lat <= 33.4) return 'galilee';
-    if (lng >= 34.5 && lng <= 35.0 && lat >= 32.0 && lat <= 32.5) return 'sharon';
-    if (lng >= 34.5 && lng <= 35.0 && lat >= 31.0 && lat <= 32.0) return 'shfela';
-    if (lng >= 35.0 && lng <= 35.5 && lat >= 31.5 && lat <= 32.5) return 'shomron';
-    if (lng >= 35.0 && lng <= 35.5 && lat >= 31.5 && lat <= 32.0) return 'jerusalem';
-    if (lng >= 35.0 && lng <= 35.5 && lat >= 29.5 && lat <= 31.0) return 'arava';
-    if (lng >= 34.0 && lng <= 35.0 && lat >= 29.5 && lat <= 31.0) return 'negev';
-    
-    // Default fallback
-    return 'jerusalem';
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -216,7 +198,6 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       name: '',
       lat: 0,
       lng: 0,
-      region: '',
       address: ''
     });
   };

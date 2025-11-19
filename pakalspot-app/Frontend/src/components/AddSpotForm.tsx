@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { useSpots } from '../hooks/useSpots';
-import { SpotType, IsraeliRegion, CreateSpotRequest, GeocodeResult } from '../types/spot';
+import { SpotType, CreateSpotRequest, GeocodeResult } from '../types/spot';
 import { MapPin, Upload, X, Plus, Map } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import LocationSearch from './LocationSearch';
@@ -25,10 +25,6 @@ const spotTypes: SpotType[] = [
   'camping', 'other'
 ];
 
-const israeliRegions: IsraeliRegion[] = [
-  'negev', 'galilee', 'golan', 'shfela', 'sharon', 'shomron', 'jerusalem', 'arava'
-];
-
 const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLocation }) => {
   const { createSpot } = useSpots();
   const { toast } = useToast();
@@ -40,7 +36,6 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     type: 'waterfall',
     latitude: initialLocation?.lat || 0,
     longitude: initialLocation?.lng || 0,
-    region: 'jerusalem',
     locationName: '',
     photos: [],
   });
@@ -69,7 +64,6 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
       ...prev,
       latitude: location.lat,
       longitude: location.lng,
-      region: location.region as IsraeliRegion,
       locationName: location.name,
     }));
   };
@@ -175,7 +169,6 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 ...prev,
                 latitude: lat,
                 longitude: lng,
-                region: locationData.region as IsraeliRegion,
                 locationName: locationData.name,
               }));
               toast({
@@ -256,7 +249,6 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
         type: formData.type!,
         latitude: formData.latitude!,
         longitude: formData.longitude!,
-        region: formData.region!,
         locationName: formData.locationName,
         photos: selectedPhotos,
       };
@@ -364,7 +356,6 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                   <span className="font-medium text-sm">{selectedLocation.name}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  <p>{t('spots.region')}: {t(`regions.${selectedLocation.region}`)}</p>
                   <p>{t('spots.coordinates')}: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
                 </div>
               </div>

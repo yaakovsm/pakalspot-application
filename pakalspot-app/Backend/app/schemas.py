@@ -186,5 +186,4 @@ class GeocodeResult(BaseModel):
     name: str
     lat: float
     lng: float
-    region: str
     address: str
