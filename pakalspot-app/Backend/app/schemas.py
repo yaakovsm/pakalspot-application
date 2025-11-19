@@ -3,8 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from enum import Enum
-from app.models import Region as RegionEnum, SpotType as SpotTypeEnum
-
+from app.models import SpotType as SpotTypeEnum
 
 # ----------------------
 # Enums
@@ -15,19 +14,6 @@ class SpotType(str, Enum):
     viewpoint = SpotTypeEnum.viewpoint.value
     forest = SpotTypeEnum.forest.value
     desert = SpotTypeEnum.desert.value
-
-
-class Region(str, Enum):
-    negev = RegionEnum.negev.value
-    galilee_elion = RegionEnum.galilee_elion.value
-    galilee_tahton = RegionEnum.galilee_tahton.value
-    golan = RegionEnum.golan.value
-    shfela = RegionEnum.shfela.value
-    sharon = RegionEnum.sharon.value
-    shomron = RegionEnum.shomron.value
-    jerusalem = RegionEnum.jerusalem.value
-    arava = RegionEnum.arava.value
-
 
 # ----------------------
 # User Schemas
@@ -95,7 +81,6 @@ class SpotBase(BaseModel):
     title: str
     description: str
     spot_type: SpotType
-    region: Region
     lat: float
     lon: float
     location_name: Optional[str] = None
@@ -109,7 +94,6 @@ class SpotUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     spot_type: Optional[SpotType] = None
-    region: Optional[Region] = None
     lat: Optional[float] = None
     lon: Optional[float] = None
 
@@ -119,7 +103,6 @@ class SpotOut(BaseModel):
     title: str
     description: str
     spot_type: SpotType
-    region: Region
     lat: float
     lon: float
     location_name: Optional[str] = None

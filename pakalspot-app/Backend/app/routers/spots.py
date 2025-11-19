@@ -414,7 +414,7 @@ def search_locations(
 def geocode_location(
     location: str = Query(..., description="Location name to geocode")
 ):
-    """Geocode a location name to get coordinates and region"""
+    """Geocode a location name to get coordinates"""
     if not location.strip():
         raise HTTPException(status_code=400, detail="Location cannot be empty")
     
