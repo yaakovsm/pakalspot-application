@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'remove_region_column'
-down_revision = '20250115_000002_add_location_name_to_spots'  # Update this to your latest revision
+down_revision = '20250115_000002'
 branch_labels = None
 depends_on = None
 
