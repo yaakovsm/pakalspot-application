@@ -305,6 +305,17 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 required
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                {t('spots.subtitle')}
+              </label>
+              <Input
+                value={formData.subtitle || ''}
+                onChange={(e) => handleInputChange('subtitle', e.target.value)}
+                placeholder={t('spots.subtitle_placeholder')}
+              />
+            </div>
             
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
@@ -316,17 +327,6 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 placeholder={t('spots.description_placeholder')}
                 className="min-h-[100px]"
                 required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                {t('spots.subtitle')}
-              </label>
-              <Input
-                value={formData.subtitle || ''}
-                onChange={(e) => handleInputChange('subtitle', e.target.value)}
-                placeholder={t('spots.subtitle_placeholder')}
               />
             </div>
 

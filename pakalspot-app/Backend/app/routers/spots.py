@@ -104,6 +104,8 @@ async def create_spot(
         "id": spot.id,
         "title": spot.title,
         "description": spot.description,
+        "subtitle": spot.subtitle,
+        "how_to_get_there": spot.how_to_get_there,
         "spot_type": spot.spot_type,
         "lat": lat,
         "lon": lon,
@@ -121,6 +123,8 @@ async def update_spot(
     type: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
+    subtitle: Optional[str] = Form(None),
+    how_to_get_there: Optional[str] = Form(None),
     location_name: Optional[str] = Form(None),
     photos: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
@@ -145,6 +149,8 @@ async def update_spot(
     # Update spot fields
     spot.title = title
     spot.description = description
+    spot.subtitle = subtitle
+    spot.how_to_get_there = how_to_get_there
     spot.spot_type = spot_type
     spot.location_name = location_name
     
@@ -216,6 +222,8 @@ async def update_spot(
         "id": spot.id,
         "title": spot.title,
         "description": spot.description,
+        "subtitle": spot.subtitle,
+        "how_to_get_there": spot.how_to_get_there,
         "spot_type": spot.spot_type,
         "lat": lat,
         "lon": lon,
@@ -301,6 +309,8 @@ def list_spots(db: Session = Depends(get_db)):
             "id": spot.id,
             "title": spot.title,
             "description": spot.description,
+            "subtitle": spot.subtitle,
+            "how_to_get_there": spot.how_to_get_there,
             "spot_type": spot.spot_type,
             "lat": lat,
             "lon": lon,
@@ -358,6 +368,8 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
         "id": spot.id,
         "title": spot.title,
         "description": spot.description,
+        "subtitle": spot.subtitle,
+        "how_to_get_there": spot.how_to_get_there,
         "spot_type": spot.spot_type,
         "lat": lat,
         "lon": lon,
@@ -499,6 +511,8 @@ def update_spot(
         "id": spot.id,
         "title": spot.title,
         "description": spot.description,
+        "subtitle": spot.subtitle,
+        "how_to_get_there": spot.how_to_get_there,
         "spot_type": spot.spot_type,
         "lat": lat,
         "lon": lon,
