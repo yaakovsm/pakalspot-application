@@ -136,12 +136,12 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
             )}
             
             {/* Badge and Author info - aligned based on language direction */}
-            <div className={`flex items-center gap-2 text-xs text-muted-foreground ${isRTL ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex items-center flex-nowrap gap-2 text-xs text-muted-foreground ${isRTL ? 'justify-end' : 'justify-start'}`}>
               {isRTL ? (
                 <>
-                  <span>{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
+                  <span className="whitespace-nowrap">{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
                   <Badge 
-                    className={`text-xs ${getTypeColor(spot.spot_type)} text-white`}
+                    className={`text-xs flex-shrink-0 ${getTypeColor(spot.spot_type)} text-white`}
                   >
                     {t(`spot_types.${spot.spot_type}`)}
                   </Badge>
@@ -149,11 +149,11 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
               ) : (
                 <>
                   <Badge 
-                    className={`text-xs ${getTypeColor(spot.spot_type)} text-white`}
+                    className={`text-xs flex-shrink-0 ${getTypeColor(spot.spot_type)} text-white`}
                   >
                     {t(`spot_types.${spot.spot_type}`)}
                   </Badge>
-                  <span>{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
+                  <span className="whitespace-nowrap">{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
                 </>
               )}
             </div>
