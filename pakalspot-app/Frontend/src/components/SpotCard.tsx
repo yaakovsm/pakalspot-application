@@ -122,7 +122,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
               </h3>
             </div>
             
-            <p className={`text-muted-foreground text-sm mb-2 line-clamp-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <p className={`text-muted-foreground text-sm mb-2 line-clamp-1 ${isRTL ? 'justify-end' : 'justify-start'}`}>
               {translatedSubtitle}
             </p>
             
@@ -136,13 +136,26 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
             )}
             
             {/* Badge and Author info - aligned based on language direction */}
-            <div className={`flex items-center gap-2 text-xs text-muted-foreground ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'}`}>
-              <Badge 
-                className={`text-xs ${getTypeColor(spot.spot_type)} text-white`}
-              >
-                {t(`spot_types.${spot.spot_type}`)}
-              </Badge>
-              <span>{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
+            <div className={`flex items-center gap-2 text-xs text-muted-foreground ${isRTL ? 'justify-end' : 'justify-start'}`}>
+              {isRTL ? (
+                <>
+                  <span>{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
+                  <Badge 
+                    className={`text-xs ${getTypeColor(spot.spot_type)} text-white`}
+                  >
+                    {t(`spot_types.${spot.spot_type}`)}
+                  </Badge>
+                </>
+              ) : (
+                <>
+                  <Badge 
+                    className={`text-xs ${getTypeColor(spot.spot_type)} text-white`}
+                  >
+                    {t(`spot_types.${spot.spot_type}`)}
+                  </Badge>
+                  <span>{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
+                </>
+              )}
             </div>
           </div>
           
