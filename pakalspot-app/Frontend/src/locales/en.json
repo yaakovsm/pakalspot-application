@@ -169,6 +169,38 @@
     },
     "footer": {
       "rights": "All rights reserved © PakalSpot"
+    },
+    "spot_content": {
+      "hexagon_pool": {
+        "title": "Hexagon Pool",
+        "subtitle": "A unique natural pool",
+        "description": "Hexagon Pool is one of the coolest pools in Israel: cold, deep water year-round, hexagonal basalt walls that look like a movie set, and the atmosphere of a closed canyon in the middle of the Golan. It's an excellent spot for jumping into the water, a small snack, and coffee that feels like you've gone abroad for an hour.\n\nImportant! Entry is paid and it's a regulated site by the Nature and Parks Authority, so it's worth checking the opening hours and updates on the Nature and Parks Authority website before arriving.",
+        "how_to_get_there": "Type \"Nahal Meshushim\" into Waze. The entrance to the reserve is from Road 888, north of the settlement Had Nes, and from there follow the signs to \"Hexagon Pool\" and reach the organized parking lot of the Nature and Parks Authority. From the parking lot, walk down a marked and steep trail, about 50 minutes to the pool."
+      },
+      "biriya_fortress": {
+        "title": "Biriya Fortress",
+        "subtitle": "Forest with a view of the Upper Galilee",
+        "description": "Biriya Fortress sits on a mountain peak above Safed, in the heart of a large pine forest. It's an ideal spot to open a coffee kit: picnic tables, cool mountain air, the smell of the forest, and views extending to Meron and the Hula Valley. You can also combine a visit to the fortress itself (during opening hours, of course) and catch some history along the way.\n\nAround the fortress there are pleasant picnic areas in the forest, so it's easy to find a quiet corner to sit in. In summer it's a great place to escape the heat, and in winter it can be very cold, so it's worth bringing a warm layer.",
+        "how_to_get_there": "Type \"Biriya Fortress\" into Waze. Arrive from Road 8900 (old Safed-Rosh Pina) following the signs to Biriya Fortress. The paved forest road leads directly to the parking lot next to the fortress, suitable for all vehicles."
+      },
+      "jilabun_waterfall": {
+        "title": "Jilabun Waterfall",
+        "subtitle": "The second highest waterfall in Israel",
+        "description": "Jilabun Waterfall is a Golan classic: water falling from a serious height into a large pool, surrounded by dramatic basalt walls. Those who come in the vibe of a descent-ascent hike can reach the pool below, and those who just want \"coffee with a view\" can settle for the view from above. In any case, it's one of those places where coffee feels like a break from life.\n\nThe trail is exposed to the sun, so it's recommended to arrive in the morning or afternoon hours and bring a hat, water, and good shoes.",
+        "how_to_get_there": "Type \"Jilabun Waterfall\" into Waze and drive on Road 91. Park according to the signs, and start walking on a trail marked in blue going downhill. After about 300 meters you reach a blue-red trail junction and a viewing platform overlooking the waterfall. From there turn left and continue with the red marking another about 400 meters downhill to the pool. The descent takes about half an hour, as does the ascent back."
+      },
+      "mount_tabor": {
+        "title": "Mount Tabor",
+        "subtitle": "A prominent mountain and view in every direction",
+        "description": "Mount Tabor, one of the mountains most identified with the landscape of the Galilee, provides a circular view in all directions: valleys, fields, villages, and mountains. At the summit are the Church of the Transfiguration complex and a Franciscan monastery, and alongside them are great viewing points where coffee always feels a bit more elevated. Those who want can also complete the circular trail around the summit (about an hour, about 2 km) and stop for coffee at one of the viewing stations along the way.\n\nThe wind at the summit can be strong and cool even on hot days, especially in the morning and at sunset, so it's worth bringing an extra thin layer.",
+        "how_to_get_there": "In Waze: \"Mount Tabor Summit – Church of the Transfiguration\". From Road 65, enter the village of Daburiyah or Shibli (two common access routes), and from there climb a winding and narrow road to the summit (private vehicles only). At the top there is a parking lot near the church complex and from there walk to the viewpoints and the circular trail."
+      },
+      "sidna_ali": {
+        "title": "Sidna Ali",
+        "subtitle": "Ancient coastal viewpoint",
+        "description": "Sidna Ali has a good sunset vibe: a high kurkar cliff, an ancient mosque, open sea, and a long stretch of Sharon beach. A few steps from the parking and you're on a sand embankment with a historic view of the sea – a perfect place to sit with a cup of coffee, breathe sea air, and catch some quiet.\n\nThe cliff itself is sensitive, so don't get too close to the edge and there are plenty of safe spots with excellent views. The place is exposed to wind, especially in winter and on stormy days, so it's worth bringing something long. There's no organized picnic area here, so it's advisable to come equipped with what's comfortable for you to sit on and take everything back at the end.",
+        "how_to_get_there": "In Waze: \"Sidna Ali Mosque\". Drive on the coastal road in the Herzliya area, turn according to the signs to the mosque, and continue on the adjacent road to the parking area near the cliff. From there walk a few meters on foot to the sand area and the viewpoint."
+      }
     }
   }
   

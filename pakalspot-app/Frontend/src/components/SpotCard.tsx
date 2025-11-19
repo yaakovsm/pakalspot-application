@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
 import AuthDialog from './AuthDialog';
+import { getTranslatedSpotContent } from '../utils/spotTranslations';
 
 interface SpotCardProps {
   spot: Spot;
@@ -22,10 +23,17 @@ interface SpotCardProps {
 const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, onInfoHover, className }) => {
   const { selectSpot, favoriteSpot, unfavoriteSpot } = useSpots();
   const { isAuthenticated } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  
+  const currentLanguage = i18n.language || 'he';
+  const isRTL = currentLanguage === 'he';
+  
+  // Get translated content
+  const translatedTitle = getTranslatedSpotContent(spot, t, 'title');
+  const translatedSubtitle = getTranslatedSpotContent(spot, t, 'subtitle');
 
   const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -106,39 +114,39 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
           {/* Left side - Spot info */}
-          <div className="flex-1 pr-3">
-            {/* Badge and title on same line, aligned to right */}
-            <div className="flex items-center justify-end gap-2 mb-1">
-              <Badge 
-                className={`text-xs ${getTypeColor(spot.spot_type)} text-white mr-4`}
-              >
-                {t(`spot_types.${spot.spot_type}`)}
-              </Badge>
-              <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">
-                {spot.title}
+          <div className={`flex-1 ${isRTL ? 'pr-3' : 'pl-3'}`}>
+            {/* Title - aligned based on language direction */}
+            <div className={`flex items-center gap-2 mb-1 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+              <h3 className={`font-semibold text-base text-foreground group-hover:text-primary transition-colors ${isRTL ? 'text-right' : 'text-left'}`}>
+                {translatedTitle}
               </h3>
             </div>
             
-            <p className="text-muted-foreground text-sm mb-2 line-clamp-1">
-              {spot.subtitle}
+            <p className={`text-muted-foreground text-sm mb-2 line-clamp-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {translatedSubtitle}
             </p>
             
             {/* Distance info */}
             {spot.distance && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+              <div className={`flex items-center gap-2 text-xs text-muted-foreground mb-2 ${isRTL ? 'justify-end' : 'justify-start'}`}>
                 <span>
                   {spot.distance < 1 ? `${Math.round(spot.distance * 1000)}m away` : `${spot.distance.toFixed(1)}km away`}
                 </span>
               </div>
             )}
             
-            {/* Author info - centered */}
-            <div className="text-center text-xs text-muted-foreground">
+            {/* Badge and Author info - aligned based on language direction */}
+            <div className={`flex items-center gap-2 text-xs text-muted-foreground ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'}`}>
+              <Badge 
+                className={`text-xs ${getTypeColor(spot.spot_type)} text-white`}
+              >
+                {t(`spot_types.${spot.spot_type}`)}
+              </Badge>
               <span>{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
             </div>
           </div>
           
-          {/* Right side - Action buttons */}
+          {/* Right side - Action buttons (always on the right) */}
           <div className="flex flex-col items-center gap-2">
             <Button
               variant="ghost"

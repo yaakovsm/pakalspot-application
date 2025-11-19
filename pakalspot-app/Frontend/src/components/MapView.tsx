@@ -17,6 +17,7 @@ import { Heart, ThumbsUp, ThumbsDown } from 'lucide-react';
 import googleMapsLoader from '../utils/googleMapsLoader';
 import { VITE_GOOGLE_MAPS_API_KEY } from '../config/env';
 import AuthDialog from './AuthDialog';
+import { getTranslatedSpotContent } from '../utils/spotTranslations';
 
 // Israel map configuration
 const ISRAEL_CENTER: google.maps.LatLngLiteral = { lat: 31.3, lng: 34.8 };
@@ -418,13 +419,13 @@ useEffect(() => {
             {selectedSpot.photos?.[0] && (
               <img 
                 src={selectedSpot.photos[0].url} 
-                alt={selectedSpot.title}
+                alt={getTranslatedSpotContent(selectedSpot, t, 'title')}
                 className="w-full h-32 object-cover rounded-lg mb-3"
               />
             )}
             
             <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-lg text-foreground">{selectedSpot.title}</h3>
+              <h3 className="font-semibold text-lg text-foreground">{getTranslatedSpotContent(selectedSpot, t, 'title')}</h3>
               <Button
                 variant="ghost"
                 size="icon"
@@ -436,7 +437,7 @@ useEffect(() => {
             </div>
             
             <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-              {selectedSpot.description}
+              {getTranslatedSpotContent(selectedSpot, t, 'description')}
             </p>
             
             <div className="flex items-center justify-between">

@@ -6,6 +6,7 @@ import { Spot } from '../types/spot';
 import { X, Heart, MapPin, Share2 } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useTranslation } from 'react-i18next';
+import { getTranslatedSpotContent } from '../utils/spotTranslations';
 
 interface SpotDetailSidebarProps {
   spot: Spot | null;
@@ -19,6 +20,11 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
   const { favoriteSpot, unfavoriteSpot } = useSpots();
   const { t } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(isOpening);
+  
+  // Get translated content
+  const translatedTitle = spot ? getTranslatedSpotContent(spot, t, 'title') : '';
+  const translatedDescription = spot ? getTranslatedSpotContent(spot, t, 'description') : '';
+  const translatedHowToGetThere = spot ? getTranslatedSpotContent(spot, t, 'how_to_get_there') : '';
 
   useEffect(() => {
     if (isOpening) {
@@ -142,7 +148,7 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
         {/* Title and Actions */}
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-foreground mb-2">
-            {spot.title}
+            {translatedTitle}
           </h1>
           
           <div className="flex items-center gap-2 mb-4">
@@ -172,7 +178,7 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
         <Card className="mb-4">
           <CardContent className="p-4">
             <p className="text-foreground leading-relaxed">
-              {spot.description}
+              {translatedDescription}
             </p>
           </CardContent>
         </Card>
@@ -184,9 +190,9 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
               {t('spots.how_to_get_there')}
             </h3>
             
-            {spot.how_to_get_there && (
+            {translatedHowToGetThere && (
               <p className="text-foreground leading-relaxed mb-4">
-                {spot.how_to_get_there}
+                {translatedHowToGetThere}
               </p>
             )}
 
