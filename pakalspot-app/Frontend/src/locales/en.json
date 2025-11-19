@@ -117,6 +117,8 @@
       "title_placeholder": "Give your spot a catchy name...",
       "description": "Description",
       "description_placeholder": "Describe what makes this spot special...",
+      "subtitle": "Subtitle",
+      "subtitle_placeholder": "A short subtitle that will appear on the card...",
       "select_type": "Select spot type",
       "location": "Location",
       "location_placeholder": "Search for a location in Israel...",
@@ -133,6 +135,7 @@
       "spot_created_success_desc": "Your spot has been created successfully",
       "spot_creation_failed": "Failed to create spot. Please try again",
       "how_to_get_there": "How to get there",
+      "how_to_get_there_placeholder": "Describe how to get to the spot...",
       "get_directions": "Get Directions"
     },
     "spot_types": {

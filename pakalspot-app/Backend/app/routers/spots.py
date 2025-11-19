@@ -26,6 +26,8 @@ async def create_spot(
     type: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
+    subtitle: Optional[str] = Form(None),
+    how_to_get_there: Optional[str] = Form(None),
     location_name: Optional[str] = Form(None),
     photos: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
@@ -41,6 +43,8 @@ async def create_spot(
     spot = models.Spot(
         title=title,
         description=description,
+        subtitle=subtitle,
+        how_to_get_there=how_to_get_there,
         spot_type=spot_type,
         location_name=location_name,
         geom=point,

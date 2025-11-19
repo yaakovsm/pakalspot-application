@@ -33,6 +33,8 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
   const [formData, setFormData] = useState<Partial<CreateSpotRequest>>({
     title: '',
     description: '',
+    subtitle: '',
+    how_to_get_there: '',
     type: 'waterfall',
     latitude: initialLocation?.lat || 0,
     longitude: initialLocation?.lng || 0,
@@ -246,6 +248,8 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
       const spotData: CreateSpotRequest = {
         title: formData.title!,
         description: formData.description!,
+        subtitle: formData.subtitle,
+        how_to_get_there: formData.how_to_get_there,
         type: formData.type!,
         latitude: formData.latitude!,
         longitude: formData.longitude!,
@@ -312,6 +316,29 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 placeholder={t('spots.description_placeholder')}
                 className="min-h-[100px]"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                {t('spots.subtitle')}
+              </label>
+              <Input
+                value={formData.subtitle || ''}
+                onChange={(e) => handleInputChange('subtitle', e.target.value)}
+                placeholder={t('spots.subtitle_placeholder')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                {t('spots.how_to_get_there')}
+              </label>
+              <Textarea
+                value={formData.how_to_get_there || ''}
+                onChange={(e) => handleInputChange('how_to_get_there', e.target.value)}
+                placeholder={t('spots.how_to_get_there_placeholder')}
+                className="min-h-[80px]"
               />
             </div>
 

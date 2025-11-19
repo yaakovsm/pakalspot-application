@@ -117,6 +117,8 @@
       "title_placeholder": "תן למקום שלך שם קליט...",
       "description": "תיאור",
       "description_placeholder": "תאר מה הופך את המקום הזה למיוחד...",
+      "subtitle": "כותרת משנה",
+      "subtitle_placeholder": "כותרת משנה קצרה שתופיע בכרטיס...",
       "select_type": "בחר סוג מקום",
       "location": "מיקום",
       "location_placeholder": "חפש מיקום בישראל...",
@@ -133,6 +135,7 @@
       "spot_created_success_desc": "המקום שלך נוצר בהצלחה",
       "spot_creation_failed": "יצירת המקום נכשלה. אנא נסו שוב",
       "how_to_get_there": "איך מגיעים?",
+      "how_to_get_there_placeholder": "תאר איך להגיע למקום...",
       "get_directions": "ניווט לספוט"
     },
     "spot_types": {

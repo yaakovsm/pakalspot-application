@@ -73,6 +73,8 @@ export interface SpotFilters {
 export interface CreateSpotRequest {
   title: string;
   description: string;
+  subtitle?: string;
+  how_to_get_there?: string;
   type: SpotType;
   latitude: number;
   longitude: number;

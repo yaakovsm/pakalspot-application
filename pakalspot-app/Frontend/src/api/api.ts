@@ -79,6 +79,14 @@ export const spotsAPI = {
     formData.append('latitude', data.latitude.toString());
     formData.append('longitude', data.longitude.toString());
     
+    if (data.subtitle) {
+      formData.append('subtitle', data.subtitle);
+    }
+    
+    if (data.how_to_get_there) {
+      formData.append('how_to_get_there', data.how_to_get_there);
+    }
+    
     if (data.locationName) {
       formData.append('location_name', data.locationName);
     }
