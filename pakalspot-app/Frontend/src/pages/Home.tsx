@@ -82,6 +82,7 @@ const Home: React.FC = () => {
     setTimeout(() => {
       setShowDetailSidebar(false);
       setIsClosingSidebar(false);
+      // Keep selectedSpot when closing so SpotActionCard can reappear
     }, 300); // Match the animation duration
   };
 
@@ -119,7 +120,12 @@ const Home: React.FC = () => {
 
         {/* Map */}
         <div className="flex-1 relative">
-          <MapView className="w-full h-full" hoveredSpot={hoveredSpot} />
+          <MapView 
+            className="w-full h-full" 
+            hoveredSpot={hoveredSpot}
+            isSpotDetailsOpen={showDetailSidebar}
+            onOpenDetails={handleInfoClick}
+          />
           
           {/* Mobile Controls */}
           <div className="lg:hidden absolute top-4 left-4 flex gap-2">

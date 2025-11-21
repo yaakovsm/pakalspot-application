@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createRoot, Root } from 'react-dom/client';
 
 // Declare Google Maps types
 declare global {
@@ -11,13 +12,11 @@ import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { Spot } from '../types/spot';
-import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Heart, ThumbsUp, ThumbsDown } from 'lucide-react';
 import googleMapsLoader from '../utils/googleMapsLoader';
 import { VITE_GOOGLE_MAPS_API_KEY } from '../config/env';
 import AuthDialog from './AuthDialog';
-import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import SpotActionCard from './SpotActionCard';
 
 // Israel map configuration
 const ISRAEL_CENTER: google.maps.LatLngLiteral = { lat: 31.3, lng: 34.8 };
@@ -34,17 +33,19 @@ const ISRAEL_BOUNDS: google.maps.LatLngBoundsLiteral = {
 interface MapViewProps {
   className?: string;
   hoveredSpot?: Spot | null;
+  isSpotDetailsOpen?: boolean;
+  onOpenDetails?: () => void;
 }
 
-const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
+const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetailsOpen = false, onOpenDetails }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
-  // Removed infoWindow - no longer needed
   const markersRef = useRef<(google.maps.marker.AdvancedMarkerElement | google.maps.Marker)[]>([]);
   const hoverMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
-  const selectedMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
+  const overlayRef = useRef<google.maps.OverlayView | null>(null);
+  const overlayRootRef = useRef<Root | null>(null);
   
-  const { spots, selectedSpot, selectSpot, userLocation, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
+  const { spots, selectedSpot, selectSpot, userLocation, favoriteSpot, unfavoriteSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
@@ -165,107 +166,48 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot }) => {
     }
   }, [userLocation]);
 
-  // Add spot markers
-useEffect(() => {
-  if (!map.current || !spots.length) return;
+  // Add spot markers with selection state
+  useEffect(() => {
+    if (!map.current || !spots.length) return;
 
-  markersRef.current.forEach(marker => {
-    if ('setMap' in marker) {
-      marker.setMap(null);
-    } else {
-      (marker as any).map = null;
-    }
-  });
-  markersRef.current = [];
-
-  spots.forEach(spot => {
-    // Use regular Marker with transparent logo for all cases
-    const marker = new google.maps.Marker({
-      position: { lat: spot.lat, lng: spot.lon },
-      map: map.current,
-      title: spot.title,
-      icon: {
-        url: '/PakalSpot_Transperent_logo.png',
-        scaledSize: new google.maps.Size(32, 32),
-        anchor: new google.maps.Point(16, 16)
+    markersRef.current.forEach(marker => {
+      if ('setMap' in marker) {
+        marker.setMap(null);
+      } else {
+        (marker as any).map = null;
       }
     });
+    markersRef.current = [];
 
-    marker.addListener('click', () => {
-      selectSpot(spot);
-      // Removed showSpotInfoWindow to eliminate map overlay card
-    });
-
-    markersRef.current.push(marker);
-  });
-
-  // Fit bounds to show all spots if no spot is currently selected
-  if (!selectedSpot && spots.length > 0) {
-    const bounds = new google.maps.LatLngBounds();
     spots.forEach(spot => {
-      bounds.extend({ lat: spot.lat, lng: spot.lon });
-    });
-    // Add padding around the bounds
-    map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
-  }
-}, [spots, selectSpot, selectedSpot]);
-
-// Handle selected spot
-useEffect(() => {
-  if (!map.current) return;
-
-  // Remove existing selected marker
-  if (selectedMarkerRef.current) {
-    if ('setMap' in selectedMarkerRef.current) {
-      selectedMarkerRef.current.setMap(null);
-    } else {
-      (selectedMarkerRef.current as any).map = null;
-    }
-    selectedMarkerRef.current = null;
-  }
-
-  if (selectedSpot) {
-    // Pan to selected spot and zoom in
-    map.current.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lon });
-    map.current.setZoom(15);
-
-    // Create a special marker for the selected spot using the transparent logo
-    const selectedElement = document.createElement('div');
-    selectedElement.style.width = '40px';
-    selectedElement.style.height = '40px';
-    selectedElement.style.backgroundImage = 'url(/PakalSpot_Transperent_logo.png)';
-    selectedElement.style.backgroundSize = 'contain';
-    selectedElement.style.backgroundRepeat = 'no-repeat';
-    selectedElement.style.backgroundPosition = 'center';
-    selectedElement.style.cursor = 'pointer';
-    selectedElement.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
-    selectedElement.style.border = '3px solid #ffffff';
-    selectedElement.style.borderRadius = '50%';
-
-    let selectedMarker;
-    if (google.maps.marker?.AdvancedMarkerElement) {
-      selectedMarker = new google.maps.marker.AdvancedMarkerElement({
-        position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
+      // Check if this spot is selected to apply different styling
+      const isSelected = selectedSpot && selectedSpot.id === spot.id;
+      
+      // Use regular Marker with transparent logo
+      // Selected markers are larger (52x52) and have higher zIndex
+      // Anchor point is at bottom center so marker "sits" on the location
+      const iconSize = isSelected ? 52 : 32;
+      const marker = new google.maps.Marker({
+        position: { lat: spot.lat, lng: spot.lon },
         map: map.current,
-        content: selectedElement
-      });
-    } else {
-      // Fallback to regular Marker with logo
-      selectedMarker = new google.maps.Marker({
-        position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
-        map: map.current,
+        title: spot.title,
+        zIndex: isSelected ? 999 : 1,
         icon: {
           url: '/PakalSpot_Transperent_logo.png',
-          scaledSize: new google.maps.Size(40, 40),
-          anchor: new google.maps.Point(20, 20)
+          scaledSize: new google.maps.Size(iconSize, iconSize),
+          anchor: new google.maps.Point(iconSize / 2, iconSize)
         }
       });
-    }
 
-    selectedMarkerRef.current = selectedMarker;
-  } else {
-    // When no spot is selected, fit bounds to show all spots
-    if (spots.length > 0) {
+      marker.addListener('click', () => {
+        selectSpot(spot);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // Fit bounds to show all spots if no spot is currently selected
+    if (!selectedSpot && spots.length > 0) {
       const bounds = new google.maps.LatLngBounds();
       spots.forEach(spot => {
         bounds.extend({ lat: spot.lat, lng: spot.lon });
@@ -273,64 +215,28 @@ useEffect(() => {
       // Add padding around the bounds
       map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
     }
-  }
-}, [selectedSpot, spots]);
+  }, [spots, selectSpot, selectedSpot]);
 
-  // Handle selected spot
+  // Handle selected spot: pan and zoom to selected spot
   useEffect(() => {
     if (!map.current) return;
 
-    // Remove existing selected marker
-    if (selectedMarkerRef.current) {
-      if ('setMap' in selectedMarkerRef.current) {
-        selectedMarkerRef.current.setMap(null);
-      } else {
-        (selectedMarkerRef.current as any).map = null;
-      }
-      selectedMarkerRef.current = null;
-    }
-
     if (selectedSpot) {
-      // Pan to selected spot
+      // Pan to selected spot and zoom in
       map.current.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lon });
       map.current.setZoom(15);
-
-      // Create a special marker for the selected spot using the transparent logo
-      const selectedElement = document.createElement('div');
-      selectedElement.style.width = '40px';
-      selectedElement.style.height = '40px';
-      selectedElement.style.backgroundImage = 'url(/PakalSpot_Transperent_logo.png)';
-      selectedElement.style.backgroundSize = 'contain';
-      selectedElement.style.backgroundRepeat = 'no-repeat';
-      selectedElement.style.backgroundPosition = 'center';
-      selectedElement.style.cursor = 'pointer';
-      selectedElement.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
-      selectedElement.style.border = '3px solid #ffffff';
-      selectedElement.style.borderRadius = '50%';
-
-      let selectedMarker;
-      if (google.maps.marker?.AdvancedMarkerElement) {
-        selectedMarker = new google.maps.marker.AdvancedMarkerElement({
-          position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
-          map: map.current,
-          content: selectedElement
+    } else {
+      // When no spot is selected, fit bounds to show all spots
+      if (spots.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        spots.forEach(spot => {
+          bounds.extend({ lat: spot.lat, lng: spot.lon });
         });
-      } else {
-        // Fallback to regular Marker with logo
-        selectedMarker = new google.maps.Marker({
-          position: { lat: selectedSpot.lat, lng: selectedSpot.lon },
-          map: map.current,
-          icon: {
-            url: '/PakalSpot_Transperent_logo.png',
-            scaledSize: new google.maps.Size(40, 40),
-            anchor: new google.maps.Point(20, 20)
-          }
-        });
+        // Add padding around the bounds
+        map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
       }
-
-      selectedMarkerRef.current = selectedMarker;
     }
-  }, [selectedSpot]);
+  }, [selectedSpot, spots]);
 
   // Handle hovered spot
   useEffect(() => {
@@ -385,8 +291,13 @@ useEffect(() => {
     }
   }, [hoveredSpot]);
 
-  // Removed showSpotInfoWindow function - no longer needed
+  // Handle navigation to spot (opens Google Maps)
+  const handleNavigateToSpot = (spot: Spot) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}`;
+    window.open(url, '_blank');
+  };
 
+  // Handle favorite toggle
   const handleFavoriteSpot = async (spotId: string, isFavorited: boolean) => {
     if (!isAuthenticated) {
       setShowAuthDialog(true);
@@ -401,75 +312,152 @@ useEffect(() => {
     }
   };
 
-  const handleLikeSpot = async (spotId: string, isLike: boolean) => {
-    try {
-      await likeSpot(spotId, isLike);
-    } catch (error) {
-      console.error('Failed to like spot:', error);
-    }
+  // Handle clear selection (deselect spot)
+  const handleClearSelection = () => {
+    selectSpot(null);
   };
+
+  // Overlay rendering: Show SpotActionCard anchored to selected marker
+  // Visibility: selectedSpot exists AND details panel is NOT open
+  useEffect(() => {
+    if (!map.current || !selectedSpot) {
+      // Clean up overlay if no spot is selected
+      if (overlayRef.current) {
+        overlayRef.current.setMap(null);
+        overlayRef.current = null;
+      }
+      if (overlayRootRef.current) {
+        overlayRootRef.current.unmount();
+        overlayRootRef.current = null;
+      }
+      return;
+    }
+
+    // Hide overlay when details panel is open
+    if (isSpotDetailsOpen) {
+      if (overlayRef.current) {
+        overlayRef.current.setMap(null);
+        overlayRef.current = null;
+      }
+      if (overlayRootRef.current) {
+        overlayRootRef.current.unmount();
+        overlayRootRef.current = null;
+      }
+      return;
+    }
+
+    // Create overlay class that extends google.maps.OverlayView
+    class SpotActionCardOverlay extends google.maps.OverlayView {
+      private container: HTMLDivElement;
+      private position: google.maps.LatLng;
+      private root: Root | null = null;
+
+      constructor(position: google.maps.LatLng) {
+        super();
+        this.position = position;
+        this.container = document.createElement('div');
+        this.container.style.position = 'absolute';
+        this.container.style.pointerEvents = 'auto';
+        this.container.style.zIndex = '1000';
+      }
+
+      onAdd(): void {
+        const panes = this.getPanes();
+        if (panes && panes.overlayMouseTarget) {
+          panes.overlayMouseTarget.appendChild(this.container);
+        }
+        // Create React root after container is added to DOM
+        if (!this.root) {
+          this.root = createRoot(this.container);
+        }
+      }
+
+      draw(): void {
+        const projection = this.getProjection();
+        if (!projection) return;
+
+        const point = projection.fromLatLngToDivPixel(this.position);
+        if (point) {
+          // Position container: center horizontally, offset below marker
+          this.container.style.left = `${point.x}px`;
+          this.container.style.top = `${point.y}px`;
+        }
+      }
+
+      onRemove(): void {
+        if (this.root) {
+          this.root.unmount();
+          this.root = null;
+        }
+        if (this.container.parentNode) {
+          this.container.parentNode.removeChild(this.container);
+        }
+      }
+
+      getContainer(): HTMLDivElement {
+        return this.container;
+      }
+
+      getRoot(): Root | null {
+        return this.root;
+      }
+    }
+
+    // Remove existing overlay
+    if (overlayRef.current) {
+      overlayRef.current.setMap(null);
+      overlayRef.current = null;
+    }
+    if (overlayRootRef.current) {
+      overlayRootRef.current.unmount();
+      overlayRootRef.current = null;
+    }
+
+    // Create new overlay
+    const position = new google.maps.LatLng(selectedSpot.lat, selectedSpot.lon);
+    const overlay = new SpotActionCardOverlay(position);
+    overlay.setMap(map.current);
+
+    // Wait for overlay to be added to DOM, then render
+    setTimeout(() => {
+      const root = overlay.getRoot();
+      if (root) {
+        root.render(
+          <SpotActionCard
+            spot={selectedSpot}
+            isFavorite={selectedSpot.isFavorited || false}
+            onOpenDetails={() => {
+              if (onOpenDetails) {
+                onOpenDetails();
+              }
+            }}
+            onNavigate={() => handleNavigateToSpot(selectedSpot)}
+            onToggleFavorite={() => handleFavoriteSpot(selectedSpot.id, selectedSpot.isFavorited || false)}
+            onClearSelection={handleClearSelection}
+          />
+        );
+        overlayRootRef.current = root;
+      }
+    }, 0);
+
+    overlayRef.current = overlay;
+
+    // Cleanup on unmount
+    return () => {
+      if (overlayRef.current) {
+        overlayRef.current.setMap(null);
+        overlayRef.current = null;
+      }
+      if (overlayRootRef.current) {
+        overlayRootRef.current.unmount();
+        overlayRootRef.current = null;
+      }
+    };
+  }, [selectedSpot, isSpotDetailsOpen, map, onOpenDetails, favoriteSpot, unfavoriteSpot, selectSpot, isAuthenticated]);
 
   return (
     <div className={`relative w-full h-full ${className}`}>
       <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden shadow-medium" />
-      
-      {selectedSpot && (
-        <Card className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-80 shadow-strong backdrop-blur-md bg-card/90">
-          <CardContent className="p-4">
-            {selectedSpot.photos?.[0] && (
-              <img 
-                src={selectedSpot.photos[0].url} 
-                alt={getTranslatedSpotContent(selectedSpot, t, 'title')}
-                className="w-full h-32 object-cover rounded-lg mb-3"
-              />
-            )}
-            
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-lg text-foreground">{getTranslatedSpotContent(selectedSpot, t, 'title')}</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleFavoriteSpot(selectedSpot.id, selectedSpot.isFavorited)}
-                className="flex-shrink-0"
-              >
-                <Heart className={`w-5 h-5 ${selectedSpot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
-              </Button>
-            </div>
-            
-            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-              {getTranslatedSpotContent(selectedSpot, t, 'description')}
-            </p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleLikeSpot(selectedSpot.id, true)}
-                  className={`${selectedSpot.userLike?.isLike ? 'text-green-600' : 'text-muted-foreground'}`}
-                >
-                  <ThumbsUp className="w-4 h-4 mr-1" />
-                  {selectedSpot.likeCount}
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleLikeSpot(selectedSpot.id, false)}
-                  className={`${selectedSpot.userLike && !selectedSpot.userLike.isLike ? 'text-red-600' : 'text-muted-foreground'}`}
-                >
-                  <ThumbsDown className="w-4 h-4 mr-1" />
-                  {selectedSpot.dislikeCount}
-                </Button>
-              </div>
-              
-              <span className="text-xs text-muted-foreground capitalize">
-                {selectedSpot.spot_type}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
       
       <AuthDialog
         open={showAuthDialog}
