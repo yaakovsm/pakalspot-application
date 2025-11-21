@@ -13,6 +13,9 @@ jobs:
   # ----------------------------------------------------------
   build:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
     outputs:
       IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
       SHORT_SHA: ${{ steps.meta.outputs.short_sha }}
