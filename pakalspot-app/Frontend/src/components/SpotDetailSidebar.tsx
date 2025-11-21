@@ -7,6 +7,7 @@ import { X, Heart, MapPin, Share2 } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useTranslation } from 'react-i18next';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from './ui/carousel';
 
 interface SpotDetailSidebarProps {
   spot: Spot | null;
@@ -116,30 +117,46 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
           </Button>
         </div>
 
-        {/* Spot Image */}
+        {/* Spot Image Carousel */}
         <div className="relative mb-6">
-          {spot.photos && spot.photos.length > 0 && spot.photos[0] ? (
-            <img 
-              src={spot.photos[0].url} 
-              alt={spot.title}
-              className="w-full h-48 object-cover rounded-lg"
-            />
+          {spot.photos && spot.photos.length > 0 ? (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {spot.photos.map((photo, index) => (
+                  <CarouselItem key={photo.id || index}>
+                    <div className="relative">
+                      <img 
+                        src={photo.url} 
+                        alt={`${spot.title} - ${index + 1}`}
+                        className="w-full h-80 object-cover rounded-lg"
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {spot.photos.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </>
+              )}
+            </Carousel>
           ) : (
-            <div className="w-full h-48 bg-gradient-card rounded-lg flex items-center justify-center">
+            <div className="w-full h-80 bg-gradient-card rounded-lg flex items-center justify-center">
               <MapPin className="w-12 h-12 text-muted-foreground" />
             </div>
           )}
           
           {/* Type Badge */}
           <Badge 
-            className={`absolute top-3 left-3 ${getTypeColor(spot.spot_type)} text-white`}
+            className={`absolute top-3 left-3 z-10 ${getTypeColor(spot.spot_type)} text-white`}
           >
             {t(`spot_types.${spot.spot_type}`)}
           </Badge>
           
           {/* Distance */}
           {spot.distance && (
-            <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-foreground">
+            <div className="absolute bottom-3 left-3 z-10 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-foreground">
               {spot.distance < 1 ? `${Math.round(spot.distance * 1000)}m away` : `${spot.distance.toFixed(1)}km away`}
             </div>
           )}
@@ -147,30 +164,28 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
 
         {/* Title and Actions */}
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            {translatedTitle}
-          </h1>
-          
-          <div className="flex items-center gap-2 mb-4">
-          </div>
-          
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleFavoriteToggle}
-              className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
-            >
-              <Heart className={`w-4 h-4 ${spot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-              className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
-            >
-              <Share2 className="w-4 h-4 text-muted-foreground" />
-            </Button>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-foreground flex-1 truncate pr-4">
+              {translatedTitle}
+            </h1>
+            <div className="flex gap-2 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleFavoriteToggle}
+                className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
+              >
+                <Heart className={`w-4 h-4 ${spot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShare}
+                className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
+              >
+                <Share2 className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </div>
           </div>
         </div>
 
