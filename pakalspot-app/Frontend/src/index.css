@@ -317,6 +317,25 @@ All colors MUST be HSL.
   /* Select RTL fixes */
   [dir="rtl"] [data-radix-select-trigger] {
     text-align: right;
+    flex-direction: row-reverse;
+  }
+  
+  /* SelectTrigger icon positioning in RTL */
+  [dir="rtl"] [data-radix-select-trigger] > [data-radix-select-icon] {
+    order: -1;
+  }
+  
+  /* SelectItem checkmark positioning in RTL */
+  [dir="rtl"] [data-radix-select-item] > span.absolute.left-2 {
+    left: auto;
+    right: 0.5rem;
+  }
+  
+  /* SelectItem text alignment and padding in RTL */
+  [dir="rtl"] [data-radix-select-item] {
+    text-align: right;
+    padding-left: 0.5rem;
+    padding-right: 2rem;
   }
 
   /* Modal RTL fixes */

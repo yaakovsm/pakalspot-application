@@ -119,6 +119,7 @@
       "description_placeholder": "Describe what makes this spot special...",
       "subtitle": "Subtitle",
       "subtitle_placeholder": "A short subtitle that will appear on the card...",
+      "type": "Spot Type",
       "select_type": "Select spot type",
       "location": "Location",
       "location_placeholder": "Search for a location in Israel...",
@@ -129,6 +130,8 @@
       "use_current_location": "Use Current Location",
       "photos_optional": "Photos (Optional)",
       "drag_drop_photos": "Drag and drop photos here, or click to select",
+      "select_photos": "Select Photos",
+      "photos_limit": "Max 5 photos, 10MB each",
       "creating": "Creating...",
       "create_spot": "Create Spot",
       "spot_created_success": "Success!",
@@ -136,7 +139,9 @@
       "spot_creation_failed": "Failed to create spot. Please try again",
       "how_to_get_there": "How to get there",
       "how_to_get_there_placeholder": "Describe how to get to the spot...",
-      "get_directions": "Get Directions"
+      "get_directions": "Get Directions",
+      "location_search_hint": "💡 Start typing to search for locations in Israel",
+      "location_search_examples": "Examples: \"Jerusalem\", \"Tel Aviv\", \"Haifa\", \"Eilat\""
     },
     "spot_types": {
       "waterfall": "Waterfall",

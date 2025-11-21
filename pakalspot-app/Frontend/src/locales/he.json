@@ -119,6 +119,7 @@
       "description_placeholder": "תאר מה הופך את המקום הזה למיוחד...",
       "subtitle": "כותרת משנה",
       "subtitle_placeholder": "כותרת משנה קצרה שתופיע בכרטיס...",
+      "type": "סוג הספוט",
       "select_type": "בחר סוג מקום",
       "location": "מיקום",
       "location_placeholder": "חפש מיקום בישראל...",
@@ -129,6 +130,8 @@
       "use_current_location": "השתמש במיקום הנוכחי",
       "photos_optional": "תמונות (אופציונלי)",
       "drag_drop_photos": "גרור ושחרר תמונות כאן, או לחץ לבחירה",
+      "select_photos": "בחר תמונות",
+      "photos_limit": "מקסימום 5 תמונות, 10MB לכל תמונה",
       "creating": "יוצר...",
       "create_spot": "צור מקום",
       "spot_created_success": "הצלחה!",
@@ -136,7 +139,9 @@
       "spot_creation_failed": "יצירת המקום נכשלה. אנא נסו שוב",
       "how_to_get_there": "איך מגיעים?",
       "how_to_get_there_placeholder": "תאר איך להגיע למקום...",
-      "get_directions": "ניווט לספוט"
+      "get_directions": "ניווט לספוט",
+      "location_search_hint": "💡 התחל להקליד כדי לחפש מיקומים בישראל",
+      "location_search_examples": "דוגמאות: \"ירושלים\", \"תל אביב\", \"חיפה\", \"אילת\""
     },
     "spot_types": {
       "waterfall": "מפל",

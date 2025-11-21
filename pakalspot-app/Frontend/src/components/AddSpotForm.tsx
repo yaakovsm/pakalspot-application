@@ -476,10 +476,10 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                   }
                 }}
               >
-                Select Photos
+                {t('spots.select_photos')}
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
-                Max 5 photos, 10MB each
+                {t('spots.photos_limit')}
               </p>
             </div>
 

@@ -6,6 +6,7 @@ import { MapPin, Search, X } from 'lucide-react';
 import { spotsAPI } from '../api/api';
 import { LocationSearchResult, GeocodeResult } from '../types/spot';
 import { useToast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface LocationSearchProps {
   onLocationSelect: (location: GeocodeResult) => void;
@@ -28,6 +29,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   const [selectedLocation, setSelectedLocation] = useState<GeocodeResult | null>(null);
   
   const { toast } = useToast();
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
@@ -285,8 +287,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       {/* Help text */}
       {!showResults && query.trim().length === 0 && !selectedLocation && (
         <div className="mt-2 text-xs text-muted-foreground">
-          <p>💡 Start typing to search for locations in Israel</p>
-          <p>Examples: "Jerusalem", "Tel Aviv", "Haifa", "Eilat"</p>
+          <p>{t('spots.location_search_hint')}</p>
+          <p>{t('spots.location_search_examples')}</p>
         </div>
       )}
     </div>
