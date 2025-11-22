@@ -1,8 +1,11 @@
+{{- if .Values.frontend.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-config
-  namespace: pakalspot-dev
+  name: {{ include "pakalspot-chart.fullname" . }}-nginx-config
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
 data:
   default.conf: |
     server {
@@ -22,3 +25,4 @@ data:
         try_files /env-config.js =404;
       }
     }
+{{- end }}

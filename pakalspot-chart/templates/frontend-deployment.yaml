@@ -100,7 +100,7 @@ spec:
           emptyDir: {}
         - name: nginx-conf
           configMap:
-            name: nginx-config
+            name: {{ include "pakalspot-chart.fullname" . }}-nginx-config
         - name: nginx-cache
           emptyDir: {}
         - name: nginx-run
