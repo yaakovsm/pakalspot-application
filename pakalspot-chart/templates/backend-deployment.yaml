@@ -23,7 +23,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -49,9 +49,9 @@ spec:
                   name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
                   key: POSTGRES_PASSWORD
         - name: db-migrate
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
-          command: ["alembic", "upgrade", "head"]
+          image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
+          imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
+          command: {{ .Values.backend.initContainers.dbMigrate.command }}
           env:
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
@@ -66,9 +66,9 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- if .Values.backend.initContainers.dbSeed.enabled }}
         - name: db-seed
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
-          command: ["python", "/app/app/db/seed.py"]
+          image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
+          imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
+          command: {{ .Values.backend.initContainers.dbSeed.command }}
           env:
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
@@ -107,6 +107,10 @@ spec:
           {{- end }}
           {{- with .Values.backend.readinessProbe }}
           readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backend.startupProbe }}
+          startupProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- with .Values.backend.resources }}

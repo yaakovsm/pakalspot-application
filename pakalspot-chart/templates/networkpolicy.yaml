@@ -1,0 +1,122 @@
+{{- if and .Values.networkPolicy.enabled .Values.frontend.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "pakalspot-chart.fullname" . }}-frontend
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "pakalspot-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    {{- toYaml .Values.networkPolicy.policyTypes | nindent 4 }}
+  {{- if has "Ingress" .Values.networkPolicy.policyTypes }}
+  ingress:
+    {{- range .Values.networkPolicy.ingress }}
+    - {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- if has "Egress" .Values.networkPolicy.policyTypes }}
+  egress:
+    {{- range .Values.networkPolicy.egress }}
+    - {{- toYaml . | nindent 6 }}
+    {{- end }}
+    # Allow frontend to connect to backend
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "pakalspot-chart.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: backend
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.targetPort }}
+  {{- end }}
+{{- end }}
+
+{{- if and .Values.networkPolicy.enabled .Values.backend.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "pakalspot-chart.fullname" . }}-backend
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "pakalspot-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  policyTypes:
+    {{- toYaml .Values.networkPolicy.policyTypes | nindent 4 }}
+  {{- if has "Ingress" .Values.networkPolicy.policyTypes }}
+  ingress:
+    {{- range .Values.networkPolicy.ingress }}
+    - {{- toYaml . | nindent 6 }}
+    {{- end }}
+    # Allow backend to receive traffic from frontend
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "pakalspot-chart.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: frontend
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.targetPort }}
+  {{- end }}
+  {{- if has "Egress" .Values.networkPolicy.policyTypes }}
+  egress:
+    {{- range .Values.networkPolicy.egress }}
+    - {{- toYaml . | nindent 6 }}
+    {{- end }}
+    # Allow backend to connect to database
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "pakalspot-chart.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: database
+      ports:
+        - protocol: TCP
+          port: {{ .Values.database.service.targetPort }}
+  {{- end }}
+{{- end }}
+
+{{- if and .Values.networkPolicy.enabled .Values.database.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "pakalspot-chart.fullname" . }}-database
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "pakalspot-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: database
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow database to receive traffic from backend only
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "pakalspot-chart.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: backend
+      ports:
+        - protocol: TCP
+          port: {{ .Values.database.service.targetPort }}
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- end }}
+

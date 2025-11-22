@@ -1,17 +1,21 @@
+# Default values for pakalspot-chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+# All actual configuration values should be provided via GitOps values files
+
 # Global configuration
 global:
   imageRegistry: ""
-  imagePullSecrets:
-    - name: ghcr-pull
+  imagePullSecrets: []
   storageClass: ""
   image:
     tag: ""
 
 # Application configuration
 app:
-  name: pakalspot
-  environment: dev
-  namespace: pakalspot
+  name: ""
+  environment: ""
+  namespace: ""
 
 # Frontend configuration
 frontend:
@@ -19,7 +23,7 @@ frontend:
   replicaCount: 1
   
   image:
-    repository: yaakovsm/pakalspot-frontend
+    repository: ""
     tag: ""
     pullPolicy: IfNotPresent
   
@@ -28,38 +32,44 @@ frontend:
     port: 80
     targetPort: 80
   
-  resources:
-    limits:
-      cpu: 200m
-      memory: 256Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
+  resources: {}
+  # limits:
+  #   cpu: 200m
+  #   memory: 256Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
   
-  livenessProbe:
-    httpGet:
-      path: /
-      port: 80
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
+  livenessProbe: {}
+  # httpGet:
+  #   path: /
+  #   port: 80
+  # initialDelaySeconds: 30
+  # periodSeconds: 10
+  # timeoutSeconds: 5
+  # failureThreshold: 3
   
-  readinessProbe:
-    httpGet:
-      path: /
-      port: 80
-    initialDelaySeconds: 5
-    periodSeconds: 5
-    timeoutSeconds: 3
-    failureThreshold: 3
+  readinessProbe: {}
+  # httpGet:
+  #   path: /
+  #   port: 80
+  # initialDelaySeconds: 5
+  # periodSeconds: 5
+  # timeoutSeconds: 3
+  # failureThreshold: 3
   
-  env:
-    VITE_HOST: "0.0.0.0"
-    VITE_ALLOWED_HOSTS: "all"
-    VITE_API_URL: "/api"
-  envRuntime:
-    VITE_GOOGLE_MAPS_API_KEY: ""
+  startupProbe: {}
+  # httpGet:
+  #   path: /
+  #   port: 80
+  # initialDelaySeconds: 10
+  # periodSeconds: 5
+  # timeoutSeconds: 3
+  # failureThreshold: 30
+  
+  env: {}
+  envRuntime: {}
+  podAnnotations: {}
 
 # Backend configuration
 backend:
@@ -67,7 +77,7 @@ backend:
   replicaCount: 1
   
   image:
-    repository: yaakovsm/pakalspot-backend
+    repository: ""
     tag: ""
     pullPolicy: IfNotPresent
   
@@ -76,63 +86,66 @@ backend:
     port: 80
     targetPort: 8000
   
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 250m
-      memory: 256Mi
+  resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 250m
+  #   memory: 256Mi
   
-  livenessProbe:
-    httpGet:
-      path: /docs
-      port: 8000
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
+  livenessProbe: {}
+  # httpGet:
+  #   path: /docs
+  #   port: 8000
+  # initialDelaySeconds: 60
+  # periodSeconds: 10
+  # timeoutSeconds: 5
+  # failureThreshold: 3
   
-  readinessProbe:
-    httpGet:
-      path: /docs
-      port: 8000
-    initialDelaySeconds: 30
-    periodSeconds: 5
-    timeoutSeconds: 3
-    failureThreshold: 3
+  readinessProbe: {}
+  # httpGet:
+  #   path: /docs
+  #   port: 8000
+  # initialDelaySeconds: 30
+  # periodSeconds: 5
+  # timeoutSeconds: 3
+  # failureThreshold: 3
   
-  env:
-    JWT_EXPIRY: "43200"
-    API_PREFIX: "/api"
-    S3_BUCKET: "pakalspot-photos"
-    DEBUG: "true"
-    ENVIRONMENT: "development"
-  # Secrets are now managed by CI/CD pipeline via pakalspot-secrets
+  startupProbe: {}
+  # httpGet:
+  #   path: /docs
+  #   port: 8000
+  # initialDelaySeconds: 10
+  # periodSeconds: 5
+  # timeoutSeconds: 3
+  # failureThreshold: 30
+  
+  env: {}
   
   # Database migration and seeding
   initContainers:
     dbMigrate:
-      enabled: true
-      command: ["python", "-c", "from app.models import Base; from app.core.database import engine; Base.metadata.create_all(bind=engine); print('Database tables created successfully')"]
-    
+      enabled: false
+      command: []
     dbSeed:
-      enabled: true
-      command: ["python", "/app/app/db/seed.py"]
+      enabled: false
+      command: []
+  
+  podAnnotations: {}
 
 # Database configuration (PostgreSQL with PostGIS)
 database:
   enabled: true
   type: postgresql
   
-  # Use StatefulSet for database
   statefulSet:
     enabled: true
     replicaCount: 1
   
   image:
-    repository: postgis/postgis
-    tag: "15-3.3"
+    repository: ""
+    tag: ""
     pullPolicy: IfNotPresent
   
   service:
@@ -140,85 +153,72 @@ database:
     port: 5432
     targetPort: 5432
   
-  resources:
-    limits:
-      cpu: 500m
-      memory: 1Gi
-    requests:
-      cpu: 250m
-      memory: 512Mi
+  resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 1Gi
+  # requests:
+  #   cpu: 250m
+  #   memory: 512Mi
   
-  livenessProbe:
-    exec:
-      command:
-        - /bin/sh
-        - -c
-        - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
+  livenessProbe: {}
+  # exec:
+  #   command:
+  #     - /bin/sh
+  #     - -c
+  #     - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+  # initialDelaySeconds: 30
+  # periodSeconds: 10
+  # timeoutSeconds: 5
+  # failureThreshold: 3
   
-  readinessProbe:
-    exec:
-      command:
-        - /bin/sh
-        - -c
-        - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
-    initialDelaySeconds: 5
-    periodSeconds: 5
-    timeoutSeconds: 3
-    failureThreshold: 3
+  readinessProbe: {}
+  # exec:
+  #   command:
+  #     - /bin/sh
+  #     - -c
+  #     - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+  # initialDelaySeconds: 5
+  # periodSeconds: 5
+  # timeoutSeconds: 3
+  # failureThreshold: 3
   
-  # Persistent storage
   persistence:
     enabled: true
-    size: 10Gi
+    size: ""
     storageClass: ""
     accessMode: ReadWriteOnce
   
-  # Database configuration
   config:
-    POSTGRES_DB: "pakalspot_db"
-    POSTGRES_PORT: "5432"
+    POSTGRES_DB: ""
+    POSTGRES_PORT: ""
   
-  # Security context for database
-  securityContext:
-    runAsUser: 999
-    runAsGroup: 999
-    fsGroup: 999
+  securityContext: {}
+  # runAsUser: 999
+  # runAsGroup: 999
+  # fsGroup: 999
 
 # Secrets configuration
-# Backend secrets are now managed by CI/CD pipeline via pakalspot-secrets
-# Database secrets remain in this chart for local development
 secrets:
   database:
-    POSTGRES_USER: "pakalspot_user"
-    POSTGRES_PASSWORD: "jcoffeebrew"
+    POSTGRES_USER: ""
+    POSTGRES_PASSWORD: ""
 
 # Ingress configuration
 ingress:
-  enabled: true
-  className: "traefik"
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-  
-  hosts:
-    - host: pakalspot.local
-      paths:
-        - path: /api
-          pathType: Prefix
-          service: backend
-        - path: /media
-          pathType: Prefix
-          service: backend
-        - path: /
-          pathType: Prefix
-          service: frontend
-  
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  # - host: chart-example.local
+  #   paths:
+  #     - path: /
+  #       pathType: Prefix
+  #       service: frontend
   tls:
     enabled: false
-    secretName: pakalspot-tls
+    secretName: ""
+    hosts: []
 
 # Service Account
 serviceAccount:
@@ -228,21 +228,21 @@ serviceAccount:
   name: ""
 
 # Pod Security Context
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
+podSecurityContext: {}
+# runAsNonRoot: true
+# runAsUser: 1000
+# runAsGroup: 1000
+# fsGroup: 1000
 
 # Container Security Context
-securityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: false
-  runAsNonRoot: true
-  runAsUser: 1000
-  capabilities:
-    drop:
-      - ALL
+securityContext: {}
+# allowPrivilegeEscalation: false
+# readOnlyRootFilesystem: false
+# runAsNonRoot: true
+# runAsUser: 1000
+# capabilities:
+#   drop:
+#     - ALL
 
 # Node selection
 nodeSelector: {}
@@ -253,7 +253,52 @@ tolerations: []
 # Affinity rules
 affinity: {}
 
-# Monitoring 
+# Autoscaling configuration
+autoscaling:
+  enabled: false
+  frontend:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+    behavior: {}
+  backend:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+    behavior: {}
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  frontend:
+    enabled: false
+    minAvailable: ""
+    maxUnavailable: ""
+  backend:
+    enabled: false
+    minAvailable: ""
+    maxUnavailable: ""
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes: []
+  ingress: []
+  egress: []
+
+# Monitoring
 monitoring:
-  enabled: true
-  
+  enabled: false
+  prometheus:
+    enabled: false
+  grafana:
+    enabled: false
+
+# Resource Quotas (optional, namespace-level)
+resourceQuota:
+  enabled: false
+  hard: {}
