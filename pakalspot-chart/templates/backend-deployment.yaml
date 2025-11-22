@@ -51,7 +51,8 @@ spec:
         - name: db-migrate
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
           imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
-          command: {{ .Values.backend.initContainers.dbMigrate.command }}
+          command:
+            {{- toYaml .Values.backend.initContainers.dbMigrate.command | nindent 12 }}
           env:
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
@@ -68,7 +69,8 @@ spec:
         - name: db-seed
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
           imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
-          command: {{ .Values.backend.initContainers.dbSeed.command }}
+          command:
+            {{- toYaml .Values.backend.initContainers.dbSeed.command | nindent 12 }}
           env:
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
