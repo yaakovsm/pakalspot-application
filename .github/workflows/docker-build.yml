@@ -1,4 +1,4 @@
-name: Build, Test and Push to ECR
+name: Build, Push to ECR and Update GitOps
 
 on:
   push:
@@ -9,16 +9,16 @@ on:
       - '.github/workflows/**'
 
 env:
-  aws-region: ${{ secrets.AWS_REGION }}
+  AWS_REGION: us-east-1
   BACKEND_REPO: pakalspot-backend
   FRONTEND_REPO: pakalspot-frontend
   GITOPS_REPO: yaakovsm/pakalspot-gitops
 
 jobs:
   # ----------------------------------------------------------
-  # 1) Build + (placeholder) tests
+  # 1) Build & Push to ECR
   # ----------------------------------------------------------
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     outputs:
       TAG: ${{ steps.meta.outputs.tag }}
@@ -35,66 +35,47 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Using image tag: $TAG"
 
-      - name: Build backend
-        run: |
-          docker build -t backend:${{ steps.meta.outputs.tag }} ./pakalspot-app/Backend
-
-      - name: Build frontend
-        run: |
-          docker build -t frontend:${{ steps.meta.outputs.tag }} ./pakalspot-app/Frontend
-
-      - name: Basic smoke tests (placeholder)
-        run: |
-          echo "Smoke tests placeholder – add real tests later."
-
-  # ----------------------------------------------------------
-  # 2) Push Images to ECR
-  # ----------------------------------------------------------
-  push:
-    runs-on: ubuntu-latest
-    needs: build
-    outputs:
-      TAG: ${{ needs.build.outputs.TAG }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Configure AWS credentials (Access Keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Push images to ECR
+      - name: Build & push backend image
         env:
-          TAG: ${{ needs.build.outputs.TAG }}
+          TAG: ${{ steps.meta.outputs.tag }}
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
-          echo "Using registry: $REGISTRY"
-          echo "Using tag: $TAG"
+          echo "Building backend image..."
+          docker build -t $REGISTRY/$BACKEND_REPO:$TAG ./pakalspot-app/Backend
 
-          # Tag images
-          docker tag backend:$TAG $REGISTRY/$BACKEND_REPO:$TAG
-          docker tag frontend:$TAG $REGISTRY/$FRONTEND_REPO:$TAG
-
-          # Push images
+          echo "Pushing backend image..."
           docker push $REGISTRY/$BACKEND_REPO:$TAG
+
+      - name: Build & push frontend image
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          echo "Building frontend image..."
+          docker build -t $REGISTRY/$FRONTEND_REPO:$TAG ./pakalspot-app/Frontend
+
+          echo "Pushing frontend image..."
           docker push $REGISTRY/$FRONTEND_REPO:$TAG
 
   # ----------------------------------------------------------
-  # 3) Update GitOps repo via SSH (GITOPS_SSH_KEY)
+  # 2) Update GitOps repo (ArgoCD will sync)
   # ----------------------------------------------------------
   update-gitops:
     runs-on: ubuntu-latest
-    needs: push
+    needs: build-and-push
     env:
-      TAG: ${{ needs.push.outputs.TAG }}
+      TAG: ${{ needs.build-and-push.outputs.TAG }}
 
     steps:
       - name: Setup SSH for GitHub
