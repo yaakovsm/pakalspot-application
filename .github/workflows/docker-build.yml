@@ -3,6 +3,9 @@ name: Build, Test and Push to ECR
 on:
   push:
     branches: [dev, staging, main]
+    paths:
+      - 'pakalspot-app/Backend/**'
+      - 'pakalspot-app/Frontend/**'
 
 env:
   AWS_REGION: us-east-1
