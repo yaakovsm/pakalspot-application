@@ -38,16 +38,28 @@ spec:
             - bash
             - -lc
             - |
-              until pg_isready -h {{ include "pakalspot-chart.fullname" . }}-postgres -p 5432 -U {{ .Values.secrets.database.POSTGRES_USER }} -d {{ .Values.database.config.POSTGRES_DB }}; do
-                echo "waiting for database...";
+              # Parse DB_URL from environment
+              DB_URL="${DB_URL}"
+              # Extract host, port, user, database from postgresql://user:password@host:port/database
+              DB_HOST=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:[^@]+@([^:/]+).*|\1|')
+              DB_PORT=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:[^@]+@[^:]+:([0-9]+)/.*|\1|' || echo "5432")
+              DB_USER=$(echo "$DB_URL" | sed -E 's|postgresql://([^:]+):.*|\1|')
+              DB_NAME=$(echo "$DB_URL" | sed -E 's|postgresql://[^/]+/([^?]+).*|\1|')
+              DB_PASSWORD=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:([^@]+)@.*|\1|')
+              
+              export PGPASSWORD="$DB_PASSWORD"
+              
+              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME"; do
+                echo "waiting for database at $DB_HOST:$DB_PORT...";
                 sleep 2;
               done
+              echo "Database is ready!"
           env:
-            - name: PGPASSWORD
+            - name: DB_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
-                  key: POSTGRES_PASSWORD
+                  name: pakalspot-backend-secrets
+                  key: DB_URL
         - name: db-migrate
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
           imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
