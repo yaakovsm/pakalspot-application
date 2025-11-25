@@ -41,7 +41,8 @@ spec:
               # Extract password from DB_URL for PGPASSWORD
               export PGPASSWORD=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:([^@]+)@.*|\1|')
               # Use psql with DB_URL directly to check connectivity
-              until psql "$DB_URL" -c "SELECT 1" > /dev/null 2>&1; do
+              # Show errors to debug connection issues
+              until psql "$DB_URL" -c "SELECT 1" 2>&1; do
                 echo "waiting for database...";
                 sleep 2;
               done
