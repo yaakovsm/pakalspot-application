@@ -35,11 +35,11 @@ jobs:
 
       - name: Build backend
         run: |
-          docker build -t backend:${{ steps.meta.outputs.tag }} ./pakalspot-app/backend
+          docker build -t backend:${{ steps.meta.outputs.tag }} ./pakalspot-app/Backend
 
       - name: Build frontend
         run: |
-          docker build -t frontend:${{ steps.meta.outputs.tag }} ./pakalspot-app/frontend
+          docker build -t frontend:${{ steps.meta.outputs.tag }} ./pakalspot-app/Frontend
 
       - name: Basic smoke tests
         run: |
