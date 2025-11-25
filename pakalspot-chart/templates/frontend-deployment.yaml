@@ -39,7 +39,8 @@ spec:
               echo "window.__ENV = {" > /shared/env-config.js
               echo "  GOOGLE_MAPS_API_KEY: \"$GOOGLE_MAPS_API_KEY\"," >> /shared/env-config.js
               echo "  VITE_GOOGLE_MAPS_API_KEY: \"$GOOGLE_MAPS_API_KEY\"," >> /shared/env-config.js
-              echo "  API_URL: \"/api\"" >> /shared/env-config.js
+              echo "  API_URL: \"$API_URL\"," >> /shared/env-config.js
+              echo "  VITE_API_BASE_URL: \"$API_URL\"" >> /shared/env-config.js
               echo "};" >> /shared/env-config.js
           env:
             - name: GOOGLE_MAPS_API_KEY
@@ -47,6 +48,11 @@ spec:
                 secretKeyRef:
                   name: pakalspot-frontend-env
                   key: GOOGLE_MAPS_API_KEY
+            - name: API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: pakalspot-frontend-env
+                  key: VITE_API_BASE_URL
           volumeMounts:
             - name: shared-env
               mountPath: /shared
