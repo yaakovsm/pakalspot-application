@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "pakalspot.fullname" . }}-ing
+  name: {{ include "pakalspot-chart.fullname" . }}-ing
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -18,7 +18,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "pakalspot.frontendServiceName" . }}
+                name: {{ include "pakalspot-chart.fullname" . }}-frontend
                 port:
                   number: 80
     - host: {{ .Values.ingress.apiHost | default "api.dev.pakalspot.com" }}
@@ -28,6 +28,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "pakalspot.backendServiceName" . }}
+                name: {{ include "pakalspot-chart.fullname" . }}-backend
                 port:
                   number: 8000
