@@ -5,7 +5,7 @@ on:
     branches: [dev, staging, main]
 
 env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_REGION: us-east-1
   BACKEND_REPO: pakalspot-backend
   FRONTEND_REPO: pakalspot-frontend
 
