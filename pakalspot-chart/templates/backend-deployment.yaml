@@ -38,19 +38,11 @@ spec:
             - bash
             - -lc
             - |
-              # Parse DB_URL from environment
-              DB_URL="${DB_URL}"
-              # Extract host, port, user, database from postgresql://user:password@host:port/database
-              DB_HOST=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:[^@]+@([^:/]+).*|\1|')
-              DB_PORT=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:[^@]+@[^:]+:([0-9]+)/.*|\1|' || echo "5432")
-              DB_USER=$(echo "$DB_URL" | sed -E 's|postgresql://([^:]+):.*|\1|')
-              DB_NAME=$(echo "$DB_URL" | sed -E 's|postgresql://[^/]+/([^?]+).*|\1|')
-              DB_PASSWORD=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:([^@]+)@.*|\1|')
-              
-              export PGPASSWORD="$DB_PASSWORD"
-              
-              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME"; do
-                echo "waiting for database at $DB_HOST:$DB_PORT...";
+              # Extract password from DB_URL for PGPASSWORD
+              export PGPASSWORD=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:([^@]+)@.*|\1|')
+              # Use psql with DB_URL directly to check connectivity
+              until psql "$DB_URL" -c "SELECT 1" > /dev/null 2>&1; do
+                echo "waiting for database...";
                 sleep 2;
               done
               echo "Database is ready!"
