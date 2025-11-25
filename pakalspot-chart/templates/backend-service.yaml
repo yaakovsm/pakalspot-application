@@ -6,6 +6,15 @@ metadata:
   labels:
     {{- include "pakalspot-chart.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
+  {{- if eq .Values.backend.service.type "LoadBalancer" }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    {{- if .Values.backend.service.nlbAnnotations }}
+    {{- toYaml .Values.backend.service.nlbAnnotations | nindent 4 }}
+    {{- end }}
+  {{- end }}
 spec:
   type: {{ .Values.backend.service.type }}
   ports:
