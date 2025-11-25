@@ -15,6 +15,13 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy seed images for initial spots (make sure this folder exists in the backend repo)
+# Example structure in repo:
+# Backend/
+#   seed_images/
+COPY seed_images /app/seed_images
+
+# Copy the rest of the backend code (including app/, alembic/, seed_cloud.py etc.)
 COPY . .
 
 EXPOSE 8000
