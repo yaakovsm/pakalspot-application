@@ -1,39 +1,33 @@
-{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "pakalspot-chart.fullname" . }}-ingress
-  labels:
-    {{- include "pakalspot-chart.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  name: {{ include "pakalspot.fullname" . }}-ing
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: pakalspot
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
 spec:
-  {{- if .Values.ingress.className }}
-  ingressClassName: {{ .Values.ingress.className }}
-  {{- end }}
-  {{- if and .Values.ingress.tls.enabled .Values.ingress.tls }}
-  tls:
-    - hosts:
-        {{- range .Values.ingress.hosts }}
-        - {{ .host | quote }}
-        {{- end }}
-      secretName: {{ .Values.ingress.tls.secretName }}
-  {{- end }}
+  ingressClassName: alb
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ .Values.ingress.host | default "app.dev.pakalspot.com" }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
+          - path: /
+            pathType: Prefix
             backend:
               service:
-                name: {{ include "pakalspot-chart.fullname" $ }}-{{ .service }}
+                name: {{ include "pakalspot.frontendServiceName" . }}
                 port:
-                  number: {{ if eq .service "backend" }}{{ $.Values.backend.service.port }}{{ else }}{{ $.Values.frontend.service.port }}{{ end }}
-          {{- end }}
-    {{- end }}
-{{- end }}
+                  number: 80
+    - host: {{ .Values.ingress.apiHost | default "api.dev.pakalspot.com" }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "pakalspot.backendServiceName" . }}
+                port:
+                  number: 8000
