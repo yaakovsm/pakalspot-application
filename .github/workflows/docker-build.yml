@@ -9,13 +9,14 @@ on:
       - '.github/workflows/**'
 
 env:
-  AWS_REGION: us-east-1
+  aws-region: ${{ secrets.AWS_REGION }}
   BACKEND_REPO: pakalspot-backend
   FRONTEND_REPO: pakalspot-frontend
+  GITOPS_REPO: yaakovsm/pakalspot-gitops
 
 jobs:
   # ----------------------------------------------------------
-  # 1) Build + Test
+  # 1) Build + (placeholder) tests
   # ----------------------------------------------------------
   build:
     runs-on: ubuntu-latest
@@ -32,6 +33,7 @@ jobs:
           SHORT_SHA=$(git rev-parse --short HEAD)
           TAG="${GITHUB_REF_NAME}-${SHORT_SHA}"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Using image tag: $TAG"
 
       - name: Build backend
         run: |
@@ -41,9 +43,9 @@ jobs:
         run: |
           docker build -t frontend:${{ steps.meta.outputs.tag }} ./pakalspot-app/Frontend
 
-      - name: Basic smoke tests
+      - name: Basic smoke tests (placeholder)
         run: |
-          echo "Tests passed (placeholder)."
+          echo "Smoke tests placeholder – add real tests later."
 
   # ----------------------------------------------------------
   # 2) Push Images to ECR
@@ -51,73 +53,94 @@ jobs:
   push:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write
-      contents: read
     outputs:
       TAG: ${{ needs.build.outputs.TAG }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Configure AWS OIDC
+      - name: Configure AWS credentials (Access Keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Push images
+      - name: Push images to ECR
         env:
           TAG: ${{ needs.build.outputs.TAG }}
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
+          echo "Using registry: $REGISTRY"
+          echo "Using tag: $TAG"
+
+          # Tag images
           docker tag backend:$TAG $REGISTRY/$BACKEND_REPO:$TAG
           docker tag frontend:$TAG $REGISTRY/$FRONTEND_REPO:$TAG
 
+          # Push images
           docker push $REGISTRY/$BACKEND_REPO:$TAG
           docker push $REGISTRY/$FRONTEND_REPO:$TAG
 
-
   # ----------------------------------------------------------
-  # 3) Update GitOps Repository
+  # 3) Update GitOps repo via SSH (GITOPS_SSH_KEY)
   # ----------------------------------------------------------
   update-gitops:
     runs-on: ubuntu-latest
     needs: push
     env:
       TAG: ${{ needs.push.outputs.TAG }}
-      GITOPS_REPO: yaakovsm/pakalspot-gitops
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ env.GITOPS_REPO }}
-          token: ${{ secrets.GITOPS_TOKEN }}
+      - name: Setup SSH for GitHub
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GITOPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Clone GitOps repo
+        run: |
+          git clone git@github.com:${{ env.GITOPS_REPO }}.git
+          cd pakalspot-gitops
+          git status
 
       - name: Install yq
-        run: sudo apt-get install -y yq
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y yq
 
-      - name: Detect env
+      - name: Detect environment
         id: env
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then echo "env=prod" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then echo "env=staging" >> $GITHUB_OUTPUT
-          else echo "env=dev" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "env=prod" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
+            echo "env=staging" >> $GITHUB_OUTPUT
+          else
+            echo "env=dev" >> $GITHUB_OUTPUT
           fi
 
-      - name: Update values.yaml
+      - name: Update values.yaml in GitOps repo
         run: |
-          cd environments/${{ steps.env.outputs.env }}
-          yq -iy ".backend.image.tag=\"$TAG\"" values.yaml
-          yq -iy ".frontend.image.tag=\"$TAG\"" values.yaml
+          cd pakalspot-gitops
+          ENV_NAME=${{ steps.env.outputs.env }}
+
+          echo "Updating environment: $ENV_NAME with TAG: $TAG"
+
+          cd environments/$ENV_NAME
+
+          yq -iy ".backend.image.tag = \"$TAG\"" values.yaml
+          yq -iy ".frontend.image.tag = \"$TAG\"" values.yaml
 
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
           git add values.yaml
-          git commit -m "Update images to $TAG" || true
-          git push
+          git commit -m "[$ENV_NAME] Update images to $TAG" || echo "No changes to commit"
+          git push origin main
