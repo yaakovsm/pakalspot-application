@@ -30,4 +30,4 @@ spec:
               service:
                 name: {{ include "pakalspot-chart.fullname" . }}-backend
                 port:
-                  number: 8000
+                  number: 80
