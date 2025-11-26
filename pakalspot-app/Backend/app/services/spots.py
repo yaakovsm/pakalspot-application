@@ -5,6 +5,7 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from .. import models
 from ..schemas import SpotCreate
+from ..models import parse_spot_type
 import uuid
 
 
@@ -15,7 +16,7 @@ def create_spot(db: Session, user_id: str, payload: SpotCreate) -> models.Spot:
 		user_id=user_id,
 		title=payload.title,
 		description=payload.description,
-		type=payload.type,
+		spot_type=payload.spot_type,
 		geom=geom_point,
 	)
 	db.add(spot)
@@ -34,7 +35,9 @@ def search_spots(
 ) -> List[models.Spot]:
 	q = db.query(models.Spot)
 	if type:
-		q = q.filter(models.Spot.type == type)
+		# Convert string to enum for comparison
+		spot_type_enum = parse_spot_type(type)
+		q = q.filter(models.Spot.spot_type == spot_type_enum)
 	if lat is not None and lng is not None and radius_m is not None:
 		# ST_DWithin(geom::geography, geography(Point(lng, lat)), radius)
 		point = func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326)

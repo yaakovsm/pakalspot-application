@@ -144,7 +144,7 @@ class Spot(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     subtitle: Mapped[str] = mapped_column(Text, nullable=True)  # Optional subtitle
     how_to_get_there: Mapped[str] = mapped_column(Text, nullable=True)  # Optional directions
-    spot_type: Mapped[SpotType] = mapped_column(EnumValueType(SpotType, length=50), nullable=False)
+    spot_type: Mapped[SpotType] = mapped_column("type", EnumValueType(SpotType, length=50), nullable=False)  # Maps to 'type' column in DB
     location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
