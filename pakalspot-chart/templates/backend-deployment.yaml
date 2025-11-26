@@ -53,6 +53,14 @@ spec:
                 secretKeyRef:
                   name: pakalspot-backend-secrets
                   key: DB_URL
+          envFrom:
+            - secretRef:
+                name: pakalspot-backend-secrets
+            {{- if .Values.database.enabled }}
+            - secretRef:
+                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+            {{- end }}
+
         - name: db-migrate
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend") | quote }}
           imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend") }}
@@ -66,8 +74,10 @@ spec:
           envFrom:
             - secretRef:
                 name: pakalspot-backend-secrets
+            {{- if .Values.database.enabled }}
             - secretRef:
                 name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+            {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- if .Values.backend.initContainers.dbSeed.enabled }}
@@ -84,8 +94,10 @@ spec:
           envFrom:
             - secretRef:
                 name: pakalspot-backend-secrets
+            {{- if .Values.database.enabled }}
             - secretRef:
                 name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
+            {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
         {{- end }}
