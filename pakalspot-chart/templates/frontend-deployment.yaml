@@ -28,47 +28,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "pakalspot-chart.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      initContainers:
-        - name: generate-env-config
-          image: busybox:1.35
-          command: ["sh", "-c"]
-          args:
-            - |
-              echo "window.__ENV = {" > /shared/env-config.js
-              echo "  GOOGLE_MAPS_API_KEY: \"$GOOGLE_MAPS_API_KEY\"," >> /shared/env-config.js
-              echo "  VITE_GOOGLE_MAPS_API_KEY: \"$GOOGLE_MAPS_API_KEY\"," >> /shared/env-config.js
-              echo "  API_URL: \"$API_URL\"," >> /shared/env-config.js
-              echo "  VITE_API_BASE_URL: \"$API_URL\"" >> /shared/env-config.js
-              echo "};" >> /shared/env-config.js
-          env:
-            - name: GOOGLE_MAPS_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: pakalspot-frontend-env
-                  key: GOOGLE_MAPS_API_KEY
-            - name: API_URL
-              valueFrom:
-                secretKeyRef:
-                  name: pakalspot-frontend-env
-                  key: VITE_API_BASE_URL
-          volumeMounts:
-            - name: shared-env
-              mountPath: /shared
-        - name: fix-permissions
-          image: busybox:1.35
-          command: ["sh", "-c"]
-          args:
-            - |
-              chown -R 101:101 /var/cache/nginx /run
-          securityContext:
-            runAsUser: 0
-          volumeMounts:
-            - name: nginx-cache
-              mountPath: /var/cache/nginx
-            - name: nginx-run
-              mountPath: /run
+
       containers:
         - name: frontend
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "frontend") | quote }}
@@ -101,29 +61,16 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
           volumeMounts:
-            - name: shared-env
-              mountPath: /usr/share/nginx/html/env-config.js
-              subPath: env-config.js
             - name: nginx-conf
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
-            - name: nginx-cache
-              mountPath: /var/cache/nginx
-            - name: nginx-run
-              mountPath: /run
+
       volumes:
-        - name: shared-env
-          emptyDir: {}
         - name: nginx-conf
           configMap:
             name: {{ include "pakalspot-chart.fullname" . }}-nginx-config
-        - name: nginx-cache
-          emptyDir: {}
-        - name: nginx-run
-          emptyDir: {}
+
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
