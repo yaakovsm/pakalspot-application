@@ -48,6 +48,7 @@ def root():
     return {"message": "Welcome to PakalSpot API"}
 
 @app.get("/health")
+@app.get("/api/health")
 def health():
     """Health check endpoint for Kubernetes probes."""
     return {"status": "ok"}
