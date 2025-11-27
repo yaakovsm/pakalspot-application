@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.append('/app')
 
 from sqlalchemy.orm import Session
+from sqlalchemy import cast, String
 from geoalchemy2 import WKTElement
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
@@ -91,9 +92,11 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
         spot_title = spot_data["title"]
         
         # Check if spot already exists (by title and user_id for idempotency)
+        # Cast user_id to string for comparison since DB column is VARCHAR
+        # but admin_user.id is UUID type
         existing_spot = db.query(Spot).filter(
             Spot.title == spot_title,
-            Spot.user_id == admin_user.id
+            cast(Spot.user_id, String) == str(admin_user.id)
         ).first()
         
         if existing_spot:
