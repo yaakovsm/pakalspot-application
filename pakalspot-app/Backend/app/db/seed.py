@@ -7,13 +7,14 @@ This script creates initial data including an admin user, spots, and photos.
 import sys
 import os
 import json
+import uuid
 from pathlib import Path
 
 # Add the app directory to the path so we can import from app
 sys.path.append('/app')
 
 from sqlalchemy.orm import Session
-from sqlalchemy import cast, String, text
+from sqlalchemy import cast, String, text, exists
 from geoalchemy2 import WKTElement
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
@@ -139,17 +140,18 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
 
 def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> None:
     """Create photos for each spot if they don't exist."""
-    # Get BASE_URL from settings (should be frontend URL)
-    settings = Settings()
-    base_url = settings.BASE_URL.rstrip('/')  # Remove trailing slash if present
-    
-    # Photos are in frontend public directory
-    photo_base_path = "/PakalSpot init photos"
+    # Photos are stored in S3 bucket: s3://pakalspot-init-photos
+    # object_key format: pakalspot-init-photos/{filename}
+    s3_bucket_name = "pakalspot-init-photos"
     
     for i, spot in enumerate(spots):
         # Check if photos already exist for this spot
-        existing_photos = db.query(Photo).filter(Photo.spot_id == spot.id).first()
-        if existing_photos:
+        # Use exists() with text() to avoid loading Photo model columns that don't exist in DB
+        # Cast spot_id to text since DB column is VARCHAR but model expects UUID
+        photo_exists = db.query(
+            exists().where(text("photos.spot_id::text = :spot_id"))
+        ).params(spot_id=str(spot.id)).scalar()
+        if photo_exists:
             print(f"Photos already exist for spot '{spot.title}'")
             continue
         
@@ -175,17 +177,23 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
             if not photo_filename:
                 continue
             
-            # Photos are in frontend public directory
-            photo_url = f"{base_url}{photo_base_path}/{photo_filename}"
+            # Photos are stored in S3 bucket s3://pakalspot-init-photos
+            # Note: url and thumbnail_url columns don't exist in current DB schema
+            # Use raw SQL to insert only columns that exist (id, spot_id, object_key, created_at)
+            photo_id = str(uuid.uuid4())
+            spot_id_str = str(spot.id)
+            # object_key format: pakalspot-init-photos/{filename}
+            object_key = f"{s3_bucket_name}/{photo_filename}"
             
-            photo = Photo(
-                spot_id=spot.id,
-                object_key=f"{photo_base_path}/{photo_filename}",
-                url=photo_url,
-                thumbnail_url=photo_url
+            # Insert using raw SQL to avoid model column mismatch
+            db.execute(
+                text("""
+                    INSERT INTO photos (id, spot_id, object_key, created_at)
+                    VALUES (:id, :spot_id, :object_key, NOW())
+                    ON CONFLICT (id) DO NOTHING
+                """),
+                {"id": photo_id, "spot_id": spot_id_str, "object_key": object_key}
             )
-            
-            db.add(photo)
             print(f"Created photo for spot '{spot.title}': {photo_filename}")
     
     db.commit()
