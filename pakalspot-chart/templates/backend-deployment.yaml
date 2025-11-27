@@ -38,15 +38,42 @@ spec:
             - bash
             - -lc
             - |
+              set -e
+              MAX_ATTEMPTS=60
+              ATTEMPT=0
+              SLEEP_INTERVAL=5
+              
+              echo "[$(date +'%Y-%m-%d %H:%M:%S')] Starting database connectivity check..."
+              echo "[$(date +'%Y-%m-%d %H:%M:%S')] DB_URL format: ${DB_URL%%@*}@***"
+              
               # Extract password from DB_URL for PGPASSWORD
               export PGPASSWORD=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:([^@]+)@.*|\1|')
-              # Use psql with DB_URL directly to check connectivity
-              # Show errors to debug connection issues
-              until psql "$DB_URL" -c "SELECT 1" 2>&1; do
-                echo "waiting for database...";
-                sleep 2;
+              
+              while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                ATTEMPT=$((ATTEMPT + 1))
+                echo "[$(date +'%Y-%m-%d %H:%M:%S')] Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking database connectivity..."
+                
+                if psql "$DB_URL" -c "SELECT 1" >/dev/null 2>&1; then
+                  echo "[$(date +'%Y-%m-%d %H:%M:%S')] ✓ Database is ready!"
+                  exit 0
+                else
+                  ERROR_MSG=$(psql "$DB_URL" -c "SELECT 1" 2>&1 || true)
+                  echo "[$(date +'%Y-%m-%d %H:%M:%S')] ✗ Database not ready yet. Error: ${ERROR_MSG}"
+                  
+                  if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+                    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Waiting ${SLEEP_INTERVAL} seconds before next attempt..."
+                    sleep $SLEEP_INTERVAL
+                  fi
+                fi
               done
-              echo "Database is ready!"
+              
+              echo "[$(date +'%Y-%m-%d %H:%M:%S')] ✗ FATAL: Database connectivity check failed after $MAX_ATTEMPTS attempts ($((MAX_ATTEMPTS * SLEEP_INTERVAL)) seconds)"
+              echo "[$(date +'%Y-%m-%d %H:%M:%S')] Please check:"
+              echo "  - RDS instance is running and accessible"
+              echo "  - Security groups allow traffic from EKS nodes"
+              echo "  - DB_URL is correct and credentials are valid"
+              echo "  - Network connectivity from cluster to RDS"
+              exit 1
           env:
             - name: DB_URL
               valueFrom:

@@ -77,7 +77,7 @@ def create_admin_user(db: Session) -> User:
 
 
 def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]:
-    """Create initial spots."""
+    """Create initial spots (idempotent - skips existing spots)."""
     # Load spots data from external file
     spots_data = load_spots_data()
     
@@ -88,29 +88,48 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
     created_spots = []
     
     for spot_data in spots_data:
-        # Parse enums from strings
-        spot_type = parse_spot_type(spot_data["spot_type"])
+        spot_title = spot_data["title"]
         
-        # Create geometry point from latitude and longitude
-        geom = WKTElement(f"POINT({spot_data['longitude']} {spot_data['latitude']})", srid=4326)
+        # Check if spot already exists (by title and user_id for idempotency)
+        existing_spot = db.query(Spot).filter(
+            Spot.title == spot_title,
+            Spot.user_id == admin_user.id
+        ).first()
         
-        # Create new spot
-        spot = Spot(
-            user_id=admin_user.id,
-            title=spot_data["title"],
-            description=spot_data["description"],
-            subtitle=spot_data.get("subtitle"),
-            how_to_get_there=spot_data.get("how_to_get_there"),
-            spot_type=spot_type,
-            location_name=spot_data.get("location_name"),
-            geom=geom
-        )
+        if existing_spot:
+            print(f"Spot '{spot_title}' already exists, skipping creation")
+            created_spots.append(existing_spot)
+            continue
         
-        db.add(spot)
-        db.commit()
-        db.refresh(spot)
-        created_spots.append(spot)
-        print(f"Created spot: {spot.title}")
+        try:
+            # Parse enums from strings
+            spot_type = parse_spot_type(spot_data["spot_type"])
+            
+            # Create geometry point from latitude and longitude
+            geom = WKTElement(f"POINT({spot_data['longitude']} {spot_data['latitude']})", srid=4326)
+            
+            # Create new spot
+            spot = Spot(
+                user_id=admin_user.id,
+                title=spot_data["title"],
+                description=spot_data["description"],
+                subtitle=spot_data.get("subtitle"),
+                how_to_get_there=spot_data.get("how_to_get_there"),
+                spot_type=spot_type,
+                location_name=spot_data.get("location_name"),
+                geom=geom
+            )
+            
+            db.add(spot)
+            db.commit()
+            db.refresh(spot)
+            created_spots.append(spot)
+            print(f"Created spot: {spot.title}")
+        except Exception as e:
+            print(f"Error creating spot '{spot_title}': {e}")
+            db.rollback()
+            # Continue with next spot instead of failing completely
+            continue
     
     return created_spots, spots_data
 

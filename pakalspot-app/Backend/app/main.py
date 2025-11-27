@@ -46,3 +46,8 @@ Instrumentator().instrument(app).expose(app)
 @app.get("/")
 def root():
     return {"message": "Welcome to PakalSpot API"}
+
+@app.get("/health")
+def health():
+    """Health check endpoint for Kubernetes probes."""
+    return {"status": "ok"}
