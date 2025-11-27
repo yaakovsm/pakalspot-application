@@ -18,7 +18,27 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - host: {{ .Values.ingress.host | default "app.dev.pakalspot.com" }}
+    # כלל בסיסי – עובד בכל סביבה, בלי host
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "pakalspot-chart.fullname" . }}-frontend
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "pakalspot-chart.fullname" . }}-backend
+                port:
+                  number: 80
+
+    # חוקים מיוחדים לסביבות עם דומיין (אופציונלי)
+    {{- if .Values.ingress.host }}
+    - host: {{ .Values.ingress.host }}
       http:
         paths:
           - path: /
@@ -28,7 +48,10 @@ spec:
                 name: {{ include "pakalspot-chart.fullname" . }}-frontend
                 port:
                   number: 80
-    - host: {{ .Values.ingress.apiHost | default "api.dev.pakalspot.com" }}
+    {{- end }}
+
+    {{- if .Values.ingress.apiHost }}
+    - host: {{ .Values.ingress.apiHost }}
       http:
         paths:
           - path: /api
@@ -38,6 +61,8 @@ spec:
                 name: {{ include "pakalspot-chart.fullname" . }}-backend
                 port:
                   number: 80
+    {{- end }}
+
     {{- if .Values.ingress.productionHost }}
     - host: {{ .Values.ingress.productionHost }}
       http:
