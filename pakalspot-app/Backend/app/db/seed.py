@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.append('/app')
 
 from sqlalchemy.orm import Session
-from sqlalchemy import cast, String, text, exists
+from sqlalchemy import cast, String, text
 from geoalchemy2 import WKTElement
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
@@ -146,12 +146,13 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
     
     for i, spot in enumerate(spots):
         # Check if photos already exist for this spot
-        # Use exists() with text() to avoid loading Photo model columns that don't exist in DB
+        # Use raw SQL to avoid loading Photo model columns that don't exist in DB
         # Cast spot_id to text since DB column is VARCHAR but model expects UUID
-        photo_exists = db.query(
-            exists().where(text("photos.spot_id::text = :spot_id"))
-        ).params(spot_id=str(spot.id)).scalar()
-        if photo_exists:
+        result = db.execute(
+            text("SELECT EXISTS(SELECT 1 FROM photos WHERE photos.spot_id::text = :spot_id)"),
+            {"spot_id": str(spot.id)}
+        ).scalar()
+        if result:
             print(f"Photos already exist for spot '{spot.title}'")
             continue
         
