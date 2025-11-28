@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Form, UploadFile, File
 from sqlalchemy.orm import Session
-from sqlalchemy import func, cast, String
+from sqlalchemy import func
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app import models, schemas
@@ -172,8 +172,7 @@ async def update_spot(
         os.makedirs(media_dir, exist_ok=True)
         
         # Delete existing photos for this spot
-        # Cast database column to text to match spot.id (database column is VARCHAR, model expects UUID)
-        existing_photos = db.query(models.Photo).filter(cast(models.Photo.spot_id, String) == str(spot.id)).all()
+        existing_photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
         for photo in existing_photos:
             # Delete file from disk
             try:
@@ -251,8 +250,7 @@ def delete_spot(
         raise HTTPException(status_code=403, detail="Not authorized to delete this spot")
     
     # Delete associated photos from disk
-    # Cast database column to text to match spot.id (database column is VARCHAR, model expects UUID)
-    photos = db.query(models.Photo).filter(cast(models.Photo.spot_id, String) == str(spot.id)).all()
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
     for photo in photos:
         try:
             if os.path.exists(photo.object_key):
@@ -284,8 +282,7 @@ def list_spots(db: Session = Depends(get_db)):
             continue
         
         # Get photos for this spot
-        # Cast database column to text to match spot.id (database column is VARCHAR, model expects UUID)
-        photos = db.query(models.Photo).filter(cast(models.Photo.spot_id, String) == str(spot.id)).all()
+        photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
         photos_data = []
         for photo in photos:
             photos_data.append({
@@ -344,8 +341,7 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Error extracting coordinates")
     
     # Get photos for this spot
-    # Cast database column to text to match spot.id (database column is VARCHAR, model expects UUID)
-    photos = db.query(models.Photo).filter(cast(models.Photo.spot_id, String) == str(spot.id)).all()
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
     photos_data = []
     for photo in photos:
         photos_data.append({
@@ -500,8 +496,7 @@ def update_spot(
         raise HTTPException(status_code=500, detail="Error extracting coordinates")
     
     # Get photos for this spot
-    # Cast database column to text to match spot.id (database column is VARCHAR, model expects UUID)
-    photos = db.query(models.Photo).filter(cast(models.Photo.spot_id, String) == str(spot.id)).all()
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
     photos_data = []
     for photo in photos:
         photos_data.append({

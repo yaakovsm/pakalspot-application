@@ -11,10 +11,9 @@ from sqlalchemy import (
     Boolean,
     SmallInteger,
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
-from sqlalchemy import TypeDecorator, String
+from sqlalchemy import TypeDecorator
 
 
 # ----------------------
@@ -114,8 +113,8 @@ def parse_spot_type(spot_type_str: str) -> SpotType:
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
     )
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
@@ -134,11 +133,11 @@ class User(Base):
 class Spot(Base):
     __tablename__ = "spots"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+    user_id: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id", ondelete="CASCADE")
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -162,11 +161,11 @@ class Spot(Base):
 class Photo(Base):
     __tablename__ = "photos"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    spot_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("spots.id", ondelete="CASCADE")
+    spot_id: Mapped[str] = mapped_column(
+        String, ForeignKey("spots.id", ondelete="CASCADE")
     )
     object_key: Mapped[str] = mapped_column(Text, nullable=False)  # S3 key
     url: Mapped[str] = mapped_column(Text, nullable=False)  # Full URL
@@ -181,11 +180,11 @@ class Photo(Base):
 class Like(Base):
     __tablename__ = "likes"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    user_id: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
-    spot_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("spots.id", ondelete="CASCADE"), primary_key=True
+    spot_id: Mapped[str] = mapped_column(
+        String, ForeignKey("spots.id", ondelete="CASCADE"), primary_key=True
     )
     value: Mapped[int] = mapped_column(
         SmallInteger, nullable=False
@@ -198,11 +197,11 @@ class Like(Base):
 class Favorite(Base):
     __tablename__ = "favorites"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    user_id: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
-    spot_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("spots.id", ondelete="CASCADE"), primary_key=True
+    spot_id: Mapped[str] = mapped_column(
+        String, ForeignKey("spots.id", ondelete="CASCADE"), primary_key=True
     )
 
     user = relationship("User", back_populates="favorites")
