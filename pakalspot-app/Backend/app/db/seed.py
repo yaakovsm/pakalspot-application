@@ -145,7 +145,7 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
     s3_bucket_name = "pakalspot-init-photos"
     
     for i, spot in enumerate(spots):
-    spot_id_str = str(spot.id)
+        spot_id_str = str(spot.id)
 
     db.execute(
         text("DELETE FROM photos WHERE photos.spot_id::text = :spot_id"),
