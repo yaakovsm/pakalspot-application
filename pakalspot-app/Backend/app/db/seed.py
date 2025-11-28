@@ -139,59 +139,56 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
 
 
 def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> None:
-    """Create photos for each spot if they don't exist."""
-    # Photos are stored in S3 bucket: s3://pakalspot-init-photos
-    # object_key format: pakalspot-init-photos/{filename}
     s3_bucket_name = "pakalspot-init-photos"
-    
+
     for i, spot in enumerate(spots):
         spot_id_str = str(spot.id)
 
-    db.execute(
-        text("DELETE FROM photos WHERE photos.spot_id::text = :spot_id"),
-        {"spot_id": spot_id_str}
-    )
-    print(f"Deleted existing photos for spot '{spot.title}'")
-
-    photos_data = spots_data[i].get("photos", [])
-    if isinstance(photos_data, str):
-        photo_filenames = [p.strip() for p in photos_data.split(',')]
-    elif isinstance(photos_data, list):
-        photo_filenames = photos_data
-    else:
-        photo_data = spots_data[i].get("photo", "")
-        if photo_data:
-            photo_filenames = [p.strip() for p in photo_data.split(',')]
-        else:
-            print(f"No photos found for spot '{spot.title}'")
-            continue
-
-    for photo_filename in photo_filenames:
-        if not photo_filename:
-            continue
-
-        photo_id = str(uuid.uuid4())
-        object_key = f"{s3_bucket_name}/{photo_filename}"
-        s3_public_base = "https://pakalspot-init-photos.s3.amazonaws.com"
-        url = f"{s3_public_base}/{photo_filename}"
-        thumbnail_url = url
-
         db.execute(
-            text("""
-                INSERT INTO photos (id, spot_id, object_key, url, thumbnail_url, created_at)
-                VALUES (:id, :spot_id, :object_key, :url, :thumbnail_url, NOW())
-            """),
-            {
-                "id": photo_id,
-                "spot_id": spot_id_str,
-                "object_key": object_key,
-                "url": url,
-                "thumbnail_url": thumbnail_url,
-            }
+            text("DELETE FROM photos WHERE photos.spot_id::text = :spot_id"),
+            {"spot_id": spot_id_str}
         )
-        print(f"Created photo for spot '{spot.title}': {photo_filename}")
+        print(f"Deleted existing photos for spot '{spot.title}'")
 
-db.commit()
+        photos_data = spots_data[i].get("photos", [])
+        if isinstance(photos_data, str):
+            photo_filenames = [p.strip() for p in photos_data.split(',')]
+        elif isinstance(photos_data, list):
+            photo_filenames = photos_data
+        else:
+            photo_data = spots_data[i].get("photo", "")
+            if photo_data:
+                photo_filenames = [p.strip() for p in photo_data.split(',')]
+            else:
+                print(f"No photos found for spot '{spot.title}'")
+                continue
+
+        for photo_filename in photo_filenames:
+            if not photo_filename:
+                continue
+
+            photo_id = str(uuid.uuid4())
+            object_key = f"{s3_bucket_name}/{photo_filename}"
+            s3_public_base = "https://pakalspot-init-photos.s3.amazonaws.com"
+            url = f"{s3_public_base}/{photo_filename}"
+            thumbnail_url = url
+
+            db.execute(
+                text("""
+                    INSERT INTO photos (id, spot_id, object_key, url, thumbnail_url, created_at)
+                    VALUES (:id, :spot_id, :object_key, :url, :thumbnail_url, NOW())
+                """),
+                {
+                    "id": photo_id,
+                    "spot_id": spot_id_str,
+                    "object_key": object_key,
+                    "url": url,
+                    "thumbnail_url": thumbnail_url,
+                }
+            )
+            print(f"Created photo for spot '{spot.title}': {photo_filename}")
+
+    db.commit()
 
 
 def main():
