@@ -9,7 +9,11 @@ from typing import List, Optional
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 import os
+import uuid
+import boto3
+from botocore.exceptions import ClientError
 from app.models import SpotType, parse_spot_type
+from app.core.settings import settings
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 
@@ -17,6 +21,17 @@ router = APIRouter(prefix="/spots", tags=["spots"])
 def is_admin_user(user: models.User) -> bool:
     """Check if user is an admin user."""
     return user.email == "yaakovsm@gmail.com"
+
+
+def get_s3_client():
+    """Get S3 client for uploading photos."""
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.S3_ENDPOINT,
+        aws_access_key_id=settings.S3_ACCESS_KEY,
+        aws_secret_access_key=settings.S3_SECRET_KEY,
+        region_name=settings.S3_REGION,
+    )
 
 
 @router.post("/", response_model=schemas.SpotOut)
@@ -56,35 +71,50 @@ async def create_spot(
     
     # Handle photo uploads if provided
     if photos:
-        import os
-        import uuid
-        from fastapi import UploadFile
-        
-        # Ensure media directory exists
-        media_dir = "media"
-        os.makedirs(media_dir, exist_ok=True)
+        s3_client = get_s3_client()
         
         for photo in photos:
             if photo and photo.filename:
-                # Generate unique filename
-                file_extension = os.path.splitext(photo.filename)[1]
-                unique_filename = f"{uuid.uuid4()}{file_extension}"
-                file_path = os.path.join(media_dir, unique_filename)
-                
-                # Save file to disk
-                with open(file_path, "wb") as buffer:
+                try:
+                    # Generate unique filename and S3 object key
+                    file_extension = os.path.splitext(photo.filename)[1] or ".jpg"
+                    unique_filename = f"{uuid.uuid4()}{file_extension}"
+                    object_key = f"{spot.id}/{unique_filename}"
+                    
+                    # Read photo content
                     content = await photo.read()
-                    buffer.write(content)
-                
-                # Create photo record in database
-                photo_url = f"http://localhost:8000/media/{unique_filename}"
-                photo_record = models.Photo(
-                    spot_id=spot.id,
-                    object_key=f"media/{unique_filename}",
-                    url=photo_url,
-                    thumbnail_url=photo_url  # Using same URL for thumbnail for now
-                )
-                db.add(photo_record)
+                    
+                    # Determine content type
+                    content_type = photo.content_type or "image/jpeg"
+                    if not content_type.startswith("image/"):
+                        content_type = "image/jpeg"
+                    
+                    # Upload to S3
+                    s3_client.put_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=object_key,
+                        Body=content,
+                        ContentType=content_type,
+                    )
+                    
+                    # Create photo record in database
+                    # URL uses media proxy route which will fetch from S3
+                    filename_for_url = unique_filename
+                    photo_url = f"{settings.BASE_URL}/media/{filename_for_url}"
+                    photo_record = models.Photo(
+                        spot_id=spot.id,
+                        object_key=object_key,
+                        url=photo_url,
+                        thumbnail_url=photo_url  # Using same URL for thumbnail for now
+                    )
+                    db.add(photo_record)
+                except ClientError as e:
+                    # Log error but continue with other photos
+                    print(f"Error uploading photo to S3: {str(e)}")
+                    raise HTTPException(status_code=500, detail=f"Error uploading photo: {str(e)}")
+                except Exception as e:
+                    print(f"Unexpected error uploading photo: {str(e)}")
+                    raise HTTPException(status_code=500, detail=f"Error uploading photo: {str(e)}")
         
         db.commit()
     
@@ -163,46 +193,67 @@ async def update_spot(
     
     # Handle photo uploads if provided
     if photos:
-        import os
-        import uuid
-        from fastapi import UploadFile
+        s3_client = get_s3_client()
         
-        # Ensure media directory exists
-        media_dir = "media"
-        os.makedirs(media_dir, exist_ok=True)
-        
-        # Delete existing photos for this spot
+        # Delete existing photos for this spot (from database and S3)
         existing_photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
-        for photo in existing_photos:
-            # Delete file from disk
-            try:
-                if os.path.exists(photo.object_key):
-                    os.remove(photo.object_key)
-            except Exception:
-                pass  # Ignore file deletion errors
-            db.delete(photo)
+        for existing_photo in existing_photos:
+            # Delete from S3 if it's an S3 object (not local file)
+            if existing_photo.object_key and not existing_photo.object_key.startswith("media/"):
+                try:
+                    # Determine bucket based on object_key
+                    if existing_photo.object_key.startswith("pakalspot-init-photos/"):
+                        bucket_name = "pakalspot-init-photos"
+                    else:
+                        bucket_name = settings.S3_BUCKET
+                    s3_client.delete_object(Bucket=bucket_name, Key=existing_photo.object_key)
+                except ClientError:
+                    pass  # Ignore S3 deletion errors (object may not exist)
+            # Delete from database
+            db.delete(existing_photo)
         
         for photo in photos:
             if photo and photo.filename:
-                # Generate unique filename
-                file_extension = os.path.splitext(photo.filename)[1]
-                unique_filename = f"{uuid.uuid4()}{file_extension}"
-                file_path = os.path.join(media_dir, unique_filename)
-                
-                # Save file to disk
-                with open(file_path, "wb") as buffer:
+                try:
+                    # Generate unique filename and S3 object key
+                    file_extension = os.path.splitext(photo.filename)[1] or ".jpg"
+                    unique_filename = f"{uuid.uuid4()}{file_extension}"
+                    object_key = f"{spot.id}/{unique_filename}"
+                    
+                    # Read photo content
                     content = await photo.read()
-                    buffer.write(content)
-                
-                # Create photo record in database
-                photo_url = f"http://localhost:8000/media/{unique_filename}"
-                photo_record = models.Photo(
-                    spot_id=spot.id,
-                    object_key=f"media/{unique_filename}",
-                    url=photo_url,
-                    thumbnail_url=photo_url  # Using same URL for thumbnail for now
-                )
-                db.add(photo_record)
+                    
+                    # Determine content type
+                    content_type = photo.content_type or "image/jpeg"
+                    if not content_type.startswith("image/"):
+                        content_type = "image/jpeg"
+                    
+                    # Upload to S3
+                    s3_client.put_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=object_key,
+                        Body=content,
+                        ContentType=content_type,
+                    )
+                    
+                    # Create photo record in database
+                    # URL uses media proxy route which will fetch from S3
+                    filename_for_url = unique_filename
+                    photo_url = f"{settings.BASE_URL}/media/{filename_for_url}"
+                    photo_record = models.Photo(
+                        spot_id=spot.id,
+                        object_key=object_key,
+                        url=photo_url,
+                        thumbnail_url=photo_url  # Using same URL for thumbnail for now
+                    )
+                    db.add(photo_record)
+                except ClientError as e:
+                    # Log error but continue with other photos
+                    print(f"Error uploading photo to S3: {str(e)}")
+                    raise HTTPException(status_code=500, detail=f"Error uploading photo: {str(e)}")
+                except Exception as e:
+                    print(f"Unexpected error uploading photo: {str(e)}")
+                    raise HTTPException(status_code=500, detail=f"Error uploading photo: {str(e)}")
         
         db.commit()
     
