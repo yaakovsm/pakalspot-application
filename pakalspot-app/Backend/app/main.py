@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.routers import auth, spots, photos, utils
+from app.routers import auth, spots, photos, utils, media
 from app.core.database import engine
 from app.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -23,6 +23,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include media router first (before StaticFiles mount) so it takes precedence
+# This allows serving images from S3 while still supporting local files as fallback
+app.include_router(media.router)
+
+# Mount static files as fallback for locally stored files
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
 app.include_router(auth.router, prefix="/api")
