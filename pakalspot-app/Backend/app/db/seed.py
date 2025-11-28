@@ -145,59 +145,54 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
     s3_bucket_name = "pakalspot-init-photos"
     
     for i, spot in enumerate(spots):
-        # Check if photos already exist for this spot
-        # Use raw SQL to avoid loading Photo model columns that don't exist in DB
-        # Cast spot_id to text since DB column is VARCHAR but model expects UUID
-        result = db.execute(
-            text("SELECT EXISTS(SELECT 1 FROM photos WHERE photos.spot_id::text = :spot_id)"),
-            {"spot_id": str(spot.id)}
-        ).scalar()
-        if result:
-            print(f"Photos already exist for spot '{spot.title}'")
-            continue
-        
-        # Get photos for this spot - support both list and comma-separated string
-        photos_data = spots_data[i].get("photos", [])
-        if isinstance(photos_data, str):
-            # Handle comma-separated string
-            photo_filenames = [p.strip() for p in photos_data.split(',')]
-        elif isinstance(photos_data, list):
-            # Handle list
-            photo_filenames = photos_data
+    spot_id_str = str(spot.id)
+
+    db.execute(
+        text("DELETE FROM photos WHERE photos.spot_id::text = :spot_id"),
+        {"spot_id": spot_id_str}
+    )
+    print(f"Deleted existing photos for spot '{spot.title}'")
+
+    photos_data = spots_data[i].get("photos", [])
+    if isinstance(photos_data, str):
+        photo_filenames = [p.strip() for p in photos_data.split(',')]
+    elif isinstance(photos_data, list):
+        photo_filenames = photos_data
+    else:
+        photo_data = spots_data[i].get("photo", "")
+        if photo_data:
+            photo_filenames = [p.strip() for p in photo_data.split(',')]
         else:
-            # Fallback: try to get from "photo" field (old format)
-            photo_data = spots_data[i].get("photo", "")
-            if photo_data:
-                photo_filenames = [p.strip() for p in photo_data.split(',')]
-            else:
-                print(f"No photos found for spot '{spot.title}'")
-                continue
-        
-        # Create photo records for each photo
-        for photo_filename in photo_filenames:
-            if not photo_filename:
-                continue
-            
-            # Photos are stored in S3 bucket s3://pakalspot-init-photos
-            # Note: url and thumbnail_url columns don't exist in current DB schema
-            # Use raw SQL to insert only columns that exist (id, spot_id, object_key, created_at)
-            photo_id = str(uuid.uuid4())
-            spot_id_str = str(spot.id)
-            # object_key format: pakalspot-init-photos/{filename}
-            object_key = f"{s3_bucket_name}/{photo_filename}"
-            
-            # Insert using raw SQL to avoid model column mismatch
-            db.execute(
-                text("""
-                    INSERT INTO photos (id, spot_id, object_key, created_at)
-                    VALUES (:id, :spot_id, :object_key, NOW())
-                    ON CONFLICT (id) DO NOTHING
-                """),
-                {"id": photo_id, "spot_id": spot_id_str, "object_key": object_key}
-            )
-            print(f"Created photo for spot '{spot.title}': {photo_filename}")
-    
-    db.commit()
+            print(f"No photos found for spot '{spot.title}'")
+            continue
+
+    for photo_filename in photo_filenames:
+        if not photo_filename:
+            continue
+
+        photo_id = str(uuid.uuid4())
+        object_key = f"{s3_bucket_name}/{photo_filename}"
+        s3_public_base = "https://pakalspot-init-photos.s3.amazonaws.com"
+        url = f"{s3_public_base}/{photo_filename}"
+        thumbnail_url = url
+
+        db.execute(
+            text("""
+                INSERT INTO photos (id, spot_id, object_key, url, thumbnail_url, created_at)
+                VALUES (:id, :spot_id, :object_key, :url, :thumbnail_url, NOW())
+            """),
+            {
+                "id": photo_id,
+                "spot_id": spot_id_str,
+                "object_key": object_key,
+                "url": url,
+                "thumbnail_url": thumbnail_url,
+            }
+        )
+        print(f"Created photo for spot '{spot.title}': {photo_filename}")
+
+db.commit()
+
 
 def main():
     """Main seeding function."""
