@@ -172,7 +172,8 @@ async def update_spot(
         os.makedirs(media_dir, exist_ok=True)
         
         # Delete existing photos for this spot
-        existing_photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        # Cast spot.id to string to match database column type (VARCHAR)
+        existing_photos = db.query(models.Photo).filter(models.Photo.spot_id == str(spot.id)).all()
         for photo in existing_photos:
             # Delete file from disk
             try:
@@ -250,7 +251,8 @@ def delete_spot(
         raise HTTPException(status_code=403, detail="Not authorized to delete this spot")
     
     # Delete associated photos from disk
-    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    # Cast spot.id to string to match database column type (VARCHAR)
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == str(spot.id)).all()
     for photo in photos:
         try:
             if os.path.exists(photo.object_key):
@@ -282,7 +284,8 @@ def list_spots(db: Session = Depends(get_db)):
             continue
         
         # Get photos for this spot
-        photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        # Cast spot.id to string to match database column type (VARCHAR)
+        photos = db.query(models.Photo).filter(models.Photo.spot_id == str(spot.id)).all()
         photos_data = []
         for photo in photos:
             photos_data.append({
@@ -341,7 +344,8 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Error extracting coordinates")
     
     # Get photos for this spot
-    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    # Cast spot.id to string to match database column type (VARCHAR)
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == str(spot.id)).all()
     photos_data = []
     for photo in photos:
         photos_data.append({
@@ -496,7 +500,8 @@ def update_spot(
         raise HTTPException(status_code=500, detail="Error extracting coordinates")
     
     # Get photos for this spot
-    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    # Cast spot.id to string to match database column type (VARCHAR)
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == str(spot.id)).all()
     photos_data = []
     for photo in photos:
         photos_data.append({
