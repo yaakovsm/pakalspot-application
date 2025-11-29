@@ -92,7 +92,7 @@ const About: React.FC = () => {
             {/* Bottom Right - Step 1 Image */}
             <div className="overflow-hidden">
               <img 
-                src="/Screenshot 2025-10-16 164842.png" 
+                src="/pakalspot-screenshot.jpg" 
                 alt="חיפוש ספוטים על המפה" 
                 className="w-full h-full object-cover"
               />
