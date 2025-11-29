@@ -215,6 +215,13 @@ ingress:
   #     - path: /
   #       pathType: Prefix
   #       service: frontend
+  # ACM Certificate ARN for HTTPS termination at ALB
+  # This should be set from Terraform output: terraform output acm_pakalspot_cert_arn
+  # When provided, the ingress will:
+  #   - Listen on both HTTP (80) and HTTPS (443)
+  #   - Use this certificate for HTTPS termination
+  #   - Redirect HTTP traffic to HTTPS
+  certificateArn: ""
   tls:
     enabled: false
     secretName: ""

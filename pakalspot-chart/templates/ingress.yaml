@@ -7,7 +7,17 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/group.name: pakalspot
+    {{- if .Values.ingress.certificateArn }}
+    # HTTPS configuration: Listen on both HTTP (80) and HTTPS (443)
+    # Certificate ARN is provided from Terraform output via values.yaml
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn | quote }}
+    # Redirect HTTP traffic to HTTPS
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    {{- else }}
+    # HTTP-only configuration (no certificate provided)
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    {{- end }}
     alb.ingress.kubernetes.io/backend-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-path: /api/health
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP

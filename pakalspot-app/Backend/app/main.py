@@ -5,7 +5,7 @@ from app.routers import auth, spots, photos, utils, media
 from app.core.database import engine
 from app.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
-from prometheus_client import Counter
+from prometheus_client import Counter, PROCESS_COLLECTOR, REGISTRY
 
 Base.metadata.create_all(bind=engine)
 
@@ -45,6 +45,14 @@ async def count_requests(request: Request, call_next):
     app_requests_total.inc()
     response = await call_next(request)
     return response
+
+# Enable process metrics (CPU, memory) for Prometheus
+# Remove default process collector and add our own to avoid conflicts
+try:
+    REGISTRY.unregister(PROCESS_COLLECTOR)
+except KeyError:
+    pass  # Already unregistered or not registered
+REGISTRY.register(PROCESS_COLLECTOR)
 
 Instrumentator().instrument(app).expose(app)
 
