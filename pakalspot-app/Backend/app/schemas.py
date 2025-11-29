@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from enum import Enum
 from app.models import SpotType as SpotTypeEnum
@@ -24,7 +24,12 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(
+        ...,
+        min_length=6,
+        max_length=128,
+        description="Password must be between 6 and 128 characters"
+    )
 
 
 class UserLogin(BaseModel):
