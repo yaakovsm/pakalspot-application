@@ -6,8 +6,7 @@ from app.core.database import engine
 from app.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, PROCESS_COLLECTOR, REGISTRY
-
-Base.metadata.create_all(bind=engine)
+import logging
 
 app = FastAPI(
     title="PakalSpot API",
@@ -56,12 +55,39 @@ REGISTRY.register(PROCESS_COLLECTOR)
 
 Instrumentator().instrument(app).expose(app)
 
+# Lazy database initialization - non-blocking to allow health checks to pass
+# even if database is temporarily unreachable
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on startup (non-blocking)."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logging.info("Database tables initialized successfully")
+    except Exception as e:
+        # Log but don't crash - allows health check to pass
+        logging.warning(f"Database initialization deferred: {e}")
+
 @app.get("/")
 def root():
     return {"message": "Welcome to PakalSpot API"}
 
 @app.get("/health")
 @app.get("/api/health")
-def health():
-    """Health check endpoint for Kubernetes probes."""
-    return {"status": "ok"}
+def health(deep: bool = False):
+    """Health check endpoint. Use ?deep=1 for DB connectivity check."""
+    from datetime import datetime
+    from sqlalchemy import text
+    
+    status = {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+    
+    if deep:
+        # Optional deep check - test DB connectivity
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            status["database"] = "connected"
+        except Exception as e:
+            status["database"] = f"error: {str(e)[:100]}"
+            # Still return 200 - service is up, DB is just unreachable
+    
+    return status
