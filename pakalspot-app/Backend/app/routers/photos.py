@@ -7,6 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 from uuid import uuid4
 from app.core.settings import settings
+from app.services.photo_url import build_photo_url_from_object_key
 
 router = APIRouter(prefix="/photos", tags=["photos"])
 
@@ -49,7 +50,10 @@ def generate_upload_url(
         raise HTTPException(status_code=500, detail=str(e))
 
     # Save photo metadata in DB
-    photo = models.Photo(spot_id=spot.id, object_key=key, url=f"{settings.BASE_URL}/media/{key.split('/')[-1]}")
+    # Use photo URL helper for consistent URL building
+    existing_url = f"{settings.BASE_URL}/media/{key.split('/')[-1]}"
+    url = build_photo_url_from_object_key(key, existing_url)
+    photo = models.Photo(spot_id=spot.id, object_key=key, url=url, thumbnail_url=url)
     db.add(photo)
     db.commit()
     db.refresh(photo)

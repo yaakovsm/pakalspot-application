@@ -16,6 +16,7 @@ from app.core.security import get_current_user
 from app.core.settings import settings
 from app.models import parse_spot_type
 from app.services.geocoding import geocoding_service
+from app.services.photo_url import build_photo_url_from_object_key
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 
@@ -100,7 +101,8 @@ async def create_spot(
                     ACL="public-read",
                 )
 
-                url = build_s3_url(bucket_name, object_key)
+                # Use photo URL helper for consistent URL building
+                url = build_photo_url_from_object_key(object_key, build_s3_url(bucket_name, object_key))
 
                 photo_record = models.Photo(
                     spot_id=spot.id,
@@ -225,7 +227,8 @@ async def update_spot(
                     ACL="public-read",
                 )
 
-                url = build_s3_url(bucket_default, object_key)
+                # Use photo URL helper for consistent URL building
+                url = build_photo_url_from_object_key(object_key, build_s3_url(bucket_default, object_key))
 
                 photo_record = models.Photo(
                     spot_id=spot.id,

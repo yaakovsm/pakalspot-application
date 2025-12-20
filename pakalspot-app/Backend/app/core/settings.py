@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     BASE_URL: str = os.getenv("BASE_URL", "http://pakalspot.local")
 
+    # Seed Configuration
+    INIT_SEED_BUCKET: str = os.getenv("INIT_SEED_BUCKET", "pakalspot-init-photos")
+    INIT_SEED_JSON_KEY: str = os.getenv("INIT_SEED_JSON_KEY", "init_spots.json")
+    INIT_PHOTOS_BASE_URL: str | None = os.getenv("INIT_PHOTOS_BASE_URL")  # Required in cloud (CloudFront domain)
+    ADMIN_SEED_API_KEY: str | None = os.getenv("ADMIN_SEED_API_KEY")  # Required for seed endpoint
+    SEED_ENABLED: bool = os.getenv("SEED_ENABLED", "true").lower() == "true"
+
     DEBUG: bool = True
     ENVIRONMENT: str = "development"
 
