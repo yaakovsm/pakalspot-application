@@ -44,6 +44,52 @@ def verify_seed_key(x_seed_key: str | None = None) -> None:
         )
 
 
+@router.post("/migrations/upgrade")
+def run_migrations_endpoint(
+    x_seed_key: Annotated[str | None, Header(alias="X-Seed-Key")] = None,
+):
+    """
+    Run database migrations (alembic upgrade head).
+    
+    Requires:
+    - X-Seed-Key header matching ADMIN_SEED_API_KEY
+    
+    Returns:
+        JSON with migration status and output
+    """
+    # Verify API key
+    verify_seed_key(x_seed_key)
+    
+    # Run migrations
+    try:
+        import subprocess
+        import sys
+        
+        result = subprocess.run(
+            [sys.executable, "-m", "alembic", "upgrade", "head"],
+            capture_output=True,
+            text=True,
+            cwd="/app"
+        )
+        
+        if result.returncode == 0:
+            return {
+                "status": "success",
+                "output": result.stdout,
+                "stderr": result.stderr
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Migration failed: {result.stderr}"
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Migration operation failed: {str(e)}"
+        )
+
+
 @router.post("/seed/init-spots")
 def seed_init_spots_endpoint(
     x_seed_key: Annotated[str | None, Header(alias="X-Seed-Key")] = None,

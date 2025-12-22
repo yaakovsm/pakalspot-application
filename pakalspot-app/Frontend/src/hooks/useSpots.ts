@@ -52,9 +52,11 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
       params.sortBy = filters.sortBy;
 
       const response = await spotsAPI.getSpots(params);
-      set({ spots: response.data, isLoading: false });
+      // Ensure response.data is an array
+      const spotsData = Array.isArray(response.data) ? response.data : [];
+      set({ spots: spotsData, isLoading: false });
     } catch (error) {
-      set({ isLoading: false });
+      set({ spots: [], isLoading: false });
       console.error('Failed to fetch spots:', error);
     }
   },
