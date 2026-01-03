@@ -25,10 +25,13 @@ def build_photo_url(photo: models.Photo) -> str:
     """
     # Check if this is an init photo by object_key prefix
     if photo.object_key.startswith("photos/"):
-        # Init photo - use CloudFront base URL
+        # Init photo - use CloudFront base URL if available, otherwise use backend API
         if not settings.INIT_PHOTOS_BASE_URL:
-            # Fallback to existing URL if base URL not configured
-            return photo.url
+            # Fallback: use backend API endpoint to proxy from private S3 bucket
+            # Extract filename from object_key (e.g., "photos/IMG_5307.JPG" -> "IMG_5307.JPG")
+            filename = photo.object_key.split("/")[-1]
+            base_url = settings.BASE_URL.rstrip("/")
+            return f"{base_url}/api/media/{filename}"
         
         # Build URL: INIT_PHOTOS_BASE_URL + "/" + object_key
         # e.g., "https://d1234.cloudfront.net/photos/IMG_5307.JPG"
@@ -54,10 +57,13 @@ def build_photo_url_from_object_key(object_key: str, existing_url: str | None = 
     """
     # Check if this is an init photo by object_key prefix
     if object_key.startswith("photos/"):
-        # Init photo - use CloudFront base URL
+        # Init photo - use CloudFront base URL if available, otherwise use backend API
         if not settings.INIT_PHOTOS_BASE_URL:
-            # Fallback: build S3 URL if base URL not configured
-            return f"https://{settings.INIT_SEED_BUCKET}.s3.amazonaws.com/{object_key}"
+            # Fallback: use backend API endpoint to proxy from private S3 bucket
+            # Extract filename from object_key (e.g., "photos/IMG_5307.JPG" -> "IMG_5307.JPG")
+            filename = object_key.split("/")[-1]
+            base_url = settings.BASE_URL.rstrip("/")
+            return f"{base_url}/api/media/{filename}"
         
         # Build URL: INIT_PHOTOS_BASE_URL + "/" + object_key
         base_url = settings.INIT_PHOTOS_BASE_URL.rstrip("/")

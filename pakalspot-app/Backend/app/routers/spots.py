@@ -16,7 +16,6 @@ from app.core.security import get_current_user
 from app.core.settings import settings
 from app.models import parse_spot_type
 from app.services.geocoding import geocoding_service
-from app.services.photo_url import build_photo_url_from_object_key
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 
@@ -39,6 +38,62 @@ def build_s3_url(bucket: str, object_key: str) -> str:
     return f"https://{bucket}.s3.amazonaws.com/{object_key}"
 
 
+def _filename_from_object_key(object_key: Optional[str]) -> Optional[str]:
+    if not object_key:
+        return None
+    return object_key.split("/")[-1]
+
+
+def _photo_api_url(filename: str) -> str:
+    # Always serve via backend proxy to support private buckets
+    base = settings.BASE_URL.rstrip("/")
+    api_prefix = settings.API_PREFIX.rstrip("/")
+    return f"{base}{api_prefix}/media/{filename}"
+
+
+def _photo_out_from_db(photo: models.Photo) -> dict:
+    filename = _filename_from_object_key(photo.object_key)
+    if filename:
+        url = _photo_api_url(filename)
+        thumb = url
+    else:
+        # Fallback (shouldn't happen, but keeps API stable)
+        url = photo.url
+        thumb = photo.thumbnail_url or photo.url
+
+    return {
+        "id": photo.id,
+        "spot_id": photo.spot_id,
+        "url": url,
+        "thumbnail_url": thumb,
+        "created_at": photo.created_at,
+    }
+
+
+def _user_out_from_db(user: Optional[models.User]) -> Optional[dict]:
+    if not user:
+        return None
+    return {
+        "id": user.id,
+        "email": user.email,
+        "display_name": user.display_name,
+        "username": user.display_name,
+        "created_at": user.created_at,
+    }
+
+
+def _spot_coords(db: Session, spot: models.Spot, fallback_lat: float, fallback_lon: float):
+    try:
+        from shapely.wkt import loads
+
+        geom_wkt = db.execute(func.ST_AsText(spot.geom)).scalar()
+        pt = loads(geom_wkt)
+        lon, lat = pt.x, pt.y
+        return lat, lon
+    except Exception:
+        return fallback_lat, fallback_lon
+
+
 @router.post("/", response_model=schemas.SpotOut)
 async def create_spot(
     title: str = Form(...),
@@ -53,7 +108,6 @@ async def create_spot(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    # map frontend type -> SpotType enum
     try:
         spot_type = parse_spot_type(type)
     except ValueError:
@@ -93,6 +147,8 @@ async def create_spot(
                 if not content_type.startswith("image/"):
                     content_type = "image/jpeg"
 
+                # NOTE: For private bucket flows, don't rely on public-read.
+                # Keep it if you want, but proxy serving doesn't need it.
                 s3_client.put_object(
                     Bucket=bucket_name,
                     Key=object_key,
@@ -101,34 +157,25 @@ async def create_spot(
                     ACL="public-read",
                 )
 
-                # Use photo URL helper for consistent URL building
-                url = build_photo_url_from_object_key(object_key, build_s3_url(bucket_name, object_key))
+                # Store any URL you want in DB, but API response will be built dynamically
+                db_url = build_s3_url(bucket_name, object_key)
 
                 photo_record = models.Photo(
                     spot_id=spot.id,
                     object_key=object_key,
-                    url=url,
-                    thumbnail_url=url,
+                    url=db_url,
+                    thumbnail_url=db_url,
                 )
                 db.add(photo_record)
+
             except ClientError as e:
-                print(f"Error uploading photo to S3: {str(e)}")
-                raise HTTPException(status_code=500, detail="Error uploading photo")
+                raise HTTPException(status_code=500, detail=f"Error uploading photo to S3: {str(e)}")
             except Exception as e:
-                print(f"Unexpected error uploading photo: {str(e)}")
-                raise HTTPException(status_code=500, detail="Error uploading photo")
+                raise HTTPException(status_code=500, detail=f"Unexpected error uploading photo: {str(e)}")
 
         db.commit()
 
-    # coordinates for response
-    try:
-        from shapely.wkt import loads
-
-        geom_wkt = db.execute(func.ST_AsText(spot.geom)).scalar()
-        pt = loads(geom_wkt)
-        lon, lat = pt.x, pt.y
-    except Exception:
-        lon, lat = longitude, latitude
+    lat, lon = _spot_coords(db, spot, latitude, longitude)
 
     return {
         "id": spot.id,
@@ -142,6 +189,7 @@ async def create_spot(
         "location_name": spot.location_name,
         "created_at": spot.created_at,
         "owner_id": spot.user_id,
+        "photos": [],
     }
 
 
@@ -178,9 +226,7 @@ async def update_spot(
     spot.how_to_get_there = how_to_get_there
     spot.spot_type = spot_type
     spot.location_name = location_name
-
-    point = from_shape(Point(longitude, latitude), srid=4326)
-    spot.geom = point
+    spot.geom = from_shape(Point(longitude, latitude), srid=4326)
 
     db.commit()
     db.refresh(spot)
@@ -189,21 +235,22 @@ async def update_spot(
         s3_client = get_s3_client()
         bucket_default = settings.S3_BUCKET
 
-        # delete old photos from S3 and DB
         existing_photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
         for existing_photo in existing_photos:
             if existing_photo.object_key:
                 try:
-                    if existing_photo.object_key.startswith("pakalspot-init-photos/"):
-                        bucket_name = "pakalspot-init-photos"
+                    # Delete from whichever bucket is relevant (best effort)
+                    if existing_photo.object_key.startswith("photos/") or existing_photo.object_key.startswith("pakalspot-init-photos/"):
+                        bucket_name = settings.INIT_SEED_BUCKET
+                        key = existing_photo.object_key.replace("pakalspot-init-photos/", "")
                     else:
                         bucket_name = bucket_default
-                    s3_client.delete_object(Bucket=bucket_name, Key=existing_photo.object_key)
+                        key = existing_photo.object_key
+                    s3_client.delete_object(Bucket=bucket_name, Key=key)
                 except ClientError:
                     pass
             db.delete(existing_photo)
 
-        # upload new photos
         for photo in photos:
             if not photo or not photo.filename:
                 continue
@@ -227,46 +274,27 @@ async def update_spot(
                     ACL="public-read",
                 )
 
-                # Use photo URL helper for consistent URL building
-                url = build_photo_url_from_object_key(object_key, build_s3_url(bucket_default, object_key))
+                db_url = build_s3_url(bucket_default, object_key)
 
                 photo_record = models.Photo(
                     spot_id=spot.id,
                     object_key=object_key,
-                    url=url,
-                    thumbnail_url=url,
+                    url=db_url,
+                    thumbnail_url=db_url,
                 )
                 db.add(photo_record)
+
             except ClientError as e:
-                print(f"Error uploading photo to S3: {str(e)}")
-                raise HTTPException(status_code=500, detail="Error uploading photo")
+                raise HTTPException(status_code=500, detail=f"Error uploading photo to S3: {str(e)}")
             except Exception as e:
-                print(f"Unexpected error uploading photo: {str(e)}")
-                raise HTTPException(status_code=500, detail="Error uploading photo")
+                raise HTTPException(status_code=500, detail=f"Unexpected error uploading photo: {str(e)}")
 
         db.commit()
 
-    # coordinates for response
-    try:
-        from shapely.wkt import loads
-
-        geom_wkt = db.execute(func.ST_AsText(spot.geom)).scalar()
-        pt = loads(geom_wkt)
-        lon, lat = pt.x, pt.y
-    except Exception:
-        lon, lat = longitude, latitude
+    lat, lon = _spot_coords(db, spot, latitude, longitude)
 
     photos_db = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
-    photos_data = [
-        {
-            "id": p.id,
-            "spot_id": p.spot_id,
-            "url": p.url,
-            "thumbnail_url": p.thumbnail_url,
-            "created_at": p.created_at,
-        }
-        for p in photos_db
-    ]
+    photos_data = [_photo_out_from_db(p) for p in photos_db]
 
     return {
         "id": spot.id,
@@ -304,18 +332,19 @@ def delete_spot(
     for photo in photos:
         if photo.object_key:
             try:
-                if photo.object_key.startswith("pakalspot-init-photos/"):
-                    bucket_name = "pakalspot-init-photos"
+                if photo.object_key.startswith("photos/") or photo.object_key.startswith("pakalspot-init-photos/"):
+                    bucket_name = settings.INIT_SEED_BUCKET
+                    key = photo.object_key.replace("pakalspot-init-photos/", "")
                 else:
                     bucket_name = bucket_default
-                s3_client.delete_object(Bucket=bucket_name, Key=photo.object_key)
+                    key = photo.object_key
+                s3_client.delete_object(Bucket=bucket_name, Key=key)
             except ClientError:
                 pass
         db.delete(photo)
 
     db.delete(spot)
     db.commit()
-
     return {"message": "Spot deleted successfully"}
 
 
@@ -325,37 +354,13 @@ def list_spots(db: Session = Depends(get_db)):
     result = []
 
     for spot in spots:
-        try:
-            from shapely.wkt import loads
-
-            geom_wkt = db.execute(func.ST_AsText(spot.geom)).scalar()
-            pt = loads(geom_wkt)
-            lon, lat = pt.x, pt.y
-        except Exception:
-            continue
+        lat, lon = _spot_coords(db, spot, 0.0, 0.0)
 
         photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
-        photos_data = [
-            {
-                "id": p.id,
-                "spot_id": p.spot_id,
-                "url": p.url,
-                "thumbnail_url": p.thumbnail_url,
-                "created_at": p.created_at,
-            }
-            for p in photos
-        ]
+        photos_data = [_photo_out_from_db(p) for p in photos]
 
         user = db.query(models.User).filter(models.User.id == spot.user_id).first()
-        user_data = None
-        if user:
-            user_data = {
-                "id": user.id,
-                "email": user.email,
-                "display_name": user.display_name,
-                "username": user.display_name,
-                "created_at": user.created_at,
-            }
+        user_data = _user_out_from_db(user)
 
         result.append(
             {
@@ -385,37 +390,13 @@ def get_spot(spot_id: str, db: Session = Depends(get_db)):
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
 
-    try:
-        from shapely.wkt import loads
-
-        geom_wkt = db.execute(func.ST_AsText(spot.geom)).scalar()
-        pt = loads(geom_wkt)
-        lon, lat = pt.x, pt.y
-    except Exception:
-        raise HTTPException(status_code=500, detail="Error extracting coordinates")
+    lat, lon = _spot_coords(db, spot, 0.0, 0.0)
 
     photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
-    photos_data = [
-        {
-            "id": p.id,
-            "spot_id": p.spot_id,
-            "url": p.url,
-            "thumbnail_url": p.thumbnail_url,
-            "created_at": p.created_at,
-        }
-        for p in photos
-    ]
+    photos_data = [_photo_out_from_db(p) for p in photos]
 
     user = db.query(models.User).filter(models.User.id == spot.user_id).first()
-    user_data = None
-    if user:
-        user_data = {
-            "id": user.id,
-            "email": user.email,
-            "display_name": user.display_name,
-            "username": user.display_name,
-            "created_at": user.created_at,
-        }
+    user_data = _user_out_from_db(user)
 
     return {
         "id": spot.id,

@@ -28,13 +28,15 @@ const normalizeBaseUrl = (url: string): string => {
 
 const runtimeEnv = getRuntimeEnv();
 
-const API_BASE_URL = normalizeBaseUrl(
+export const API_BASE_URL = normalizeBaseUrl(
   runtimeEnv.VITE_API_BASE_URL ||
     runtimeEnv.VITE_API_URL ||
-    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
-    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
+    ((typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) as string) ||
+    ((typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) as string) ||
     '/api'
 );
+
+const isAbsoluteUrl = (value: string): boolean => /^https?:\/\//i.test(value);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -66,6 +68,22 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const getMediaUrl = (value: string | null | undefined): string => {
+  if (!value) return '';
+
+  const v = value.trim();
+  if (!v) return '';
+
+  if (isAbsoluteUrl(v)) return v;
+
+  if (v.startsWith('/')) {
+    if (typeof window === 'undefined') return v;
+    return new URL(v, window.location.origin).toString();
+  }
+
+  return `${API_BASE_URL}/media/${encodeURIComponent(v)}`;
+};
 
 export const authAPI = {
   login: (data: LoginRequest): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/login', data),

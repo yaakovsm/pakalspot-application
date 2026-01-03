@@ -1,58 +1,64 @@
-from pydantic_settings import BaseSettings
+from typing import Optional
 import os
 from urllib.parse import quote_plus
 
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
 class Settings(BaseSettings):
-    # --- DB parts ---
-    DB_HOST: str | None = os.getenv("DB_HOST")
-    DB_PORT: int = int(os.getenv("DB_PORT", "5432"))
-    DB_NAME: str | None = os.getenv("DB_NAME")
-    DB_USER: str | None = os.getenv("DB_USER")
-    DB_PASSWORD: str | None = os.getenv("DB_PASSWORD")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Keep backward compatibility:
-    # 1) If DB_URL exists -> use it
-    # 2) else if DB parts exist -> build DB_URL
-    # 3) else fallback to local docker-compose default
-    DB_URL: str = os.getenv(
-        "DB_URL",
-        ""
-    )
+    DB_HOST: Optional[str] = Field(default=None)
+    DB_PORT: int = Field(default=5432)
+    DB_NAME: Optional[str] = Field(default=None)
+    DB_USER: Optional[str] = Field(default=None)
+    DB_PASSWORD: Optional[str] = Field(default=None)
 
-    # Secrets (from environment)
-    SECRET_KEY: str
-    JWT_EXPIRY: int = 60 * 24 * 30  # 30 days
+    DB_URL: Optional[str] = Field(default=None)
 
-    # S3 Configuration
-    S3_BUCKET: str = "pakalspot-photos"
-    S3_ENDPOINT: str = "https://s3.amazonaws.com"
-    S3_REGION: str = "us-east-1"
-    S3_ACCESS_KEY: str
-    S3_SECRET_KEY: str
+    SECRET_KEY: Optional[str] = Field(default=None)
+    JWT_EXPIRY: int = Field(default=60 * 24 * 30)
 
-    API_PREFIX: str = "/api"
-    BASE_URL: str = os.getenv("BASE_URL", "http://pakalspot.local")
+    S3_BUCKET: str = Field(default="pakalspot-photos")
+    S3_ENDPOINT: str = Field(default="https://s3.amazonaws.com")
+    S3_REGION: str = Field(default="us-east-1")
+    S3_ACCESS_KEY: Optional[str] = Field(default=None)
+    S3_SECRET_KEY: Optional[str] = Field(default=None)
 
-    # Seed Configuration
-    INIT_SEED_BUCKET: str = os.getenv("INIT_SEED_BUCKET", "pakalspot-init-photos")
-    INIT_SEED_JSON_KEY: str = os.getenv("INIT_SEED_JSON_KEY", "init_spots.json")
-    INIT_PHOTOS_BASE_URL: str | None = os.getenv("INIT_PHOTOS_BASE_URL")  # Required in cloud (CloudFront domain)
-    ADMIN_SEED_API_KEY: str | None = os.getenv("ADMIN_SEED_API_KEY")  # Required for seed endpoint
-    SEED_ENABLED: bool = os.getenv("SEED_ENABLED", "true").lower() == "true"
+    API_PREFIX: str = Field(default="/api")
+    BASE_URL: str = Field(default="http://pakalspot.local")
 
-    DEBUG: bool = True
-    ENVIRONMENT: str = "development"
+    INIT_SEED_BUCKET: str = Field(default="pakalspot-init-photos")
+    INIT_SEED_JSON_KEY: str = Field(default="init_spots.json")
+    INIT_PHOTOS_BASE_URL: Optional[str] = Field(default=None)
+    ADMIN_SEED_API_KEY: Optional[str] = Field(default=None)
+    SEED_ENABLED: bool = Field(default=True)
 
-    model_config = {"env_file": ".env", "extra": "ignore"}
+    DEBUG: bool = Field(default=True)
+    ENVIRONMENT: str = Field(default="development")
 
     def model_post_init(self, __context) -> None:
-        # Build DB_URL if not provided explicitly
+        env = (self.ENVIRONMENT or "").lower()
+        is_local = env in {"development", "dev", "local"}
+
         if not self.DB_URL:
             if all([self.DB_HOST, self.DB_NAME, self.DB_USER, self.DB_PASSWORD]):
                 pwd = quote_plus(self.DB_PASSWORD)
                 self.DB_URL = f"postgresql://{self.DB_USER}:{pwd}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
             else:
-                # Local docker-compose fallback
                 self.DB_URL = "postgresql://pakalspot_user:jcoffeebrew@db:5432/pakalspot_db"
+
+        if not self.SECRET_KEY:
+            if is_local:
+                self.SECRET_KEY = "local-dev-secret-change-me"
+            else:
+                raise ValueError("SECRET_KEY is required in non-local environments")
+
+        has_access = bool(self.S3_ACCESS_KEY)
+        has_secret = bool(self.S3_SECRET_KEY)
+        if has_access != has_secret:
+            raise ValueError("S3_ACCESS_KEY and S3_SECRET_KEY must be provided together")
+
 
 settings = Settings()

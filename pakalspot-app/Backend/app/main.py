@@ -6,6 +6,7 @@ from app.core.database import engine
 from app.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, PROCESS_COLLECTOR, REGISTRY
+import os
 import logging
 
 app = FastAPI(
@@ -22,12 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include media router first (before StaticFiles mount) so it takes precedence
-# This allows serving images from S3 while still supporting local files as fallback
-app.include_router(media.router)
-
-# Mount static files as fallback for locally stored files
-app.mount("/media", StaticFiles(directory="media"), name="media")
+app.include_router(media.router, prefix="/api")
+# Static file mount removed - media router handles all /api/media requests
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(spots.router, prefix="/api")
@@ -46,27 +43,29 @@ async def count_requests(request: Request, call_next):
     response = await call_next(request)
     return response
 
-# Enable process metrics (CPU, memory) for Prometheus
-# Remove default process collector and add our own to avoid conflicts
 try:
     REGISTRY.unregister(PROCESS_COLLECTOR)
 except KeyError:
-    pass  # Already unregistered or not registered
+    pass
 REGISTRY.register(PROCESS_COLLECTOR)
 
 Instrumentator().instrument(app).expose(app)
 
-# Lazy database initialization - non-blocking to allow health checks to pass
-# even if database is temporarily unreachable
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database tables on startup (non-blocking)."""
-    try:
-        Base.metadata.create_all(bind=engine)
-        logging.info("Database tables initialized successfully")
-    except Exception as e:
-        # Log but don't crash - allows health check to pass
-        logging.warning(f"Database initialization deferred: {e}")
+    """
+    Do NOT auto-create tables by default.
+    Alembic should manage schema.
+    Enable only if you explicitly want it: AUTO_CREATE_TABLES=true
+    """
+    if os.getenv("AUTO_CREATE_TABLES", "false").lower() == "true":
+        try:
+            Base.metadata.create_all(bind=engine)
+            logging.info("Database tables auto-created (AUTO_CREATE_TABLES=true)")
+        except Exception as e:
+            logging.warning(f"Auto-create tables failed: {e}")
+    else:
+        logging.info("Skipping Base.metadata.create_all (Alembic manages schema)")
 
 @app.get("/")
 def root():
@@ -75,20 +74,17 @@ def root():
 @app.get("/health")
 @app.get("/api/health")
 def health(deep: bool = False):
-    """Health check endpoint. Use ?deep=1 for DB connectivity check."""
     from datetime import datetime
     from sqlalchemy import text
-    
+
     status = {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
-    
+
     if deep:
-        # Optional deep check - test DB connectivity
         try:
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             status["database"] = "connected"
         except Exception as e:
             status["database"] = f"error: {str(e)[:100]}"
-            # Still return 200 - service is up, DB is just unreachable
-    
+
     return status

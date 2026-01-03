@@ -65,11 +65,21 @@ spec:
             - name: nginx-conf
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
+            {{- if .Values.frontend.envRuntime }}
+            - name: env-config
+              mountPath: /usr/share/nginx/html/env-config.js
+              subPath: env-config.js
+            {{- end }}
 
       volumes:
         - name: nginx-conf
           configMap:
             name: {{ include "pakalspot-chart.fullname" . }}-nginx-config
+        {{- if .Values.frontend.envRuntime }}
+        - name: env-config
+          configMap:
+            name: {{ include "pakalspot-chart.fullname" . }}-frontend-env-config
+        {{- end }}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:

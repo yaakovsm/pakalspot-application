@@ -22,6 +22,8 @@ data:
       }
 
       location = /env-config.js {
+        add_header Content-Type application/javascript;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
         try_files /env-config.js =404;
       }
     }
