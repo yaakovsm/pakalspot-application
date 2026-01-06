@@ -117,6 +117,7 @@ class SpotOut(BaseModel):
     owner_id: uuid.UUID
     createdBy: Optional[UserOut] = None  # User information
     photos: Optional[List[PhotoOut]] = []
+    is_favorited: Optional[bool] = False  # Whether current user has favorited this spot
 
     class Config:
         from_attributes = True

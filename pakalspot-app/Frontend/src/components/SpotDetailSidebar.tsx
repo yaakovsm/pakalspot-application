@@ -5,9 +5,13 @@ import { Badge } from './ui/badge';
 import { Spot } from '../types/spot';
 import { X, Heart, MapPin, Share2 } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
+import { useAuth } from '../hooks/useAuth';
+import { useFavorites } from '../hooks/useFavorites';
+import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from './ui/carousel';
+import AuthDialog from './AuthDialog';
 
 interface SpotDetailSidebarProps {
   spot: Spot | null;
@@ -18,14 +22,24 @@ interface SpotDetailSidebarProps {
 }
 
 const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, isClosing = false, isOpening = false, className }) => {
-  const { favoriteSpot, unfavoriteSpot } = useSpots();
+  const { selectedSpot } = useSpots();
+  const { isAuthenticated } = useAuth();
+  const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
+  const { toast } = useToast();
   const { t } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(isOpening);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  
+  // Use selectedSpot from store if available, otherwise use prop (for reactivity)
+  const currentSpot = selectedSpot || spot;
   
   // Get translated content
-  const translatedTitle = spot ? getTranslatedSpotContent(spot, t, 'title') : '';
-  const translatedDescription = spot ? getTranslatedSpotContent(spot, t, 'description') : '';
-  const translatedHowToGetThere = spot ? getTranslatedSpotContent(spot, t, 'how_to_get_there') : '';
+  const translatedTitle = currentSpot ? getTranslatedSpotContent(currentSpot, t, 'title') : '';
+  const translatedDescription = currentSpot ? getTranslatedSpotContent(currentSpot, t, 'description') : '';
+  const translatedHowToGetThere = currentSpot ? getTranslatedSpotContent(currentSpot, t, 'how_to_get_there') : '';
+  
+  // Check if spot is favorited using global state
+  const isSpotFavorited = currentSpot ? isFavorited(currentSpot.id) : false;
 
   useEffect(() => {
     if (isOpening) {
@@ -38,17 +52,28 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
     }
   }, [isOpening]);
 
-  if (!spot) return null;
+  if (!currentSpot) return null;
 
-  const handleFavoriteToggle = async () => {
-    try {
-      if (spot.isFavorited) {
-        await unfavoriteSpot(spot.id);
-      } else {
-        await favoriteSpot(spot.id);
-      }
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
+  const handleFavoriteToggle = () => {
+    if (!isAuthenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    if (!currentSpot) return;
+
+    if (isSpotFavorited) {
+      unfavoriteSpot(currentSpot.id);
+      toast({
+        title: t('spots.removed_from_favorites'),
+        description: t('spots.removed_from_favorites_desc'),
+      });
+    } else {
+      favoriteSpot(currentSpot.id);
+      toast({
+        title: t('spots.added_to_favorites'),
+        description: t('spots.added_to_favorites_desc'),
+      });
     }
   };
 
@@ -56,8 +81,8 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
     if (navigator.share) {
       try {
         await navigator.share({
-          title: spot.title,
-          text: spot.description,
+          title: currentSpot.title,
+          text: currentSpot.description,
           url: window.location.href,
         });
       } catch (error) {
@@ -119,22 +144,22 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
 
         {/* Spot Image Carousel */}
         <div className="relative mb-6">
-          {spot.photos && spot.photos.length > 0 ? (
+          {currentSpot.photos && currentSpot.photos.length > 0 ? (
             <Carousel className="w-full">
               <CarouselContent>
-                {spot.photos.map((photo, index) => (
+                {currentSpot.photos.map((photo, index) => (
                   <CarouselItem key={photo.id || index}>
                     <div className="relative">
                       <img 
                         src={photo.url} 
-                        alt={`${spot.title} - ${index + 1}`}
+                        alt={`${currentSpot.title} - ${index + 1}`}
                         className="w-full h-80 object-cover rounded-lg"
                       />
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              {spot.photos.length > 1 && (
+              {currentSpot.photos.length > 1 && (
                 <>
                   <CarouselPrevious className="left-2" />
                   <CarouselNext className="right-2" />
@@ -149,15 +174,15 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
           
           {/* Type Badge */}
           <Badge 
-            className={`absolute top-3 left-3 z-10 ${getTypeColor(spot.spot_type)} text-white`}
+            className={`absolute top-3 left-3 z-10 ${getTypeColor(currentSpot.spot_type)} text-white`}
           >
-            {t(`spot_types.${spot.spot_type}`)}
+            {t(`spot_types.${currentSpot.spot_type}`)}
           </Badge>
           
           {/* Distance */}
-          {spot.distance && (
+          {currentSpot.distance && (
             <div className="absolute bottom-3 left-3 z-10 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-foreground">
-              {spot.distance < 1 ? `${Math.round(spot.distance * 1000)}m away` : `${spot.distance.toFixed(1)}km away`}
+              {currentSpot.distance < 1 ? `${Math.round(currentSpot.distance * 1000)}m away` : `${currentSpot.distance.toFixed(1)}km away`}
             </div>
           )}
         </div>
@@ -175,7 +200,7 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
                 onClick={handleFavoriteToggle}
                 className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
               >
-                <Heart className={`w-4 h-4 ${spot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+                <Heart className={`w-4 h-4 ${isSpotFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
               </Button>
               <Button
                 variant="ghost"
@@ -215,7 +240,7 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
             <Button 
               variant="default" 
               onClick={() => {
-                const url = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}`;
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${currentSpot.lat},${currentSpot.lon}`;
                 window.open(url, '_blank');
               }}
               className="w-full gap-2"
@@ -226,6 +251,16 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
           </CardContent>
         </Card>
       </div>
+      
+      {/* Auth Dialog */}
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        title={t('auth.sign_in_required')}
+        description={t('auth.favorites_sign_in_description')}
+        actionText={t('auth.sign_in')}
+        cancelText={t('common.cancel')}
+      />
     </div>
   );
 };

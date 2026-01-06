@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import AuthDialog from '../components/AuthDialog';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
+import { useFavorites } from '../hooks/useFavorites';
 import { ArrowLeft, MapPin, Heart, ThumbsUp, ThumbsDown, Calendar, User, Share2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
@@ -16,10 +17,14 @@ const SpotDetails: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { selectedSpot, selectSpot, favoriteSpot, unfavoriteSpot, likeSpot } = useSpots();
+  const { selectedSpot, selectSpot, likeSpot } = useSpots();
   const { isAuthenticated } = useAuth();
+  const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  
+  // Check if spot is favorited using global state
+  const isSpotFavorited = selectedSpot ? isFavorited(selectedSpot.id) : false;
 
   useEffect(() => {
     if (!id) {
@@ -34,7 +39,7 @@ const SpotDetails: React.FC = () => {
     }
   }, [id, selectedSpot, navigate]);
 
-  const handleFavoriteToggle = async () => {
+  const handleFavoriteToggle = () => {
     if (!isAuthenticated) {
       setShowAuthDialog(true);
       return;
@@ -42,25 +47,17 @@ const SpotDetails: React.FC = () => {
 
     if (!selectedSpot) return;
 
-    try {
-      if (selectedSpot.isFavorited) {
-        await unfavoriteSpot(selectedSpot.id);
-        toast({
-          title: t('spots.removed_from_favorites'),
-          description: t('spots.removed_from_favorites_desc'),
-        });
-      } else {
-        await favoriteSpot(selectedSpot.id);
-        toast({
-          title: t('spots.added_to_favorites'),
-          description: t('spots.added_to_favorites_desc'),
-        });
-      }
-    } catch (error) {
+    if (isSpotFavorited) {
+      unfavoriteSpot(selectedSpot.id);
       toast({
-        title: t('common.error'),
-        description: t('spots.favorites_update_failed'),
-        variant: 'destructive',
+        title: t('spots.removed_from_favorites'),
+        description: t('spots.removed_from_favorites_desc'),
+      });
+    } else {
+      favoriteSpot(selectedSpot.id);
+      toast({
+        title: t('spots.added_to_favorites'),
+        description: t('spots.added_to_favorites_desc'),
       });
     }
   };
@@ -235,7 +232,7 @@ const SpotDetails: React.FC = () => {
                         size="icon"
                         onClick={handleFavoriteToggle}
                       >
-                        <Heart className={`w-5 h-5 ${selectedSpot.isFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+                        <Heart className={`w-5 h-5 ${isSpotFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
                       </Button>
                       <Button
                         variant="ghost"

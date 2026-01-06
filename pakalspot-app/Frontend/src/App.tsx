@@ -1,10 +1,11 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
+import { spotsAPI } from "./api/api";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Login from "./pages/Login";
@@ -16,11 +17,36 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { initialize } = useAuth();
+  const { initialize, isAuthenticated } = useAuth();
+  const client = useQueryClient();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Prefetch favorites when user is authenticated
+      client.prefetchQuery({
+        queryKey: ['favorites', 'ids'],
+        queryFn: async () => {
+          const response = await spotsAPI.getFavorites();
+          return new Set(response.data.map(spot => spot.id));
+        },
+      });
+      client.prefetchQuery({
+        queryKey: ['favorites', 'list'],
+        queryFn: async () => {
+          const response = await spotsAPI.getFavorites();
+          return response.data;
+        },
+      });
+    } else {
+      // Clear favorites when user logs out
+      client.setQueryData(['favorites', 'ids'], new Set<string>());
+      client.setQueryData(['favorites', 'list'], []);
+    }
+  }, [isAuthenticated, client]);
 
   return (
     <BrowserRouter>
