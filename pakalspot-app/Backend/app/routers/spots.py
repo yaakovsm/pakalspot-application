@@ -29,13 +29,18 @@ def is_admin_user(user: models.User) -> bool:
 
 
 def get_s3_client():
-    return boto3.client(
-        "s3",
-        endpoint_url=settings.S3_ENDPOINT,
-        aws_access_key_id=settings.S3_ACCESS_KEY,
-        aws_secret_access_key=settings.S3_SECRET_KEY,
-        region_name=settings.S3_REGION,
-    )
+    kwargs = {
+        "region_name": settings.S3_REGION,
+    }
+
+    if settings.S3_ENDPOINT:
+        kwargs["endpoint_url"] = settings.S3_ENDPOINT
+
+    if settings.S3_ACCESS_KEY and settings.S3_SECRET_KEY:
+        kwargs["aws_access_key_id"] = settings.S3_ACCESS_KEY
+        kwargs["aws_secret_access_key"] = settings.S3_SECRET_KEY
+
+    return boto3.client("s3", **kwargs)
 
 
 def build_s3_url(bucket: str, object_key: str) -> str:
