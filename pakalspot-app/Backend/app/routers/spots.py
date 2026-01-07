@@ -18,6 +18,7 @@ from app.core.security import get_current_user, decode_access_token
 from app.core.settings import settings
 from app.models import parse_spot_type
 from app.services.geocoding import geocoding_service
+from app.services.photo_url import build_photo_url
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 logger = logging.getLogger(__name__)
@@ -55,14 +56,10 @@ def _photo_api_url(filename: str) -> str:
 
 
 def _photo_out_from_db(photo: models.Photo) -> dict:
-    filename = _filename_from_object_key(photo.object_key)
-    if filename:
-        url = _photo_api_url(filename)
-        thumb = url
-    else:
-        # Fallback (shouldn't happen, but keeps API stable)
-        url = photo.url
-        thumb = photo.thumbnail_url or photo.url
+    # Use build_photo_url() to respect INIT_PHOTOS_BASE_URL for CloudFront
+    # This will use CloudFront URL when INIT_PHOTOS_BASE_URL is set, otherwise backend API
+    url = build_photo_url(photo)
+    thumb = photo.thumbnail_url or url
 
     return {
         "id": photo.id,
