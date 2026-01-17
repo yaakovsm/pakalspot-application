@@ -159,9 +159,12 @@ async def create_spot(
         user_id=current_user.id,
     )
     db.add(spot)
-    db.commit()
+    db.flush()  # Flush to get spot.id without committing
     db.refresh(spot)
 
+    # Upload photos before committing the spot
+    # If photo upload fails, the transaction will roll back
+    uploaded_photos = []
     if photos:
         s3_client = get_s3_client()
         bucket_name = settings.S3_BUCKET
@@ -181,8 +184,7 @@ async def create_spot(
                 if not content_type.startswith("image/"):
                     content_type = "image/jpeg"
 
-                # NOTE: For private bucket flows, don't rely on public-read.
-                # Keep it if you want, but proxy serving doesn't need it.
+                # Upload to S3
                 s3_client.put_object(
                     Bucket=bucket_name,
                     Key=object_key,
@@ -191,9 +193,8 @@ async def create_spot(
                     ACL="public-read",
                 )
 
-                # Store any URL you want in DB, but API response will be built dynamically
+                # Store photo record in DB
                 db_url = build_s3_url(bucket_name, object_key)
-
                 photo_record = models.Photo(
                     spot_id=spot.id,
                     object_key=object_key,
@@ -201,18 +202,33 @@ async def create_spot(
                     thumbnail_url=db_url,
                 )
                 db.add(photo_record)
+                uploaded_photos.append(photo_record)
 
             except ClientError as e:
+                db.rollback()
+                logger.error(f"S3 upload error: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Error uploading photo to S3: {str(e)}")
             except Exception as e:
+                db.rollback()
+                logger.error(f"Unexpected error uploading photo: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Unexpected error uploading photo: {str(e)}")
 
+    # Commit everything together (spot + photos)
+    try:
         db.commit()
+        db.refresh(spot)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Database commit error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error saving spot: {str(e)}")
 
     lat, lon = _spot_coords(db, spot, latitude, longitude)
     
     # Check if user has favorited this spot (unlikely for newly created, but include for consistency)
     is_favorited = _check_if_favorited(db, spot.id, current_user.id)
+
+    # Build photos array for response
+    photos_data = [_photo_out_from_db(p) for p in uploaded_photos]
 
     return {
         "id": spot.id,
@@ -226,7 +242,7 @@ async def create_spot(
         "location_name": spot.location_name,
         "created_at": spot.created_at,
         "owner_id": spot.user_id,
-        "photos": [],
+        "photos": photos_data,
         "is_favorited": is_favorited,
         "isFavorited": is_favorited,  # Also include camelCase for frontend compatibility
     }

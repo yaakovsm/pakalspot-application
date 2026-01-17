@@ -14,6 +14,7 @@ class SpotType(str, Enum):
     viewpoint = SpotTypeEnum.viewpoint.value
     forest = SpotTypeEnum.forest.value
     desert = SpotTypeEnum.desert.value
+    river = SpotTypeEnum.river.value
 
 # ----------------------
 # User Schemas

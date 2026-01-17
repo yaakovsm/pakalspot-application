@@ -63,6 +63,7 @@ class SpotType(enum.Enum):
     viewpoint = "viewpoint"
     forest = "forest"
     desert = "desert"
+    river = "river"
 
 
 def parse_spot_type(spot_type_str: str) -> SpotType:
