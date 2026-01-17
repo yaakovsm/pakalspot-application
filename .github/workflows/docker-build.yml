@@ -2,7 +2,7 @@ name: Build, Push to ECR and Update GitOps
 
 on:
   push:
-    branches: [dev, staging, main]
+    branches: [dev, staging, main, k8sfinal]
     paths:
       - 'pakalspot-app/Backend/**'
       - 'pakalspot-app/Frontend/**'
@@ -103,6 +103,8 @@ jobs:
             echo "env=prod" >> $GITHUB_OUTPUT
           elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
             echo "env=staging" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "k8sfinal" ]]; then
+            echo "env=k8sfinal" >> $GITHUB_OUTPUT
           else
             echo "env=dev" >> $GITHUB_OUTPUT
           fi
