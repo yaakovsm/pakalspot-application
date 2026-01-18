@@ -62,9 +62,13 @@ def _photo_api_url(filename: str) -> str:
 
 def _photo_out_from_db(photo: models.Photo) -> dict:
     # Use build_photo_url() to respect INIT_PHOTOS_BASE_URL for CloudFront
-    # This will use CloudFront URL when INIT_PHOTOS_BASE_URL is set, otherwise backend API
+    # This will use CloudFront URL when INIT_PHOTOS_BASE_URL is set, otherwise direct S3 URL
     url = build_photo_url(photo)
-    thumb = photo.thumbnail_url or url
+    # For init photos, rebuild thumbnail_url too; for user uploads, use stored thumbnail_url
+    if photo.object_key and photo.object_key.startswith("photos/"):
+        thumb = url  # Init photos: use same URL for thumbnail
+    else:
+        thumb = photo.thumbnail_url or url  # User uploads: use stored thumbnail_url
 
     return {
         "id": photo.id,

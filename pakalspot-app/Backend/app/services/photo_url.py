@@ -25,13 +25,11 @@ def build_photo_url(photo: models.Photo) -> str:
     """
     # Check if this is an init photo by object_key prefix
     if photo.object_key.startswith("photos/"):
-        # Init photo - use CloudFront base URL if available, otherwise use backend API
+        # Init photo - use CloudFront base URL if available, otherwise use direct S3 URL
         if not settings.INIT_PHOTOS_BASE_URL:
-            # Fallback: use backend API endpoint to proxy from private S3 bucket
-            # Extract filename from object_key (e.g., "photos/IMG_5307.JPG" -> "IMG_5307.JPG")
-            filename = photo.object_key.split("/")[-1]
-            base_url = settings.BASE_URL.rstrip("/")
-            return f"{base_url}/api/media/{filename}"
+            # Fallback: use direct S3 URL for public bucket
+            # object_key format: "photos/IMG_5307.JPG"
+            return f"https://pakalspot-init-photos.s3.amazonaws.com/{photo.object_key}"
         
         # Build URL: INIT_PHOTOS_BASE_URL + "/" + object_key
         # e.g., "https://d1234.cloudfront.net/photos/IMG_5307.JPG"
@@ -57,13 +55,11 @@ def build_photo_url_from_object_key(object_key: str, existing_url: str | None = 
     """
     # Check if this is an init photo by object_key prefix
     if object_key.startswith("photos/"):
-        # Init photo - use CloudFront base URL if available, otherwise use backend API
+        # Init photo - use CloudFront base URL if available, otherwise use direct S3 URL
         if not settings.INIT_PHOTOS_BASE_URL:
-            # Fallback: use backend API endpoint to proxy from private S3 bucket
-            # Extract filename from object_key (e.g., "photos/IMG_5307.JPG" -> "IMG_5307.JPG")
-            filename = object_key.split("/")[-1]
-            base_url = settings.BASE_URL.rstrip("/")
-            return f"{base_url}/api/media/{filename}"
+            # Fallback: use direct S3 URL for public bucket
+            # object_key format: "photos/IMG_5307.JPG"
+            return f"https://pakalspot-init-photos.s3.amazonaws.com/{object_key}"
         
         # Build URL: INIT_PHOTOS_BASE_URL + "/" + object_key
         base_url = settings.INIT_PHOTOS_BASE_URL.rstrip("/")
