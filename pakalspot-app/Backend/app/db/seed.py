@@ -170,7 +170,7 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
             photo_id = str(uuid.uuid4())
             object_key = f"{s3_bucket_name}/{photo_filename}"
             s3_public_base = "https://pakalspot-init-photos.s3.amazonaws.com"
-            url = f"{s3_public_base}/{photo_filename}"
+            url = f"{s3_public_base}/photos/{photo_filename}"
             thumbnail_url = url
 
             db.execute(
