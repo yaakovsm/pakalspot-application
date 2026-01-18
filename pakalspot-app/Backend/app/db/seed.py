@@ -167,7 +167,7 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
                 continue
 
             photo_id = str(uuid.uuid4())
-            object_key = f"{s3_bucket_name}/{photo_filename}"
+            object_key = f"photos/{photo_filename}"
             s3_public_base = "https://pakalspot-init-photos.s3.amazonaws.com"
             url = f"{s3_public_base}/photos/{photo_filename}"
             thumbnail_url = url
