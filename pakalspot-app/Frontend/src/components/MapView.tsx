@@ -10,6 +10,7 @@ declare global {
 
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
+import { useFavorites } from '../hooks/useFavorites';
 import { useTranslation } from 'react-i18next';
 import { Spot } from '../types/spot';
 import { Button } from './ui/button';
@@ -45,7 +46,8 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
   const overlayRef = useRef<google.maps.OverlayView | null>(null);
   const overlayRootRef = useRef<Root | null>(null);
   
-  const { spots, selectedSpot, selectSpot, userLocation, favoriteSpot, unfavoriteSpot } = useSpots();
+  const { spots, selectedSpot, selectSpot, userLocation } = useSpots();
+  const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
@@ -298,17 +300,16 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
   };
 
   // Handle favorite toggle
-  const handleFavoriteSpot = async (spotId: string, isFavorited: boolean) => {
+  const handleFavoriteSpot = (spotId: string) => {
     if (!isAuthenticated) {
       setShowAuthDialog(true);
       return;
     }
 
-    try {
-      if (isFavorited) await unfavoriteSpot(spotId);
-      else await favoriteSpot(spotId);
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
+    if (isFavorited(spotId)) {
+      unfavoriteSpot(spotId);
+    } else {
+      favoriteSpot(spotId);
     }
   };
 
@@ -425,14 +426,14 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
         root.render(
           <SpotActionCard
             spot={selectedSpot}
-            isFavorite={selectedSpot.isFavorited || false}
+            isFavorite={isFavorited(selectedSpot.id)}
             onOpenDetails={() => {
               if (onOpenDetails) {
                 onOpenDetails();
               }
             }}
             onNavigate={() => handleNavigateToSpot(selectedSpot)}
-            onToggleFavorite={() => handleFavoriteSpot(selectedSpot.id, selectedSpot.isFavorited || false)}
+            onToggleFavorite={() => handleFavoriteSpot(selectedSpot.id)}
             onClearSelection={handleClearSelection}
           />
         );
@@ -453,7 +454,7 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
         overlayRootRef.current = null;
       }
     };
-  }, [selectedSpot, isSpotDetailsOpen, map, onOpenDetails, favoriteSpot, unfavoriteSpot, selectSpot, isAuthenticated]);
+  }, [selectedSpot, isSpotDetailsOpen, map, onOpenDetails, isFavorited, favoriteSpot, unfavoriteSpot, selectSpot, isAuthenticated]);
 
   return (
     <div className={`relative w-full h-full ${className}`}>

@@ -16,14 +16,56 @@ branch_labels = None
 depends_on = None
 
 
+def column_exists(table_name: str, column_name: str) -> bool:
+    """Check if a column exists in a table using information_schema."""
+    connection = op.get_bind()
+    result = connection.execute(
+        sa.text(
+            """
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = :table_name
+                AND column_name = :column_name
+            )
+            """
+        ),
+        {"table_name": table_name, "column_name": column_name}
+    )
+    return result.scalar()
+
+
+def column_is_nullable(table_name: str, column_name: str) -> bool:
+    """Check if a column is nullable."""
+    connection = op.get_bind()
+    result = connection.execute(
+        sa.text(
+            """
+            SELECT is_nullable = 'YES'
+            FROM information_schema.columns
+            WHERE table_name = :table_name
+            AND column_name = :column_name
+            """
+        ),
+        {"table_name": table_name, "column_name": column_name}
+    )
+    return result.scalar() if result.rowcount > 0 else True
+
+
 def upgrade():
-    # Add url column as nullable first
-    op.add_column('photos', sa.Column('url', sa.Text(), nullable=True))
+    table_name = 'photos'
+    url_column_exists = column_exists(table_name, 'url')
+    thumbnail_url_column_exists = column_exists(table_name, 'thumbnail_url')
     
-    # Add thumbnail_url column as nullable
-    op.add_column('photos', sa.Column('thumbnail_url', sa.Text(), nullable=True))
+    # Add url column as nullable first (only if it doesn't exist)
+    if not url_column_exists:
+        op.add_column(table_name, sa.Column('url', sa.Text(), nullable=True))
+    
+    # Add thumbnail_url column as nullable (only if it doesn't exist)
+    if not thumbnail_url_column_exists:
+        op.add_column(table_name, sa.Column('thumbnail_url', sa.Text(), nullable=True))
     
     # Populate existing rows with URLs based on object_key
+    # Only populate if columns were just created or if data is missing
     # Extract filename from object_key (last part after '/')
     # URL format: http://pakalspot.com/media/{filename}
     # Use regexp_replace to extract filename: get everything after the last '/', or the whole string if no '/'
@@ -34,12 +76,18 @@ def upgrade():
         WHERE url IS NULL
     """)
     
-    # Now make url column NOT NULL
-    op.alter_column('photos', 'url', nullable=False)
+    # Now make url column NOT NULL (only if it's currently nullable)
+    if column_is_nullable(table_name, 'url'):
+        op.alter_column(table_name, 'url', nullable=False)
 
 
 def downgrade():
-    # Drop the columns
-    op.drop_column('photos', 'thumbnail_url')
-    op.drop_column('photos', 'url')
+    table_name = 'photos'
+    
+    # Drop the columns (only if they exist)
+    if column_exists(table_name, 'thumbnail_url'):
+        op.drop_column(table_name, 'thumbnail_url')
+    
+    if column_exists(table_name, 'url'):
+        op.drop_column(table_name, 'url')
 

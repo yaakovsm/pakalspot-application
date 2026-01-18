@@ -14,6 +14,7 @@ class SpotType(str, Enum):
     viewpoint = SpotTypeEnum.viewpoint.value
     forest = SpotTypeEnum.forest.value
     desert = SpotTypeEnum.desert.value
+    river = SpotTypeEnum.river.value
 
 # ----------------------
 # User Schemas
@@ -117,6 +118,7 @@ class SpotOut(BaseModel):
     owner_id: uuid.UUID
     createdBy: Optional[UserOut] = None  # User information
     photos: Optional[List[PhotoOut]] = []
+    is_favorited: Optional[bool] = False  # Whether current user has favorited this spot
 
     class Config:
         from_attributes = True

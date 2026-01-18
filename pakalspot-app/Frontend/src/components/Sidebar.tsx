@@ -55,11 +55,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
     setSearchQuery(e.target.value);
   };
 
-  const filteredSpots = spots.filter(spot =>
+  // Defensive check: ensure spots is an array before filtering
+  const filteredSpots = Array.isArray(spots) ? spots.filter(spot =>
     spot.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     spot.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     spot.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
 
   const handleTypeToggle = (type: SpotType) => {
     const currentTypes = filters.types;

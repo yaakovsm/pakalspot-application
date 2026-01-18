@@ -52,9 +52,11 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
       params.sortBy = filters.sortBy;
 
       const response = await spotsAPI.getSpots(params);
-      set({ spots: response.data, isLoading: false });
+      // Ensure response.data is an array
+      const spotsData = Array.isArray(response.data) ? response.data : [];
+      set({ spots: spotsData, isLoading: false });
     } catch (error) {
-      set({ isLoading: false });
+      set({ spots: [], isLoading: false });
       console.error('Failed to fetch spots:', error);
     }
   },
@@ -108,51 +110,32 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
     }
   },
 
+  // Note: favoriteSpot and unfavoriteSpot are now handled by useFavorites hook (React Query)
+  // These actions are kept for backward compatibility but should not be used directly
+  // Use useFavorites hook instead for all favorite operations
   favoriteSpot: async (spotId: string) => {
-    try {
-      await spotsAPI.favoriteSpot(spotId);
-      
-      set((state) => {
-        const spotToFavorite = state.spots.find(spot => spot.id === spotId);
-        return {
-          spots: state.spots.map((spot) =>
-            spot.id === spotId ? { ...spot, isFavorited: true } : spot
-          ),
-          selectedSpot: state.selectedSpot?.id === spotId
-            ? { ...state.selectedSpot, isFavorited: true }
-            : state.selectedSpot,
-          favorites: spotToFavorite ? [...state.favorites, { ...spotToFavorite, isFavorited: true }] : state.favorites,
-        };
-      });
-    } catch (error) {
-      console.error('Failed to favorite spot:', error);
-    }
+    // Deprecated: Use useFavorites hook instead
+    console.warn('favoriteSpot from useSpots is deprecated. Use useFavorites hook instead.');
+    await spotsAPI.favoriteSpot(spotId);
   },
 
   unfavoriteSpot: async (spotId: string) => {
-    try {
-      await spotsAPI.unfavoriteSpot(spotId);
-      
-      set((state) => ({
-        spots: state.spots.map((spot) =>
-          spot.id === spotId ? { ...spot, isFavorited: false } : spot
-        ),
-        selectedSpot: state.selectedSpot?.id === spotId
-          ? { ...state.selectedSpot, isFavorited: false }
-          : state.selectedSpot,
-        favorites: state.favorites.filter((spot) => spot.id !== spotId),
-      }));
-    } catch (error) {
-      console.error('Failed to unfavorite spot:', error);
-    }
+    // Deprecated: Use useFavorites hook instead
+    console.warn('unfavoriteSpot from useSpots is deprecated. Use useFavorites hook instead.');
+    await spotsAPI.unfavoriteSpot(spotId);
   },
 
   fetchFavorites: async () => {
     try {
       const response = await spotsAPI.getFavorites();
+      // Fetch full spot data for favorites page display
+      // Note: Favorite state (isFavorited) is now managed by useFavorites hook (React Query)
+      // This function only fetches the full spot objects for display purposes
       set({ favorites: response.data });
     } catch (error) {
       console.error('Failed to fetch favorites:', error);
+      // Don't clear favorites on error - preserve existing state
+      // This prevents favorites from disappearing on refresh if API fails
     }
   },
 

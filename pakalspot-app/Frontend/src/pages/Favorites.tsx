@@ -1,24 +1,22 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
+import { useFavorites } from '../hooks/useFavorites';
 import Header from '../components/Header';
-import SpotCard from '../components/SpotCard';
+import FavoriteSpotCard from '../components/FavoriteSpotCard';
 import { Button } from '../components/ui/button';
 import { Heart, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const Favorites: React.FC = () => {
-  const { favorites, fetchFavorites, selectSpot } = useSpots();
+  const { selectSpot } = useSpots();
   const { isAuthenticated } = useAuth();
+  const { favorites } = useFavorites(); // Get full favorites list from React Query
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchFavorites();
-    }
-  }, [isAuthenticated, fetchFavorites]);
+  // No need for useEffect - React Query handles fetching automatically
 
   const handleViewDetails = (spot: any) => {
     selectSpot(spot);
@@ -73,9 +71,9 @@ const Favorites: React.FC = () => {
 
           {/* Content */}
           {favorites.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {favorites.map(spot => (
-                <SpotCard 
+                <FavoriteSpotCard 
                   key={spot.id} 
                   spot={spot} 
                   onViewDetails={handleViewDetails}
