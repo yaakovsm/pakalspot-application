@@ -66,7 +66,7 @@ export const spotsAPI = {
     type?: string;
     sortBy?: string;
   }): Promise<AxiosResponse<Spot[]>> =>
-    api.get('/spots', { params }),
+    api.get('/spots/', { params }),
   
   getSpot: (id: string): Promise<AxiosResponse<Spot>> =>
     api.get(`/spots/${id}`),

@@ -13,6 +13,7 @@ app = FastAPI(
     title="PakalSpot API",
     description="API backend for PakalSpot (coffee spots in Israel)",
     version="1.0.0",
+    redirect_slashes=False,  # Disable automatic trailing slash redirects
 )
 
 app.add_middleware(

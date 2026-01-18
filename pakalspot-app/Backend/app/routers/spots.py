@@ -316,6 +316,7 @@ def delete_spot(
     return {"message": "Spot deleted successfully"}
 
 
+@router.get("", response_model=List[schemas.SpotOut])
 @router.get("/", response_model=List[schemas.SpotOut])
 def list_spots(db: Session = Depends(get_db)):
     spots = db.query(models.Spot).join(models.User).all()
