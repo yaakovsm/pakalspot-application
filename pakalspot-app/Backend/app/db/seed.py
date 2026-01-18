@@ -19,7 +19,6 @@ from geoalchemy2 import WKTElement
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.models import User, Spot, Photo, SpotType, parse_spot_type
-from app.core.settings import settings
 import hashlib
 
 
@@ -168,10 +167,9 @@ def create_photos(db: Session, spots: list[Spot], spots_data: list[dict]) -> Non
                 continue
 
             photo_id = str(uuid.uuid4())
-            object_key = f"photos/{photo_filename}"
-            # Use backend API endpoint to proxy from private S3 bucket
-            base_url = settings.BASE_URL.rstrip("/")
-            url = f"{base_url}/api/media/{photo_filename}"
+            object_key = f"{s3_bucket_name}/{photo_filename}"
+            s3_public_base = "https://pakalspot-init-photos.s3.amazonaws.com"
+            url = f"{s3_public_base}/photos/{photo_filename}"
             thumbnail_url = url
 
             db.execute(
