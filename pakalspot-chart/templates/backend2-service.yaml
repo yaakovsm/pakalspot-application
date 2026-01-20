@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: pakalspot-backend2
+  name: {{ include "pakalspot-chart.fullname" . }}-backend2
   labels:
     {{- include "pakalspot-chart.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
