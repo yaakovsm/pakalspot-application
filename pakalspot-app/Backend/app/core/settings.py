@@ -28,6 +28,7 @@ class Settings(BaseSettings):
 
     API_PREFIX: str = Field(default="/api")
     BASE_URL: str = Field(default="http://pakalspot.local")
+    BACKEND2_URL: str = Field(default="http://pakalspot-backend2:80")
 
     INIT_SEED_BUCKET: str = Field(default="pakalspot-init-photos")
     INIT_SEED_JSON_KEY: str = Field(default="init_spots.json")

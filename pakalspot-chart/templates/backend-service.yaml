@@ -25,4 +25,5 @@ spec:
   selector:
     {{- include "pakalspot-chart.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend1
 {{- end }}

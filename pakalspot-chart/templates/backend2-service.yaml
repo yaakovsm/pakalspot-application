@@ -1,0 +1,22 @@
+{{- if .Values.backend2.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: pakalspot-backend2
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend2
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.backend2.service.port }}
+      targetPort: {{ .Values.backend2.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pakalspot-chart.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend2
+{{- end }}
+

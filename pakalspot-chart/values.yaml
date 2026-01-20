@@ -134,6 +134,69 @@ backend:
   
   podAnnotations: {}
 
+# Backend2 configuration
+backend2:
+  enabled: false
+  replicaCount: 1
+  
+  image:
+    repository: ""
+    tag: ""
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  
+  resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 250m
+  #   memory: 256Mi
+  
+  livenessProbe: {}
+  # httpGet:
+  #   path: /docs
+  #   port: 8000
+  # initialDelaySeconds: 60
+  # periodSeconds: 10
+  # timeoutSeconds: 5
+  # failureThreshold: 3
+  
+  readinessProbe: {}
+  # httpGet:
+  #   path: /docs
+  #   port: 8000
+  # initialDelaySeconds: 30
+  # periodSeconds: 5
+  # timeoutSeconds: 3
+  # failureThreshold: 3
+  
+  startupProbe: {}
+  # httpGet:
+  #   path: /docs
+  #   port: 8000
+  # initialDelaySeconds: 10
+  # periodSeconds: 5
+  # timeoutSeconds: 3
+  # failureThreshold: 30
+  
+  env: {}
+  
+  # Database migration and seeding
+  initContainers:
+    dbMigrate:
+      enabled: false
+      command: []
+    dbSeed:
+      enabled: false
+      command: []
+  
+  podAnnotations: {}
+
 # Database configuration (PostgreSQL with PostGIS)
 database:
   enabled: true

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.routers import auth, spots, photos, utils, media, admin
+from app.routers import auth, spots, photos, utils, media, admin, hello, backend2
 from app.core.database import engine
 from app.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -31,6 +31,8 @@ app.include_router(spots.router, prefix="/api")
 app.include_router(photos.router, prefix="/api")
 app.include_router(utils.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(hello.router, prefix="/api")
+app.include_router(backend2.router, prefix="/api")
 
 app_requests_total = Counter(
     "app_requests_total",
