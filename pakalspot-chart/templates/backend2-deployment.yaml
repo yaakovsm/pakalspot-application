@@ -33,105 +33,6 @@ spec:
       serviceAccountName: {{ include "pakalspot-chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.backend2.initContainers.dbMigrate.enabled }}
-      initContainers:
-        - name: wait-for-db
-          image: postgres:16
-          command:
-            - bash
-            - -lc
-            - |
-              set -e
-              MAX_ATTEMPTS=60
-              ATTEMPT=0
-              SLEEP_INTERVAL=5
-              
-              echo "[$(date +'%Y-%m-%d %H:%M:%S')] Starting database connectivity check..."
-              echo "[$(date +'%Y-%m-%d %H:%M:%S')] DB_URL format: ${DB_URL%%@*}@***"
-              
-              # Extract password from DB_URL for PGPASSWORD
-              export PGPASSWORD=$(echo "$DB_URL" | sed -E 's|postgresql://[^:]+:([^@]+)@.*|\1|')
-              
-              while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-                ATTEMPT=$((ATTEMPT + 1))
-                echo "[$(date +'%Y-%m-%d %H:%M:%S')] Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking database connectivity..."
-                
-                if psql "$DB_URL" -c "SELECT 1" >/dev/null 2>&1; then
-                  echo "[$(date +'%Y-%m-%d %H:%M:%S')] ✓ Database is ready!"
-                  exit 0
-                else
-                  ERROR_MSG=$(psql "$DB_URL" -c "SELECT 1" 2>&1 || true)
-                  echo "[$(date +'%Y-%m-%d %H:%M:%S')] ✗ Database not ready yet. Error: ${ERROR_MSG}"
-                  
-                  if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
-                    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Waiting ${SLEEP_INTERVAL} seconds before next attempt..."
-                    sleep $SLEEP_INTERVAL
-                  fi
-                fi
-              done
-              
-              echo "[$(date +'%Y-%m-%d %H:%M:%S')] ✗ FATAL: Database connectivity check failed after $MAX_ATTEMPTS attempts ($((MAX_ATTEMPTS * SLEEP_INTERVAL)) seconds)"
-              echo "[$(date +'%Y-%m-%d %H:%M:%S')] Please check:"
-              echo "  - RDS instance is running and accessible"
-              echo "  - Security groups allow traffic from EKS nodes"
-              echo "  - DB_URL is correct and credentials are valid"
-              echo "  - Network connectivity from cluster to RDS"
-              exit 1
-          env:
-            - name: DB_URL
-              valueFrom:
-                secretKeyRef:
-                  name: pakalspot-backend-secrets
-                  key: DB_URL
-          envFrom:
-            - secretRef:
-                name: pakalspot-backend-secrets
-            {{- if .Values.database.enabled }}
-            - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
-            {{- end }}
-
-        - name: db-migrate
-          image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend2") | quote }}
-          imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend2") }}
-          command:
-            {{- toYaml .Values.backend2.initContainers.dbMigrate.command | nindent 12 }}
-          env:
-            {{- range $key, $value := .Values.backend2.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
-          envFrom:
-            - secretRef:
-                name: pakalspot-backend-secrets
-            {{- if .Values.database.enabled }}
-            - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
-            {{- end }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-        {{- if .Values.backend2.initContainers.dbSeed.enabled }}
-        - name: db-seed
-          image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend2") | quote }}
-          imagePullPolicy: {{ include "pakalspot-chart.imagePullPolicy" (dict "root" . "service" "backend2") }}
-          command:
-            {{- toYaml .Values.backend2.initContainers.dbSeed.command | nindent 12 }}
-          env:
-            {{- range $key, $value := .Values.backend2.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
-          envFrom:
-            - secretRef:
-                name: pakalspot-backend-secrets
-            {{- if .Values.database.enabled }}
-            - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
-            {{- end }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-        {{- end }}
-      {{- end }}
       containers:
         - name: backend2
           image: {{ include "pakalspot-chart.image" (dict "root" . "service" "backend2") | quote }}
@@ -145,13 +46,7 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          envFrom:
-            - secretRef:
-                name: pakalspot-backend-secrets
-            {{- if .Values.database.enabled }}
-            - secretRef:
-                name: {{ include "pakalspot-chart.fullname" . }}-db-secrets
-            {{- end }}
+          envFrom: []
           {{- with .Values.backend2.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
