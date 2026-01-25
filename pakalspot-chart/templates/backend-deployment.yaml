@@ -76,12 +76,6 @@ spec:
               echo "  - DB_URL is correct and credentials are valid"
               echo "  - Network connectivity from cluster to RDS"
               exit 1
-          env:
-            - name: DB_URL
-              valueFrom:
-                secretKeyRef:
-                  name: pakalspot-backend-secrets
-                  key: DB_URL
           envFrom:
             - secretRef:
                 name: pakalspot-backend-secrets

@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: deny-backend1-to-backend2
+  name: backend2-deny-ingress-from-backend1
   labels:
     {{- include "pakalspot-chart.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
@@ -22,4 +22,28 @@ spec:
                 operator: NotIn
                 values:
                   - backend1
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend1-deny-egress-to-backend2
+  labels:
+    {{- include "pakalspot-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "pakalspot-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: backend1
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: NotIn
+                values:
+                  - backend2
 {{- end }}
