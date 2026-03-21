@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Update photo URLs in the database to use the correct backend URL.
+Deprecated: this script hardcodes http://pakalspot.local and overwrites every row.
+
+Use app.db.fix_photo_urls (normalizes init keys + S3/CloudFront URLs) and rely on
+app.services.photo_url.build_photo_url for API responses instead.
 """
 
 import sys

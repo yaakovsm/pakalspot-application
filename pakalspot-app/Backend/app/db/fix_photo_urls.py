@@ -1,95 +1,90 @@
 #!/usr/bin/env python3
 """
-Fix photo URLs and object_keys to use backend API proxy for init photos.
+Normalize init photo rows: object_key -> photos/{filename}, url/thumbnail -> S3 or CloudFront.
 
-This script updates:
-1. object_key from "pakalspot-init-photos/{filename}" to "photos/{filename}"
-2. URL from S3 URLs to backend API URLs: "{BASE_URL}/api/media/{filename}"
+Run with the same environment as the target deployment (especially INIT_PHOTOS_BASE_URL
+if you use CloudFront). Do not rely on default BASE_URL for public image URLs; this
+script stores canonical URLs from build_photo_url_from_object_key(), not API proxy URLs.
+
+Usage (container): python -m app.db.fix_photo_urls
 """
 
 import sys
 import os
-import re
+import warnings
 
 # Add the app directory to the path so we can import from app
-sys.path.append('/app')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+if os.path.isdir("/app"):
+    sys.path.insert(0, "/app")
 
 from app.core.database import SessionLocal
 from app.models import Photo
 from app.core.settings import settings
+from app.services.photo_url import (
+    build_photo_url_from_object_key,
+    normalized_init_object_key,
+)
 
-def extract_filename(object_key: str) -> str:
-    """Extract filename from object_key."""
-    # Handle formats like "pakalspot-init-photos/IMG_3821.JPG" or "photos/IMG_3821.JPG"
-    parts = object_key.split('/')
-    return parts[-1] if parts else object_key
 
 def fix_photo_urls():
-    """Fix photo URLs and object_keys to include /photos/ prefix."""
-    print("Fixing photo URLs and object_keys...")
-    
-    # Create database session
+    """Normalize init photo object_keys and persist S3/CloudFront URLs."""
+    default_base = "http://pakalspot.local"
+    if (settings.BASE_URL or "").rstrip("/") == default_base and os.environ.get(
+        "ALLOW_DEFAULT_BASE_URL_FOR_FIX"
+    ) != "1":
+        warnings.warn(
+            "BASE_URL is still the default http://pakalspot.local. "
+            "Set BASE_URL, or set ALLOW_DEFAULT_BASE_URL_FOR_FIX=1 if intentional. "
+            "This script no longer writes API proxy URLs; it only matters for DB_URL etc.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    print("Normalizing init photo object_keys and URLs (S3/CloudFront)...")
+
     db = SessionLocal()
-    
+
     try:
-        # Get all photos
         photos = db.query(Photo).all()
         updated_count = 0
-        
+
         for photo in photos:
-            updated = False
-            old_object_key = photo.object_key
-            old_url = photo.url
-            old_thumbnail_url = photo.thumbnail_url
-            
-            # Fix object_key: change "pakalspot-init-photos/{filename}" to "photos/{filename}"
-            if photo.object_key.startswith("pakalspot-init-photos/"):
-                filename = extract_filename(photo.object_key)
-                photo.object_key = f"photos/{filename}"
-                updated = True
-                print(f"Updated object_key: {old_object_key} -> {photo.object_key}")
-            
-            # Fix URL: convert S3 URLs to backend API URLs for init photos
-            # Check if URL is an S3 URL for init photos bucket or if object_key is "photos/"
-            if (photo.object_key.startswith("photos/") or 
-                "pakalspot-init-photos.s3.amazonaws.com" in photo.url):
-                filename = extract_filename(photo.object_key)
-                base_url = settings.BASE_URL.rstrip("/")
-                expected_url = f"{base_url}/api/media/{filename}"
-                
-                if photo.url != expected_url:
-                    photo.url = expected_url
-                    updated = True
-                    print(f"Updated URL: {old_url} -> {photo.url}")
-            
-            # Fix thumbnail_url: same logic as URL
-            if (photo.object_key.startswith("photos/") or 
-                (photo.thumbnail_url and "pakalspot-init-photos.s3.amazonaws.com" in photo.thumbnail_url)):
-                filename = extract_filename(photo.object_key)
-                base_url = settings.BASE_URL.rstrip("/")
-                expected_thumbnail_url = f"{base_url}/api/media/{filename}"
-                
-                if photo.thumbnail_url != expected_thumbnail_url:
-                    photo.thumbnail_url = expected_thumbnail_url
-                    updated = True
-                    print(f"Updated thumbnail_url: {old_thumbnail_url} -> {photo.thumbnail_url}")
-            
-            if updated:
+            nkey = normalized_init_object_key(photo)
+            if not nkey:
+                continue
+
+            new_url = build_photo_url_from_object_key(nkey)
+            changed = False
+            if photo.object_key != nkey:
+                print(f"object_key: {photo.object_key} -> {nkey}")
+                photo.object_key = nkey
+                changed = True
+            if photo.url != new_url:
+                print(f"url: {photo.url} -> {new_url}")
+                photo.url = new_url
+                changed = True
+            if photo.thumbnail_url != new_url:
+                print(f"thumbnail_url: {photo.thumbnail_url} -> {new_url}")
+                photo.thumbnail_url = new_url
+                changed = True
+
+            if changed:
                 updated_count += 1
-        
-        # Commit the changes
+
         db.commit()
-        print(f"\n✅ Updated {updated_count} out of {len(photos)} photo records successfully! 🚀")
-        
+        print(f"\nUpdated {updated_count} of {len(photos)} photo record(s).")
+
     except Exception as e:
-        print(f"❌ Error updating photo URLs: {e}")
+        print(f"Error updating photo URLs: {e}")
         import traceback
+
         traceback.print_exc()
         db.rollback()
         raise
     finally:
         db.close()
 
+
 if __name__ == "__main__":
     fix_photo_urls()
-
