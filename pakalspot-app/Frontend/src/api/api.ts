@@ -119,9 +119,10 @@ export const spotsAPI = {
       data.photos.forEach((photo) => formData.append('photos', photo));
     }
 
+    // Clear default JSON Content-Type so the browser sets multipart/form-data with boundary.
     return api.post('/spots/', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': false,
       },
     });
   },

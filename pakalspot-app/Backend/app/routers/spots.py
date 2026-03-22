@@ -191,7 +191,6 @@ async def create_spot(
                     Key=object_key,
                     Body=content,
                     ContentType=content_type,
-                    ACL="public-read",
                 )
 
                 # Store photo record in DB
@@ -327,7 +326,6 @@ async def update_spot(
                     Key=object_key,
                     Body=content,
                     ContentType=content_type,
-                    ACL="public-read",
                 )
 
                 db_url = build_s3_url(bucket_default, object_key)

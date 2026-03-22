@@ -39,9 +39,8 @@ def generate_upload_url(
         presigned_post = s3_client.generate_presigned_post(
             Bucket=settings.S3_BUCKET,
             Key=key,
-            Fields={"acl": "public-read", "Content-Type": "image/jpeg"},
+            Fields={"Content-Type": "image/jpeg"},
             Conditions=[
-                {"acl": "public-read"},
                 {"Content-Type": "image/jpeg"},
             ],
             ExpiresIn=3600,
