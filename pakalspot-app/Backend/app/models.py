@@ -9,7 +9,6 @@ from sqlalchemy import (
     DateTime,
     func,
     Boolean,
-    SmallInteger,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
@@ -187,9 +186,8 @@ class Like(Base):
     spot_id: Mapped[str] = mapped_column(
         String, ForeignKey("spots.id", ondelete="CASCADE"), primary_key=True
     )
-    value: Mapped[int] = mapped_column(
-        SmallInteger, nullable=False
-    )  # +1 = like, -1 = dislike
+    # DB column is `is_like` (see alembic 20250911_000001); API still accepts +/-1 as "value"
+    is_like: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     user = relationship("User", back_populates="likes")
     spot = relationship("Spot", back_populates="likers")

@@ -581,7 +581,10 @@ def like_spot(
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
 
-    like = models.Like(user_id=current_user.id, spot_id=spot.id, value=like_in.value)
+    is_like = like_in.value > 0
+    like = models.Like(
+        user_id=current_user.id, spot_id=spot.id, is_like=is_like
+    )
     db.merge(like)
     db.commit()
     return {"message": "Like updated"}
