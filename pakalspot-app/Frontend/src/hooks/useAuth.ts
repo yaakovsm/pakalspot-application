@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, LoginRequest, RegisterRequest } from '../types/spot';
 import { authAPI } from '../api/api';
+import { normalizeAuthUser } from '../utils/authUser';
 
 interface AuthState {
   user: User | null;
@@ -12,7 +13,8 @@ interface AuthState {
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
-  initialize: () => void;
+  /** Restore token + refresh user from GET /auth/me when possible */
+  initialize: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,7 +29,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true });
           const response = await authAPI.login(data);
-          const { user, token } = response.data;
+          const { user: rawUser, token } = response.data;
+          const user = normalizeAuthUser(rawUser);
           
           // Store token in localStorage for API interceptor
           localStorage.setItem('auth_token', token);
@@ -48,7 +51,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true });
           const response = await authAPI.register(data);
-          const { user, token } = response.data;
+          const { user: rawUser, token } = response.data;
+          const user = normalizeAuthUser(rawUser);
           
           // Store token in localStorage for API interceptor
           localStorage.setItem('auth_token', token);
@@ -80,21 +84,38 @@ export const useAuthStore = create<AuthState>()(
         set({ user });
       },
 
-      initialize: () => {
-        const { user, isAuthenticated } = get();
-        
-        // If we have user data but no token in localStorage, restore it
-        if (user && isAuthenticated) {
+      initialize: async () => {
+        try {
           const stored = localStorage.getItem('auth-storage');
           if (stored) {
-            try {
-              const parsed = JSON.parse(stored);
-              if (parsed.state && parsed.state.token) {
-                localStorage.setItem('auth_token', parsed.state.token);
-              }
-            } catch (error) {
-              console.error('Failed to restore auth token:', error);
+            const parsed = JSON.parse(stored);
+            if (parsed?.state?.token) {
+              localStorage.setItem('auth_token', parsed.state.token);
             }
+          }
+        } catch (error) {
+          console.error('Failed to restore auth token:', error);
+        }
+
+        const t =
+          typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        if (!t) return;
+
+        try {
+          const response = await authAPI.getProfile();
+          const normalized = normalizeAuthUser(response.data);
+          if (normalized) {
+            set({ user: normalized, token: t, isAuthenticated: true });
+          }
+        } catch {
+          try {
+            const stored = localStorage.getItem('auth-storage');
+            if (stored) {
+              const u = JSON.parse(stored)?.state?.user;
+              if (u) set({ user: normalizeAuthUser(u), isAuthenticated: true });
+            }
+          } catch {
+            /* ignore */
           }
         }
       },

@@ -20,6 +20,8 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import { ADMIN_EMAIL } from '../utils/authUser';
+import { getApiErrorDetail } from '../utils/apiError';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from './ui/carousel';
 import AuthDialog from './AuthDialog';
 
@@ -42,9 +44,8 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Prefer API is_admin; email fallback if persisted session predates backend is_admin field
   const isAdmin = Boolean(
-    user?.is_admin || user?.email?.toLowerCase() === 'yaakovsm@gmail.com'
+    user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
   );
   
   // Use selectedSpot from store if available, otherwise use prop (for reactivity)
@@ -107,10 +108,10 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
       await fetchSpots();
       setDeleteDialogOpen(false);
       onClose();
-    } catch {
+    } catch (err) {
       toast({
         title: t('common.error'),
-        description: t('spots.delete_spot_failed'),
+        description: getApiErrorDetail(err, t('spots.delete_spot_failed')),
         variant: 'destructive',
       });
     } finally {
@@ -230,11 +231,11 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
 
         {/* Title and Actions */}
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-foreground flex-1 truncate pr-4">
+          <div className="flex items-start justify-between gap-2 mb-4 min-w-0">
+            <h1 className="text-2xl font-bold text-foreground flex-1 min-w-0 truncate pr-2">
               {translatedTitle}
             </h1>
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2 flex-shrink-0 items-center">
               {isAuthenticated && isAdmin && (
                 <Button
                   variant="ghost"

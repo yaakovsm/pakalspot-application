@@ -11,6 +11,7 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app import models, schemas
 from app.core.database import get_db
@@ -382,26 +383,54 @@ def delete_spot(
     if spot.user_id != current_user.id and not user_is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to delete this spot")
 
-    s3_client = get_s3_client()
-    bucket_default = settings.S3_BUCKET
+    try:
+        # Remove dependent rows explicitly (avoids FK / session ordering issues on some DBs)
+        db.query(models.Like).filter(models.Like.spot_id == spot.id).delete(
+            synchronize_session=False
+        )
+        db.query(models.Favorite).filter(models.Favorite.spot_id == spot.id).delete(
+            synchronize_session=False
+        )
 
-    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
-    for photo in photos:
-        if photo.object_key:
-            try:
-                if photo.object_key.startswith("photos/") or photo.object_key.startswith("pakalspot-init-photos/"):
-                    bucket_name = settings.INIT_SEED_BUCKET
-                    key = photo.object_key.replace("pakalspot-init-photos/", "")
-                else:
-                    bucket_name = bucket_default
-                    key = photo.object_key
-                s3_client.delete_object(Bucket=bucket_name, Key=key)
-            except ClientError:
-                pass
-        db.delete(photo)
+        s3_client = get_s3_client()
+        bucket_default = settings.S3_BUCKET
 
-    db.delete(spot)
-    db.commit()
+        photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        for photo in photos:
+            if photo.object_key:
+                try:
+                    if photo.object_key.startswith("photos/") or photo.object_key.startswith(
+                        "pakalspot-init-photos/"
+                    ):
+                        bucket_name = settings.INIT_SEED_BUCKET
+                        key = photo.object_key.replace("pakalspot-init-photos/", "")
+                    else:
+                        bucket_name = bucket_default
+                        key = photo.object_key
+                    s3_client.delete_object(Bucket=bucket_name, Key=key)
+                except ClientError:
+                    pass
+                except Exception as e:
+                    logger.warning("S3 delete_object skipped for %s: %s", photo.object_key, e)
+            db.delete(photo)
+
+        db.delete(spot)
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        logger.exception("delete_spot integrity error: %s", e)
+        raise HTTPException(
+            status_code=409,
+            detail="Could not delete spot due to related data. Try again or contact support.",
+        ) from e
+    except Exception as e:
+        db.rollback()
+        logger.exception("delete_spot failed: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete spot",
+        ) from e
+
     return {"message": "Spot deleted successfully"}
 
 

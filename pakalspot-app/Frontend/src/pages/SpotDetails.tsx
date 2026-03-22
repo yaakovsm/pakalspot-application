@@ -21,6 +21,8 @@ import {
 import { ArrowLeft, MapPin, Heart, ThumbsUp, ThumbsDown, User, Share2, Trash2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { ADMIN_EMAIL } from '../utils/authUser';
+import { getApiErrorDetail } from '../utils/apiError';
 
 const SpotDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +38,7 @@ const SpotDetails: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isAdmin = Boolean(
-    user?.is_admin || user?.email?.toLowerCase() === 'yaakovsm@gmail.com'
+    user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
   );
   
   // Check if spot is favorited using global state
@@ -114,10 +116,10 @@ const SpotDetails: React.FC = () => {
       await fetchSpots();
       setDeleteDialogOpen(false);
       navigate('/');
-    } catch {
+    } catch (err) {
       toast({
         title: t('common.error'),
-        description: t('spots.delete_spot_failed'),
+        description: getApiErrorDetail(err, t('spots.delete_spot_failed')),
         variant: 'destructive',
       });
     } finally {
@@ -254,9 +256,9 @@ const SpotDetails: React.FC = () => {
               <Card>
                 <CardContent className="p-6">
                   {/* Title and Actions */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h1 className="text-3xl font-bold text-foreground mb-2">
+                  <div className="flex items-start justify-between gap-2 mb-4 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-3xl font-bold text-foreground mb-2 break-words">
                         {selectedSpot.title}
                       </h1>
                       <div className="flex items-center gap-2 mb-4">
@@ -266,7 +268,7 @@ const SpotDetails: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                       {isAuthenticated && isAdmin && (
                         <Button
                           variant="ghost"

@@ -55,7 +55,11 @@ class Settings(BaseSettings):
                 self.DB_URL = "postgresql://pakalspot_user:jcoffeebrew@db:5432/pakalspot_db"
 
         if not self.SECRET_KEY:
-            if is_local:
+            # App Runner / Terraform inject JWT_SECRET; Python settings field is SECRET_KEY
+            jwt_secret = os.environ.get("JWT_SECRET")
+            if jwt_secret:
+                self.SECRET_KEY = jwt_secret
+            elif is_local:
                 self.SECRET_KEY = "local-dev-secret-change-me"
             else:
                 raise ValueError("SECRET_KEY is required in non-local environments")
