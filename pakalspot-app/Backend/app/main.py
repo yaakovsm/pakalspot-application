@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.routers import auth, spots, photos, utils, media, admin
 from app.core.database import engine
+from app.db.bootstrap import migrate_legacy_admin_email
 from app.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, PROCESS_COLLECTOR, REGISTRY
@@ -66,6 +67,11 @@ async def startup_event():
             logging.warning(f"Auto-create tables failed: {e}")
     else:
         logging.info("Skipping Base.metadata.create_all (Alembic manages schema)")
+
+    try:
+        migrate_legacy_admin_email()
+    except Exception as e:
+        logging.warning("migrate_legacy_admin_email at startup failed: %s", e)
 
 @app.get("/")
 def root():

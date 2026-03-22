@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     ADMIN_SEED_API_KEY: Optional[str] = Field(default=None)
     SEED_ENABLED: bool = Field(default=True)
 
+    # Single admin identity (must match seed user email for cloud/local seed)
+    ADMIN_EMAIL: str = Field(default="yaakovsm@gmail.com")
+    ADMIN_PASSWORD: str = Field(default="admin123")
+    ADMIN_DISPLAY_NAME: str = Field(default="PakalSpot Admin")
+
     DEBUG: bool = Field(default=True)
     ENVIRONMENT: str = Field(default="development")
 

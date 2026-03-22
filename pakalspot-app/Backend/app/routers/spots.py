@@ -19,13 +19,10 @@ from app.core.settings import settings
 from app.models import parse_spot_type
 from app.services.geocoding import geocoding_service
 from app.services.photo_url import build_photo_url
+from app.core.authz import user_is_admin
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 logger = logging.getLogger(__name__)
-
-
-def is_admin_user(user: models.User) -> bool:
-    return user.email == "yaakovsm@gmail.com"
 
 
 def get_s3_client():
@@ -85,6 +82,7 @@ def _user_out_from_db(user: Optional[models.User]) -> Optional[dict]:
         "display_name": user.display_name,
         "username": user.display_name,
         "created_at": user.created_at,
+        "is_admin": user_is_admin(user),
     }
 
 
@@ -267,7 +265,7 @@ async def update_spot(
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
 
-    if spot.user_id != current_user.id and not is_admin_user(current_user):
+    if spot.user_id != current_user.id and not user_is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to edit this spot")
 
     try:
@@ -381,7 +379,7 @@ def delete_spot(
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
 
-    if spot.user_id != current_user.id and not is_admin_user(current_user):
+    if spot.user_id != current_user.id and not user_is_admin(current_user):
         raise HTTPException(status_code=403, detail="Not authorized to delete this spot")
 
     s3_client = get_s3_client()

@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from enum import Enum
 from app.models import SpotType as SpotTypeEnum
+from app.core.authz import user_is_admin
 
 # ----------------------
 # Enums
@@ -42,6 +43,7 @@ class UserOut(UserBase):
     id: uuid.UUID
     username: str  # Alias for display_name to match frontend
     created_at: datetime
+    is_admin: bool = False
 
     class Config:
         from_attributes = True
@@ -54,7 +56,8 @@ class UserOut(UserBase):
             email=user.email,
             display_name=user.display_name,
             username=user.display_name,  # Map display_name to username
-            created_at=user.created_at
+            created_at=user.created_at,
+            is_admin=user_is_admin(user),
         )
 
 

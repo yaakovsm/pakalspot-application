@@ -4,6 +4,8 @@ export interface User {
   email: string;
   avatar?: string;
   createdAt: string;
+  /** Set by API for the configured admin account */
+  is_admin?: boolean;
 }
 
 export interface Photo {

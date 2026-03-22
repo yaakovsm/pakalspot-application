@@ -5,7 +5,6 @@ Reads init_spots.json from S3 bucket and seeds the database idempotently.
 """
 
 import json
-import os
 import logging
 from typing import Dict, List
 import boto3
@@ -68,29 +67,33 @@ def read_init_spots_json() -> dict:
 
 def get_or_create_admin_user(db: Session) -> models.User:
     """
-    Find or create admin user by email.
-    
-    Uses ADMIN_EMAIL env var or defaults to "admin@pakalspot.com".
-    
-    Args:
-        db: Database session
-        
-    Returns:
-        Admin User model instance
+    Find or create admin user by email (see settings.ADMIN_EMAIL).
+
+    If the DB still has the legacy seed user admin@pakalspot.com, renames it to
+    ADMIN_EMAIL so login matches backend admin checks.
     """
-    admin_email = os.getenv("ADMIN_EMAIL", "admin@pakalspot.com")
-    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
-    admin_display_name = os.getenv("ADMIN_DISPLAY_NAME", "PakalSpot Admin")
-    
-    # Check if admin user exists
+    admin_email = settings.ADMIN_EMAIL
+    admin_password = settings.ADMIN_PASSWORD
+    admin_display_name = settings.ADMIN_DISPLAY_NAME
+
     existing_user = db.query(models.User).filter(
         models.User.email == admin_email
     ).first()
-    
+
     if existing_user:
         logger.info(f"Admin user already exists: {admin_email}")
         return existing_user
-    
+
+    legacy = db.query(models.User).filter(
+        models.User.email == "admin@pakalspot.com"
+    ).first()
+    if legacy:
+        legacy.email = admin_email
+        db.commit()
+        db.refresh(legacy)
+        logger.info(f"Migrated legacy admin user to {admin_email}")
+        return legacy
+
     # Create admin user
     try:
         password_hash = get_password_hash(admin_password)

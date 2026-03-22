@@ -8,7 +8,17 @@ import AuthDialog from '../components/AuthDialog';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
-import { ArrowLeft, MapPin, Heart, ThumbsUp, ThumbsDown, Calendar, User, Share2 } from 'lucide-react';
+import { spotsAPI } from '../api/api';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
+import { ArrowLeft, MapPin, Heart, ThumbsUp, ThumbsDown, User, Share2, Trash2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -17,11 +27,15 @@ const SpotDetails: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { selectedSpot, selectSpot, likeSpot } = useSpots();
-  const { isAuthenticated } = useAuth();
+  const { selectedSpot, selectSpot, likeSpot, fetchSpots } = useSpots();
+  const { isAuthenticated, user } = useAuth();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isAdmin = Boolean(user?.is_admin);
   
   // Check if spot is favorited using global state
   const isSpotFavorited = selectedSpot ? isFavorited(selectedSpot.id) : false;
@@ -82,6 +96,30 @@ const SpotDetails: React.FC = () => {
         description: t('spots.feedback_failed'),
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleDeleteSpot = async () => {
+    if (!selectedSpot) return;
+    setIsDeleting(true);
+    try {
+      await spotsAPI.deleteSpot(selectedSpot.id);
+      toast({
+        title: t('spots.spot_deleted'),
+        description: t('spots.spot_deleted_desc'),
+      });
+      selectSpot(null);
+      await fetchSpots();
+      setDeleteDialogOpen(false);
+      navigate('/');
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('spots.delete_spot_failed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -227,6 +265,17 @@ const SpotDetails: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-2">
+                      {isAuthenticated && isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteDialogOpen(true)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          aria-label={t('spots.delete_spot')}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -347,6 +396,25 @@ const SpotDetails: React.FC = () => {
         actionText={t('auth.sign_in')}
         cancelText={t('common.cancel')}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('spots.delete_spot_confirm_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('spots.delete_spot_confirm_description')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={() => void handleDeleteSpot()}
+              disabled={isDeleting}
+            >
+              {isDeleting ? t('spots.deleting') : t('spots.delete_spot')}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -44,4 +44,4 @@ def login(user_in: schemas.UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=schemas.UserOut)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return current_user
+    return schemas.UserOut.from_orm(current_user)
