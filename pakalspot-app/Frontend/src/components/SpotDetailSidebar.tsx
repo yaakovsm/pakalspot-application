@@ -3,7 +3,17 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Spot } from '../types/spot';
-import { X, Heart, MapPin, Share2 } from 'lucide-react';
+import { spotsAPI } from '../api/api';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
+import { X, Heart, MapPin, Share2, Trash2 } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
@@ -22,13 +32,20 @@ interface SpotDetailSidebarProps {
 }
 
 const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, isClosing = false, isOpening = false, className }) => {
-  const { selectedSpot } = useSpots();
-  const { isAuthenticated } = useAuth();
+  const { selectedSpot, selectSpot, fetchSpots } = useSpots();
+  const { isAuthenticated, user } = useAuth();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(isOpening);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Prefer API is_admin; email fallback if persisted session predates backend is_admin field
+  const isAdmin = Boolean(
+    user?.is_admin || user?.email?.toLowerCase() === 'yaakovsm@gmail.com'
+  );
   
   // Use selectedSpot from store if available, otherwise use prop (for reactivity)
   const currentSpot = selectedSpot || spot;
@@ -74,6 +91,30 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
         title: t('spots.added_to_favorites'),
         description: t('spots.added_to_favorites_desc'),
       });
+    }
+  };
+
+  const handleDeleteSpot = async () => {
+    if (!currentSpot) return;
+    setIsDeleting(true);
+    try {
+      await spotsAPI.deleteSpot(currentSpot.id);
+      toast({
+        title: t('spots.spot_deleted'),
+        description: t('spots.spot_deleted_desc'),
+      });
+      selectSpot(null);
+      await fetchSpots();
+      setDeleteDialogOpen(false);
+      onClose();
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('spots.delete_spot_failed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -194,6 +235,17 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
               {translatedTitle}
             </h1>
             <div className="flex gap-2 flex-shrink-0">
+              {isAuthenticated && isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="h-8 w-8 rounded-full border border-muted-foreground/20 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  aria-label={t('spots.delete_spot')}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -261,6 +313,25 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
         actionText={t('auth.sign_in')}
         cancelText={t('common.cancel')}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('spots.delete_spot_confirm_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('spots.delete_spot_confirm_description')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={() => void handleDeleteSpot()}
+              disabled={isDeleting}
+            >
+              {isDeleting ? t('spots.deleting') : t('spots.delete_spot')}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

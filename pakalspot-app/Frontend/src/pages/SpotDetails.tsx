@@ -35,7 +35,9 @@ const SpotDetails: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isAdmin = Boolean(user?.is_admin);
+  const isAdmin = Boolean(
+    user?.is_admin || user?.email?.toLowerCase() === 'yaakovsm@gmail.com'
+  );
   
   // Check if spot is favorited using global state
   const isSpotFavorited = selectedSpot ? isFavorited(selectedSpot.id) : false;
