@@ -186,7 +186,8 @@ def seed_init_spots(db: Session) -> Dict[str, int | List[str]]:
                         existing_spot.location_name = spot_data.get("location_name", existing_spot.location_name)
                         existing_spot.spot_type = spot_type
                         existing_spot.geom = geom
-                        
+                        existing_spot.approval_status = models.SpotApprovalStatus.approved
+
                         db.commit()
                         db.refresh(existing_spot)
                         report["updated_spots"] += 1
@@ -213,7 +214,8 @@ def seed_init_spots(db: Session) -> Dict[str, int | List[str]]:
                             how_to_get_there=spot_data.get("how_to_get_there"),
                             spot_type=spot_type,
                             location_name=spot_data.get("location_name"),
-                            geom=geom
+                            geom=geom,
+                            approval_status=models.SpotApprovalStatus.approved,
                         )
                         
                         db.add(spot)

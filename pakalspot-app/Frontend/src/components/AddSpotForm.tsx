@@ -257,12 +257,22 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
         photos: selectedPhotos,
       };
 
-      await createSpot(spotData);
-      
-      toast({
-        title: t('spots.spot_created_success'),
-        description: t('spots.spot_created_success_desc'),
-      });
+      const newSpot = await createSpot(spotData);
+      const approval =
+        newSpot.approval_status ??
+        (newSpot as { approvalStatus?: string }).approvalStatus;
+
+      if (approval === 'pending') {
+        toast({
+          title: t('spots.spot_pending_title'),
+          description: t('spots.spot_pending_desc'),
+        });
+      } else {
+        toast({
+          title: t('spots.spot_created_success'),
+          description: t('spots.spot_created_success_desc'),
+        });
+      }
       
       onSuccess?.();
       onClose?.();

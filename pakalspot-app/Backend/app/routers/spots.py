@@ -17,10 +17,10 @@ from app import models, schemas
 from app.core.database import get_db
 from app.core.security import get_current_user, decode_access_token
 from app.core.settings import settings
-from app.models import parse_spot_type
+from app.models import parse_spot_type, SpotApprovalStatus
 from app.services.geocoding import geocoding_service
 from app.services.photo_url import build_photo_url
-from app.core.authz import user_is_admin
+from app.core.authz import user_is_admin, get_current_admin_user
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 logger = logging.getLogger(__name__)
@@ -110,6 +110,58 @@ def _check_if_favorited(db: Session, spot_id: str, user_id: Optional[str]) -> bo
     return favorite is not None
 
 
+def _approval_status_str(spot: models.Spot) -> str:
+    s = getattr(spot, "approval_status", None)
+    if s is None:
+        return SpotApprovalStatus.approved.value
+    if isinstance(s, SpotApprovalStatus):
+        return s.value
+    return str(s)
+
+
+def _spot_visible_to_user(spot: models.Spot, user: Optional[models.User]) -> bool:
+    if _approval_status_str(spot) == SpotApprovalStatus.approved.value:
+        return True
+    if not user:
+        return False
+    if user_is_admin(user):
+        return True
+    return spot.user_id == user.id
+
+
+def _spot_payload(
+    spot: models.Spot,
+    db: Session,
+    *,
+    lat: float,
+    lon: float,
+    photos_data: list,
+    user_data: Optional[dict],
+    is_favorited: bool,
+) -> dict:
+    approval = _approval_status_str(spot)
+    return {
+        "id": spot.id,
+        "title": spot.title,
+        "description": spot.description,
+        "subtitle": spot.subtitle,
+        "how_to_get_there": spot.how_to_get_there,
+        "spot_type": spot.spot_type,
+        "lat": lat,
+        "lon": lon,
+        "location_name": spot.location_name,
+        "createdAt": spot.created_at,
+        "created_at": spot.created_at,
+        "owner_id": spot.user_id,
+        "approval_status": approval,
+        "approvalStatus": approval,
+        "createdBy": user_data,
+        "photos": photos_data,
+        "is_favorited": is_favorited,
+        "isFavorited": is_favorited,
+    }
+
+
 def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
     db: Session = Depends(get_db)
@@ -148,6 +200,11 @@ async def create_spot(
         raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
 
     point = from_shape(Point(longitude, latitude), srid=4326)
+    approval = (
+        SpotApprovalStatus.approved
+        if user_is_admin(current_user)
+        else SpotApprovalStatus.pending
+    )
     spot = models.Spot(
         title=title,
         description=description,
@@ -157,6 +214,7 @@ async def create_spot(
         location_name=location_name,
         geom=point,
         user_id=current_user.id,
+        approval_status=approval,
     )
     db.add(spot)
     db.flush()  # Flush to get spot.id without committing
@@ -229,22 +287,15 @@ async def create_spot(
     # Build photos array for response
     photos_data = [_photo_out_from_db(p) for p in uploaded_photos]
 
-    return {
-        "id": spot.id,
-        "title": spot.title,
-        "description": spot.description,
-        "subtitle": spot.subtitle,
-        "how_to_get_there": spot.how_to_get_there,
-        "spot_type": spot.spot_type,
-        "lat": lat,
-        "lon": lon,
-        "location_name": spot.location_name,
-        "created_at": spot.created_at,
-        "owner_id": spot.user_id,
-        "photos": photos_data,
-        "is_favorited": is_favorited,
-        "isFavorited": is_favorited,  # Also include camelCase for frontend compatibility
-    }
+    return _spot_payload(
+        spot,
+        db,
+        lat=lat,
+        lon=lon,
+        photos_data=photos_data,
+        user_data=_user_out_from_db(current_user),
+        is_favorited=is_favorited,
+    )
 
 
 @router.put("/{spot_id}", response_model=schemas.SpotOut)
@@ -352,22 +403,16 @@ async def update_spot(
     # Check if user has favorited this spot
     is_favorited = _check_if_favorited(db, spot.id, current_user.id)
 
-    return {
-        "id": spot.id,
-        "title": spot.title,
-        "description": spot.description,
-        "subtitle": spot.subtitle,
-        "how_to_get_there": spot.how_to_get_there,
-        "spot_type": spot.spot_type,
-        "lat": lat,
-        "lon": lon,
-        "location_name": spot.location_name,
-        "created_at": spot.created_at,
-        "owner_id": spot.user_id,
-        "photos": photos_data,
-        "is_favorited": is_favorited,
-        "isFavorited": is_favorited,  # Also include camelCase for frontend compatibility
-    }
+    user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+    return _spot_payload(
+        spot,
+        db,
+        lat=lat,
+        lon=lon,
+        photos_data=photos_data,
+        user_data=_user_out_from_db(user),
+        is_favorited=is_favorited,
+    )
 
 
 @router.delete("/{spot_id}")
@@ -437,9 +482,14 @@ def delete_spot(
 @router.get("/", response_model=List[schemas.SpotOut])
 def list_spots(
     db: Session = Depends(get_db),
-    current_user: Optional[models.User] = Depends(get_current_user_optional)
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
 ):
-    spots = db.query(models.Spot).join(models.User).all()
+    spots = (
+        db.query(models.Spot)
+        .join(models.User)
+        .filter(models.Spot.approval_status == SpotApprovalStatus.approved)
+        .all()
+    )
     result = []
     user_id = current_user.id if current_user else None
 
@@ -455,24 +505,15 @@ def list_spots(
         is_favorited = _check_if_favorited(db, spot.id, user_id)
 
         result.append(
-            {
-                "id": spot.id,
-                "title": spot.title,
-                "description": spot.description,
-                "subtitle": spot.subtitle,
-                "how_to_get_there": spot.how_to_get_there,
-                "spot_type": spot.spot_type,
-                "lat": lat,
-                "lon": lon,
-                "location_name": spot.location_name,
-                "createdAt": spot.created_at,
-                "created_at": spot.created_at,
-                "owner_id": spot.user_id,
-                "createdBy": user_data,
-                "photos": photos_data,
-                "is_favorited": is_favorited,
-                "isFavorited": is_favorited,  # Also include camelCase for frontend compatibility
-            }
+            _spot_payload(
+                spot,
+                db,
+                lat=lat,
+                lon=lon,
+                photos_data=photos_data,
+                user_data=user_data,
+                is_favorited=is_favorited,
+            )
         )
 
     return result
@@ -495,7 +536,9 @@ def get_favorites(
         spot = db.query(models.Spot).filter(models.Spot.id == favorite.spot_id).first()
         if not spot:
             continue  # Skip if spot doesn't exist
-        
+        if _approval_status_str(spot) != SpotApprovalStatus.approved.value:
+            continue
+
         lat, lon = _spot_coords(db, spot, 0.0, 0.0)
         
         photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
@@ -505,28 +548,81 @@ def get_favorites(
         user_data = _user_out_from_db(user)
         
         result.append(
-            {
-                "id": spot.id,
-                "title": spot.title,
-                "description": spot.description,
-                "subtitle": spot.subtitle,
-                "how_to_get_there": spot.how_to_get_there,
-                "spot_type": spot.spot_type,
-                "lat": lat,
-                "lon": lon,
-                "location_name": spot.location_name,
-                "createdAt": spot.created_at,
-                "created_at": spot.created_at,
-                "owner_id": spot.user_id,
-                "createdBy": user_data,
-                "photos": photos_data,
-                "is_favorited": True,  # All spots in favorites are favorited
-                "isFavorited": True,  # All spots in favorites are favorited (camelCase for frontend)
-            }
+            _spot_payload(
+                spot,
+                db,
+                lat=lat,
+                lon=lon,
+                photos_data=photos_data,
+                user_data=user_data,
+                is_favorited=True,
+            )
         )
     
     logger.info(f"User {current_user.id} fetched {len(result)} favorites")
     return result
+
+
+@router.get("/pending", response_model=List[schemas.SpotOut])
+def list_pending_spots(
+    db: Session = Depends(get_db),
+    _admin: models.User = Depends(get_current_admin_user),
+):
+    spots = (
+        db.query(models.Spot)
+        .join(models.User)
+        .filter(models.Spot.approval_status == SpotApprovalStatus.pending)
+        .order_by(models.Spot.created_at.asc())
+        .all()
+    )
+    result = []
+    for spot in spots:
+        lat, lon = _spot_coords(db, spot, 0.0, 0.0)
+        photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        photos_data = [_photo_out_from_db(p) for p in photos]
+        user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+        user_data = _user_out_from_db(user)
+        result.append(
+            _spot_payload(
+                spot,
+                db,
+                lat=lat,
+                lon=lon,
+                photos_data=photos_data,
+                user_data=user_data,
+                is_favorited=False,
+            )
+        )
+    return result
+
+
+@router.post("/{spot_id}/approve", response_model=schemas.SpotOut)
+def approve_spot(
+    spot_id: str,
+    db: Session = Depends(get_db),
+    _admin: models.User = Depends(get_current_admin_user),
+):
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    spot.approval_status = SpotApprovalStatus.approved
+    db.commit()
+    db.refresh(spot)
+
+    lat, lon = _spot_coords(db, spot, 0.0, 0.0)
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    photos_data = [_photo_out_from_db(p) for p in photos]
+    user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+    user_data = _user_out_from_db(user)
+    return _spot_payload(
+        spot,
+        db,
+        lat=lat,
+        lon=lon,
+        photos_data=photos_data,
+        user_data=user_data,
+        is_favorited=False,
+    )
 
 
 @router.get("/{spot_id}", response_model=schemas.SpotOut)
@@ -537,6 +633,9 @@ def get_spot(
 ):
     spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
     if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+
+    if not _spot_visible_to_user(spot, current_user):
         raise HTTPException(status_code=404, detail="Spot not found")
 
     lat, lon = _spot_coords(db, spot, 0.0, 0.0)
@@ -550,24 +649,15 @@ def get_spot(
     user_id = current_user.id if current_user else None
     is_favorited = _check_if_favorited(db, spot.id, user_id)
 
-    return {
-        "id": spot.id,
-        "title": spot.title,
-        "description": spot.description,
-        "subtitle": spot.subtitle,
-        "how_to_get_there": spot.how_to_get_there,
-        "spot_type": spot.spot_type,
-        "lat": lat,
-        "lon": lon,
-        "location_name": spot.location_name,
-        "createdAt": spot.created_at,
-        "created_at": spot.created_at,
-        "owner_id": spot.user_id,
-        "createdBy": user_data,
-        "photos": photos_data,
-        "is_favorited": is_favorited,
-        "isFavorited": is_favorited,  # Also include camelCase for frontend compatibility
-    }
+    return _spot_payload(
+        spot,
+        db,
+        lat=lat,
+        lon=lon,
+        photos_data=photos_data,
+        user_data=user_data,
+        is_favorited=is_favorited,
+    )
 
 
 @router.post("/{spot_id}/like")
@@ -580,6 +670,8 @@ def like_spot(
     spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
+    if _approval_status_str(spot) != SpotApprovalStatus.approved.value:
+        raise HTTPException(status_code=403, detail="Spot is not approved yet")
 
     is_like = like_in.value > 0
     like = models.Like(
@@ -596,6 +688,12 @@ def favorite_spot(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    if _approval_status_str(spot) != SpotApprovalStatus.approved.value:
+        raise HTTPException(status_code=403, detail="Spot is not approved yet")
+
     fav = models.Favorite(user_id=current_user.id, spot_id=spot_id)
     db.merge(fav)
     db.commit()

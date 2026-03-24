@@ -18,7 +18,7 @@ from sqlalchemy import cast, String, text
 from geoalchemy2 import WKTElement
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
-from app.models import User, Spot, Photo, SpotType, parse_spot_type
+from app.models import User, Spot, Photo, SpotType, SpotApprovalStatus, parse_spot_type
 from app.core.settings import settings
 import hashlib
 
@@ -121,7 +121,8 @@ def create_spots(db: Session, admin_user: User) -> tuple[list[Spot], list[dict]]
                 how_to_get_there=spot_data.get("how_to_get_there"),
                 spot_type=spot_type,
                 location_name=spot_data.get("location_name"),
-                geom=geom
+                geom=geom,
+                approval_status=SpotApprovalStatus.approved,
             )
             
             db.add(spot)

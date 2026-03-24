@@ -107,6 +107,11 @@ def parse_spot_type(spot_type_str: str) -> SpotType:
     return SpotType.viewpoint
 
 
+class SpotApprovalStatus(enum.Enum):
+    approved = "approved"
+    pending = "pending"
+
+
 # ----------------------
 # Models
 # ----------------------
@@ -146,6 +151,11 @@ class Spot(Base):
     spot_type: Mapped[SpotType] = mapped_column("type", EnumValueType(SpotType, length=50), nullable=False)  # Maps to 'type' column in DB
     location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)
+    approval_status: Mapped[SpotApprovalStatus] = mapped_column(
+        EnumValueType(SpotApprovalStatus, length=20),
+        nullable=False,
+        default=SpotApprovalStatus.approved,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

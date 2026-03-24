@@ -12,7 +12,8 @@
       "spots": "מקומות",
       "favorites": "מועדפים",
       "about": "אודות",
-      "contact": "צור קשר"
+      "contact": "צור קשר",
+      "moderation": "ממתינים לאישור"
     },
     "auth": {
       "login": "התחברות",
@@ -143,6 +144,14 @@
       "create_spot": "צור מקום",
       "spot_created_success": "הצלחה!",
       "spot_created_success_desc": "המקום שלך נוצר בהצלחה",
+      "spot_pending_title": "נשלח לאישור",
+      "spot_pending_desc": "המקום ממתין לאישור מנהל. הוא יופיע במפה לאחר האישור.",
+      "pending_approval_banner": "מקום זה ממתין לאישור מנהל ועדיין לא מוצג במפה הציבורית.",
+      "pending_spots_title": "מקומות הממתינים לאישור",
+      "pending_spots_empty": "אין מקומות הממתינים לאישור.",
+      "approve_spot": "אשר",
+      "spot_approved_toast": "המקום אושר",
+      "spot_approved_toast_desc": "המקום מוצג כעת במפה.",
       "spot_creation_failed": "יצירת המקום נכשלה. אנא נסו שוב",
       "how_to_get_there": "איך מגיעים?",
       "how_to_get_there_placeholder": "תאר איך להגיע למקום...",
@@ -177,7 +186,8 @@
     },
     "common": {
       "error": "שגיאה",
-      "cancel": "ביטול"
+      "cancel": "ביטול",
+      "loading": "טוען…"
     },
     "footer": {
       "rights": "כל הזכויות שמורות © פקל ספוט"

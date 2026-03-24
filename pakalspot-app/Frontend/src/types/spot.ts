@@ -24,6 +24,8 @@ export interface Like {
   createdAt: string;
 }
 
+export type SpotApprovalStatus = 'approved' | 'pending';
+
 export interface Spot {
   id: string;
   title: string;
@@ -33,6 +35,10 @@ export interface Spot {
   spot_type: SpotType;
   lat: number;
   lon: number;
+  /** Backend owner id (UUID string) */
+  owner_id?: string;
+  /** Moderation: pending spots are hidden from the map until approved */
+  approval_status?: SpotApprovalStatus;
   createdBy?: User;
   photos?: Photo[];
   likes?: Like[];

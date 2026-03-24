@@ -12,7 +12,8 @@
       "spots": "Spots",
       "favorites": "Favorites",
       "about": "About",
-      "contact": "Contact"
+      "contact": "Contact",
+      "moderation": "Pending spots"
     },
     "auth": {
       "login": "Login",
@@ -143,6 +144,14 @@
       "create_spot": "Create Spot",
       "spot_created_success": "Success!",
       "spot_created_success_desc": "Your spot has been created successfully",
+      "spot_pending_title": "Submitted for review",
+      "spot_pending_desc": "Your spot is waiting for an admin to approve it. It will appear on the map once approved.",
+      "pending_approval_banner": "This spot is waiting for admin approval and is not visible on the public map yet.",
+      "pending_spots_title": "Spots awaiting approval",
+      "pending_spots_empty": "No spots waiting for approval.",
+      "approve_spot": "Approve",
+      "spot_approved_toast": "Spot approved",
+      "spot_approved_toast_desc": "The spot is now visible on the map.",
       "spot_creation_failed": "Failed to create spot. Please try again",
       "how_to_get_there": "How to get there",
       "how_to_get_there_placeholder": "Describe how to get to the spot...",
@@ -177,7 +186,8 @@
     },
     "common": {
       "error": "Error",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "loading": "Loading…"
     },
     "footer": {
       "rights": "All rights reserved © PakalSpot"

@@ -141,6 +141,10 @@ export const spotsAPI = {
 
   getFavorites: (): Promise<AxiosResponse<Spot[]>> => api.get('/spots/favorites'),
 
+  getPendingSpots: (): Promise<AxiosResponse<Spot[]>> => api.get('/spots/pending'),
+
+  approveSpot: (id: string): Promise<AxiosResponse<Spot>> => api.post(`/spots/${id}/approve`),
+
   searchLocations: (query: string, limit: number = 10): Promise<AxiosResponse<LocationSearchResponse>> =>
     api.get('/spots/search/locations', { params: { q: query, limit } }),
 

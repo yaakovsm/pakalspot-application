@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Spot, SpotFilters, CreateSpotRequest } from '../types/spot';
+import { Spot, SpotFilters, CreateSpotRequest, SpotApprovalStatus } from '../types/spot';
 import { spotsAPI } from '../api/api';
 
 interface SpotsState {
@@ -69,11 +69,17 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
     try {
       const response = await spotsAPI.createSpot(data);
       const newSpot = response.data;
-      
-      set((state) => ({
-        spots: [newSpot, ...state.spots],
-      }));
-      
+      const status = (newSpot.approval_status ??
+        (newSpot as { approvalStatus?: SpotApprovalStatus }).approvalStatus) as
+        | SpotApprovalStatus
+        | undefined;
+
+      if (status === 'approved' || status === undefined) {
+        set((state) => ({
+          spots: [newSpot, ...state.spots],
+        }));
+      }
+
       return newSpot;
     } catch (error) {
       console.error('Failed to create spot:', error);

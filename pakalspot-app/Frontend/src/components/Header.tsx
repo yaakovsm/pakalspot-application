@@ -4,11 +4,12 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAuth } from '../hooks/useAuth';
 import { useSpots } from '../hooks/useSpots';
-import { User, LogOut, Heart, Settings, MapPin, Moon, Sun } from 'lucide-react';
+import { User, LogOut, Heart, Settings, MapPin, Moon, Sun, ListChecks } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
 import LanguageSwitcher from './LanguageSwitcher';
+import { ADMIN_EMAIL } from '../utils/authUser';
 
 interface HeaderProps {
   className?: string;
@@ -19,6 +20,10 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   const { setUserLocation, userLocation } = useSpots();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const isAdmin = Boolean(
+    user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
+  );
 
   const handleLogout = () => {
     logout();
@@ -94,6 +99,11 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                     <Button variant="ghost" onClick={() => navigate('/favorites')} className="text-lg font-medium">
                       {t('navbar.favorites')}
                     </Button>
+                    {isAuthenticated && isAdmin && (
+                      <Button variant="ghost" onClick={() => navigate('/admin/pending-spots')} className="text-lg font-medium">
+                        {t('navbar.moderation')}
+                      </Button>
+                    )}
                     <Button variant="ghost" onClick={() => navigate('/')} className="text-lg font-medium">
                       {t('navbar.home')}
                     </Button>
@@ -109,6 +119,11 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                     <Button variant="ghost" onClick={() => navigate('/favorites')} className="text-lg font-medium">
                       {t('navbar.favorites')}
                     </Button>
+                    {isAuthenticated && isAdmin && (
+                      <Button variant="ghost" onClick={() => navigate('/admin/pending-spots')} className="text-lg font-medium">
+                        {t('navbar.moderation')}
+                      </Button>
+                    )}
                     <Button variant="ghost" onClick={() => navigate('/about')} className="text-lg font-medium">
                       {t('navbar.about')}
                     </Button>
@@ -154,6 +169,12 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                             <Heart className="mr-2 h-4 w-4" />
                             <span>{t('navbar.favorites')}</span>
                           </DropdownMenuItem>
+                          {isAdmin && (
+                            <DropdownMenuItem onClick={() => navigate('/admin/pending-spots')} className="cursor-pointer">
+                              <ListChecks className="mr-2 h-4 w-4" />
+                              <span>{t('navbar.moderation')}</span>
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                             <User className="mr-2 h-4 w-4" />
                             <span>Profile</span>
@@ -245,6 +266,12 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                             <Heart className="mr-2 h-4 w-4" />
                             <span>{t('navbar.favorites')}</span>
                           </DropdownMenuItem>
+                          {isAdmin && (
+                            <DropdownMenuItem onClick={() => navigate('/admin/pending-spots')} className="cursor-pointer">
+                              <ListChecks className="mr-2 h-4 w-4" />
+                              <span>{t('navbar.moderation')}</span>
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                             <User className="mr-2 h-4 w-4" />
                             <span>Profile</span>

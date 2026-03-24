@@ -36,6 +36,7 @@ const SpotDetails: React.FC = () => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(true);
 
   const isAdmin = Boolean(
     user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
@@ -49,13 +50,40 @@ const SpotDetails: React.FC = () => {
       navigate('/');
       return;
     }
+    let cancelled = false;
+    setDetailLoading(true);
+    (async () => {
+      try {
+        const { data } = await spotsAPI.getSpot(id);
+        if (!cancelled) {
+          selectSpot(data);
+        }
+      } catch {
+        if (!cancelled) {
+          navigate('/');
+        }
+      } finally {
+        if (!cancelled) {
+          setDetailLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, navigate, selectSpot]);
 
-    // If we don't have the spot in selectedSpot, we would fetch it
-    // For now, we'll redirect to home if no spot is selected
-    if (!selectedSpot || selectedSpot.id !== id) {
-      navigate('/');
-    }
-  }, [id, selectedSpot, navigate]);
+  const approvalRaw =
+    selectedSpot?.approval_status ??
+    (selectedSpot as { approvalStatus?: string } | undefined)?.approvalStatus;
+  const isPending = approvalRaw === 'pending';
+  const isOwner = Boolean(
+    user &&
+      selectedSpot &&
+      (user.id === selectedSpot.owner_id || user.id === selectedSpot.createdBy?.id)
+  );
+  const showPendingBanner = Boolean(isPending && (isOwner || isAdmin));
+  const canSocial = !isPending;
 
   const handleFavoriteToggle = () => {
     if (!isAuthenticated) {
@@ -127,6 +155,25 @@ const SpotDetails: React.FC = () => {
     }
   };
 
+  const handleApproveSpot = async () => {
+    if (!selectedSpot) return;
+    try {
+      const { data } = await spotsAPI.approveSpot(selectedSpot.id);
+      selectSpot(data);
+      await fetchSpots();
+      toast({
+        title: t('spots.spot_approved_toast'),
+        description: t('spots.spot_approved_toast_desc'),
+      });
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: getApiErrorDetail(err, t('spots.spot_creation_failed')),
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -178,8 +225,15 @@ const SpotDetails: React.FC = () => {
     return typeColors[type] || typeColors.other;
   };
 
-  if (!selectedSpot) {
-    return null;
+  if (detailLoading || !selectedSpot || selectedSpot.id !== id) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-12 text-center text-muted-foreground">
+          {t('common.loading')}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -197,6 +251,15 @@ const SpotDetails: React.FC = () => {
             <ArrowLeft className="w-4 h-4" />
             {t('spots.back_to_map')}
           </Button>
+
+          {showPendingBanner && (
+            <div
+              className="mb-6 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-foreground"
+              role="status"
+            >
+              {t('spots.pending_approval_banner')}
+            </div>
+          )}
 
           {/* Image Gallery */}
           {selectedSpot.photos && selectedSpot.photos.length > 0 && (
@@ -268,7 +331,18 @@ const SpotDetails: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                      {isAuthenticated && isAdmin && isPending && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-9 px-3"
+                          type="button"
+                          onClick={handleApproveSpot}
+                        >
+                          {t('spots.approve_spot')}
+                        </Button>
+                      )}
                       {isAuthenticated && isAdmin && (
                         <Button
                           variant="ghost"
@@ -280,13 +354,15 @@ const SpotDetails: React.FC = () => {
                           <Trash2 className="w-5 h-5" />
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleFavoriteToggle}
-                      >
-                        <Heart className={`w-5 h-5 ${isSpotFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
-                      </Button>
+                      {canSocial && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleFavoriteToggle}
+                        >
+                          <Heart className={`w-5 h-5 ${isSpotFavorited ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -303,25 +379,27 @@ const SpotDetails: React.FC = () => {
                   </p>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant={selectedSpot.userLike?.isLike ? "default" : "outline"}
-                      onClick={() => handleLike(true)}
-                      className="gap-2"
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                      {selectedSpot.likeCount || 0}
-                    </Button>
-                    
-                    <Button
-                      variant={selectedSpot.userLike && !selectedSpot.userLike.isLike ? "default" : "outline"}
-                      onClick={() => handleLike(false)}
-                      className="gap-2"
-                    >
-                      <ThumbsDown className="w-4 h-4" />
-                      {selectedSpot.dislikeCount || 0}
-                    </Button>
-                  </div>
+                  {canSocial && (
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant={selectedSpot.userLike?.isLike ? "default" : "outline"}
+                        onClick={() => handleLike(true)}
+                        className="gap-2"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        {selectedSpot.likeCount || 0}
+                      </Button>
+                      
+                      <Button
+                        variant={selectedSpot.userLike && !selectedSpot.userLike.isLike ? "default" : "outline"}
+                        onClick={() => handleLike(false)}
+                        className="gap-2"
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                        {selectedSpot.dislikeCount || 0}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

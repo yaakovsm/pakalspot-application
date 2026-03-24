@@ -17,6 +17,11 @@ class SpotType(str, Enum):
     desert = SpotTypeEnum.desert.value
     river = SpotTypeEnum.river.value
 
+
+class SpotApprovalStatus(str, Enum):
+    approved = "approved"
+    pending = "pending"
+
 # ----------------------
 # User Schemas
 # ----------------------
@@ -119,6 +124,7 @@ class SpotOut(BaseModel):
     location_name: Optional[str] = None
     created_at: datetime
     owner_id: uuid.UUID
+    approval_status: SpotApprovalStatus = SpotApprovalStatus.approved
     createdBy: Optional[UserOut] = None  # User information
     photos: Optional[List[PhotoOut]] = []
     is_favorited: Optional[bool] = False  # Whether current user has favorited this spot
