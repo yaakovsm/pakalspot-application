@@ -170,27 +170,6 @@ const AuthModal: React.FC<{
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mb-2 mt-1 rounded-xl bg-secondary p-1">
-          <div className="grid grid-cols-2 gap-1">
-            <Button
-              type="button"
-              variant={mode === 'login' ? 'hero' : 'ghost'}
-              onClick={() => switchMode('login')}
-              className="h-10"
-            >
-              {t('auth.login')}
-            </Button>
-            <Button
-              type="button"
-              variant={mode === 'register' ? 'hero' : 'ghost'}
-              onClick={() => switchMode('register')}
-              className="h-10"
-            >
-              {t('auth.signup')}
-            </Button>
-          </div>
-        </div>
-
         {mode === 'login' ? (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
