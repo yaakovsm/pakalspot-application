@@ -403,7 +403,7 @@ const Profile: React.FC = () => {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap gap-2 mb-2">
+                        <div className="flex w-full flex-wrap items-center gap-2 justify-start mb-2">
                           {approved ? (
                             <Badge
                               variant="outline"
@@ -412,10 +412,18 @@ const Profile: React.FC = () => {
                               {t('profile.badge_approved')}
                             </Badge>
                           ) : (
-                            <Badge variant="secondary">{t('profile.badge_pending')}</Badge>
+                            <Badge
+                              variant="outline"
+                              className="border-2 border-muted-foreground/45 text-muted-foreground"
+                            >
+                              {t('profile.badge_pending')}
+                            </Badge>
                           )}
                           {approved && hasPr && (
-                            <Badge variant="outline" className="border-amber-500/80 text-amber-900 dark:text-amber-200">
+                            <Badge
+                              variant="outline"
+                              className="border-2 border-amber-500/80 text-amber-900 dark:text-amber-200"
+                            >
                               {t('profile.badge_changes_pending')}
                             </Badge>
                           )}

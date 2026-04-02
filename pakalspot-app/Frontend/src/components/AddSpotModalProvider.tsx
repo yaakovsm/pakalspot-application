@@ -88,7 +88,10 @@ export const AddSpotModalProvider: React.FC<{ children: React.ReactNode }> = ({ 
     <AddSpotModalContext.Provider value={value}>
       {children}
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent
+          hideCloseButton
+          className="max-w-4xl max-h-[90vh] overflow-y-auto p-0"
+        >
           <AddSpotForm
             key={formKey}
             initialLocation={initialLocation}
