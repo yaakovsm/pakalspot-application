@@ -322,17 +322,17 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
                   <Button
                     variant="ghost"
                     onClick={openGoogleMaps}
-                    className="w-full h-11 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                    className="w-full h-11 justify-start rounded-lg border border-transparent text-foreground hover:text-foreground hover:border-primary/20 hover:bg-accent/60"
                   >
-                    <img src="/navigation/google-maps.svg" alt={t('spots.google_maps')} className="w-5 h-5 rounded-sm" />
+                    <img src="/maps_icon.png" alt={t('spots.google_maps')} className="w-5 h-5 rounded-sm object-contain" />
                     <span className="font-medium">{t('spots.google_maps')}</span>
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={openWaze}
-                    className="w-full h-11 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                    className="w-full h-11 justify-start rounded-lg border border-transparent text-foreground hover:text-foreground hover:border-primary/20 hover:bg-accent/60"
                   >
-                    <img src="/navigation/waze.svg" alt={t('spots.waze')} className="w-5 h-5 rounded-sm" />
+                    <img src="/waze_icon.png" alt={t('spots.waze')} className="w-5 h-5 rounded-sm object-contain" />
                     <span className="font-medium">{t('spots.waze')}</span>
                   </Button>
                 </div>
