@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { useSpots } from '../hooks/useSpots';
 import { SpotType, CreateSpotRequest, GeocodeResult } from '../types/spot';
-import { MapPin, Upload, X, Plus, Map } from 'lucide-react';
+import { MapPin, X, Plus, Map } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import LocationSearch from './LocationSearch';
 import { spotsAPI } from '../api/api';
 import { useTranslation } from 'react-i18next';
+import SpotPhotoDropzone from './SpotPhotoDropzone';
 
 interface AddSpotFormProps {
   onClose?: () => void;
@@ -44,17 +45,8 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
-  const [dragActive, setDragActive] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<GeocodeResult | null>(null);
   const [showCoordinateInputs, setShowCoordinateInputs] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-
-  // Cleanup object URLs on unmount
-  useEffect(() => {
-    return () => {
-      imageUrls.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [imageUrls]);
 
   const handleInputChange = (field: keyof CreateSpotRequest, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -68,87 +60,6 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
       longitude: location.lng,
       locationName: location.name,
     }));
-  };
-
-  const handleFileSelect = (files: FileList | null) => {
-    if (!files) {
-      console.log('No files selected');
-      return;
-    }
-    
-    console.log('Files selected:', files.length);
-    
-    const newFiles = Array.from(files).filter(file => 
-      file.type.startsWith('image/') && file.size <= 10 * 1024 * 1024 // 10MB limit
-    );
-    
-    console.log('Valid files after filtering:', newFiles.length);
-    
-    if (newFiles.length === 0) {
-      toast({
-        title: "Invalid files",
-        description: "Please select valid image files under 10MB each.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setSelectedPhotos(prev => {
-      const updated = [...prev, ...newFiles].slice(0, 5); // Max 5 photos
-      console.log('Updated selected photos:', updated.length);
-      
-      // Create object URLs for the new files
-      const newUrls = newFiles.map(file => URL.createObjectURL(file));
-      setImageUrls(prevUrls => {
-        // Clean up old URLs that are no longer needed
-        const currentUrls = [...prevUrls, ...newUrls].slice(0, 5);
-        return currentUrls;
-      });
-      
-      return updated;
-    });
-    
-    toast({
-      title: "Photos added",
-      description: `${newFiles.length} photo(s) added successfully.`,
-    });
-  };
-
-  const removePhoto = (index: number) => {
-    setSelectedPhotos(prev => {
-      const updated = prev.filter((_, i) => i !== index);
-      
-      // Clean up the corresponding URL
-      setImageUrls(prevUrls => {
-        const urlToRevoke = prevUrls[index];
-        if (urlToRevoke) {
-          URL.revokeObjectURL(urlToRevoke);
-        }
-        return prevUrls.filter((_, i) => i !== index);
-      });
-      
-      return updated;
-    });
-  };
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileSelect(e.dataTransfer.files);
-    }
   };
 
   const getCurrentLocation = async () => {
@@ -447,100 +358,11 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
             <label className="block text-sm font-medium text-foreground mb-2">
               {t('spots.photos_optional')}
             </label>
-            
-            {/* Drop Zone */}
-            <div 
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                dragActive 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-border hover:border-primary/50'
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground mb-2">
-                {t('spots.drag_drop_photos')}
-              </p>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(e) => {
-                  handleFileSelect(e.target.files);
-                  // Reset the input value to allow selecting the same files again
-                  e.target.value = '';
-                }}
-                className="hidden"
-                id="photo-upload"
-              />
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  const input = document.getElementById('photo-upload') as HTMLInputElement;
-                  if (input) {
-                    input.click();
-                  }
-                }}
-              >
-                {t('spots.select_photos')}
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                {t('spots.photos_limit')}
-              </p>
-            </div>
-
-            {/* Debug Info - Remove in production */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
-                <p>Debug: selectedPhotos.length = {selectedPhotos.length}</p>
-                <p>selectedPhotos: {JSON.stringify(selectedPhotos.map(f => f.name))}</p>
-              </div>
-            )}
-
-            {/* Selected Photos */}
-            {selectedPhotos.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-foreground mb-2">
-                  Selected Photos ({selectedPhotos.length}/5)
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {selectedPhotos.map((file, index) => (
-                    <div key={`photo-${file.name}-${file.size}-${index}`} className="relative group">
-                      <img
-                        src={imageUrls[index] || URL.createObjectURL(file)}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border"
-                        onLoad={() => console.log(`Image ${index + 1} loaded successfully`)}
-                        onError={(e) => {
-                          console.error(`Failed to load image ${index + 1}:`, e);
-                          // Fallback to creating a new URL if the managed one fails
-                          const target = e.target as HTMLImageElement;
-                          if (!imageUrls[index]) {
-                            target.src = URL.createObjectURL(file);
-                          }
-                        }}
-                      />
-                      <div className="absolute top-1 left-1 bg-black/50 text-white text-xs px-1 py-0.5 rounded">
-                        {Math.round(file.size / 1024)}KB
-                      </div>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => removePhoto(index)}
-                        className="absolute top-1 right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <SpotPhotoDropzone
+              inputId="spot-photo-add"
+              files={selectedPhotos}
+              onFilesChange={setSelectedPhotos}
+            />
           </div>
 
           {/* Submit */}

@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import { useAuth } from '../hooks/useAuth';
 import { authAPI, spotsAPI, getMediaUrl } from '../api/api';
 import { normalizeAuthUser } from '../utils/authUser';
-import { Spot, SpotType } from '../types/spot';
+import { Photo, Spot, SpotType } from '../types/spot';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -31,6 +31,7 @@ import { useToast } from '../hooks/use-toast';
 import { useAuthModal } from '../components/AuthModalProvider';
 import { useAddSpotModal } from '../components/AddSpotModalProvider';
 import { User, MapPin, Pencil, ExternalLink, Plus } from 'lucide-react';
+import SpotPhotoDropzone from '../components/SpotPhotoDropzone';
 
 const spotTypes: SpotType[] = [
   'waterfall',
@@ -101,9 +102,10 @@ function buildEditForm(spot: Spot) {
 }
 
 function photoThumbUrl(spot: Spot): string | null {
-  const p = spot.photos?.[0] as Record<string, string> | undefined;
+  const p = spot.photos?.[0];
   if (!p) return null;
-  const u = p.thumbnailUrl || p.thumbnail_url || p.url;
+  const api = p as Photo & { thumbnail_url?: string };
+  const u = api.thumbnailUrl || api.thumbnail_url || api.url;
   return u ? getMediaUrl(u) : null;
 }
 
@@ -654,16 +656,11 @@ const Profile: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium">{t('profile.photos_optional')}</label>
-              <Input
-                type="file"
-                accept="image/*"
-                multiple
-                className="mt-1"
-                onChange={(e) => {
-                  const files = e.target.files ? Array.from(e.target.files) : [];
-                  setEditForm((f) => ({ ...f, photos: files }));
-                }}
+              <label className="block text-sm font-medium mb-2">{t('profile.photos_optional')}</label>
+              <SpotPhotoDropzone
+                inputId="spot-photo-edit"
+                files={editForm.photos}
+                onFilesChange={(photos) => setEditForm((f) => ({ ...f, photos }))}
               />
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
