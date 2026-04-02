@@ -24,7 +24,7 @@ import { ADMIN_EMAIL } from '../utils/authUser';
 import { getApiErrorDetail } from '../utils/apiError';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from './ui/carousel';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import AuthDialog from './AuthDialog';
+import { useAuthModal } from './AuthModalProvider';
 
 interface SpotDetailSidebarProps {
   spot: Spot | null;
@@ -38,10 +38,10 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
   const { selectedSpot, selectSpot, fetchSpots } = useSpots();
   const { isAuthenticated, user } = useAuth();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
+  const { openAuthModal } = useAuthModal();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(isOpening);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [navigationPopoverOpen, setNavigationPopoverOpen] = useState(false);
@@ -76,7 +76,10 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
 
   const handleFavoriteToggle = () => {
     if (!isAuthenticated) {
-      setShowAuthDialog(true);
+      openAuthModal('login', {
+        title: t('auth.sign_in_required'),
+        description: t('auth.favorites_sign_in_description'),
+      });
       return;
     }
 
@@ -342,16 +345,6 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
         </Card>
       </div>
       
-      {/* Auth Dialog */}
-      <AuthDialog
-        open={showAuthDialog}
-        onOpenChange={setShowAuthDialog}
-        title={t('auth.sign_in_required')}
-        description={t('auth.favorites_sign_in_description')}
-        actionText={t('auth.sign_in')}
-        cancelText={t('common.cancel')}
-      />
-
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

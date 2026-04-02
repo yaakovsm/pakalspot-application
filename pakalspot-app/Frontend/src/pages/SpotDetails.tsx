@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import Header from '../components/Header';
 import AuthDialog from '../components/AuthDialog';
+import { useAuthModal } from '../components/AuthModalProvider';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
@@ -31,6 +32,7 @@ const SpotDetails: React.FC = () => {
   const { t } = useTranslation();
   const { selectedSpot, selectSpot, likeSpot, fetchSpots } = useSpots();
   const { isAuthenticated, user } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -87,7 +89,10 @@ const SpotDetails: React.FC = () => {
 
   const handleFavoriteToggle = () => {
     if (!isAuthenticated) {
-      setShowAuthDialog(true);
+      openAuthModal('login', {
+        title: t('auth.sign_in_required'),
+        description: t('auth.favorites_sign_in_description'),
+      });
       return;
     }
 

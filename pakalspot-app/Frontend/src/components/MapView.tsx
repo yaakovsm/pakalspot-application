@@ -13,10 +13,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
 import { useTranslation } from 'react-i18next';
 import { Spot } from '../types/spot';
-import { Button } from './ui/button';
 import googleMapsLoader from '../utils/googleMapsLoader';
 import { VITE_GOOGLE_MAPS_API_KEY } from '../config/env';
-import AuthDialog from './AuthDialog';
+import { useAuthModal } from './AuthModalProvider';
 import SpotActionCard from './SpotActionCard';
 
 // Israel map configuration
@@ -50,8 +49,8 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
+  const { openAuthModal } = useAuthModal();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   // Initialize map
   useEffect(() => {
@@ -296,7 +295,10 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
   // Handle favorite toggle
   const handleFavoriteSpot = (spotId: string) => {
     if (!isAuthenticated) {
-      setShowAuthDialog(true);
+      openAuthModal('login', {
+        title: t('auth.sign_in_required'),
+        description: t('auth.favorites_sign_in_description'),
+      });
       return;
     }
 
@@ -452,15 +454,6 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
   return (
     <div className={`relative w-full h-full ${className}`}>
       <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden shadow-medium" />
-      
-      <AuthDialog
-        open={showAuthDialog}
-        onOpenChange={setShowAuthDialog}
-        title={t('auth.sign_in_required')}
-        description={t('auth.favorites_sign_in_description')}
-        actionText={t('auth.sign_in')}
-        cancelText={t('common.cancel')}
-      />
     </div>
   );
 };

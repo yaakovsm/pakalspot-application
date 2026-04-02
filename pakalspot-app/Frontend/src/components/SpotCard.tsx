@@ -10,7 +10,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/use-toast';
-import AuthDialog from './AuthDialog';
+import { useAuthModal } from './AuthModalProvider';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
 
 interface SpotCardProps {
@@ -25,10 +25,10 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
   const { selectSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
+  const { openAuthModal } = useAuthModal();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   
   const currentLanguage = i18n.language || 'he';
   const isRTL = currentLanguage === 'he';
@@ -44,7 +44,10 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      setShowAuthDialog(true);
+      openAuthModal('login', {
+        title: t('auth.sign_in_required'),
+        description: t('auth.favorites_sign_in_description'),
+      });
       return;
     }
 
@@ -179,15 +182,6 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails, onInfoClick, o
           </div>
         </div>
       </CardContent>
-      
-      <AuthDialog
-        open={showAuthDialog}
-        onOpenChange={setShowAuthDialog}
-        title={t('auth.sign_in_required')}
-        description={t('auth.favorites_sign_in_description')}
-        actionText={t('auth.sign_in')}
-        cancelText={t('common.cancel')}
-      />
     </Card>
   );
 };

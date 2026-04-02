@@ -9,8 +9,13 @@ import { Input } from './ui/input';
 
 type AuthMode = 'login' | 'register';
 
+interface AuthModalCopyOverride {
+  title?: string;
+  description?: string;
+}
+
 interface AuthModalContextValue {
-  openAuthModal: (mode?: AuthMode) => void;
+  openAuthModal: (mode?: AuthMode, copy?: AuthModalCopyOverride) => void;
   closeAuthModal: () => void;
 }
 
@@ -33,9 +38,10 @@ export const useAuthModal = (): AuthModalContextValue => {
 const AuthModal: React.FC<{
   open: boolean;
   mode: AuthMode;
+  copyOverride?: AuthModalCopyOverride;
   onOpenChange: (open: boolean) => void;
   onModeChange: (mode: AuthMode) => void;
-}> = ({ open, mode, onOpenChange, onModeChange }) => {
+}> = ({ open, mode, copyOverride, onOpenChange, onModeChange }) => {
   const { login, register, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -163,10 +169,10 @@ const AuthModal: React.FC<{
             <span className="text-xl font-bold text-foreground">{t('app.name')}</span>
           </div>
           <DialogTitle className="text-2xl font-bold text-foreground">
-            {mode === 'login' ? t('auth.welcome_back') : t('auth.create_account_title')}
+            {mode === 'login' ? (copyOverride?.title || t('auth.welcome_back')) : t('auth.create_account_title')}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'login' ? t('auth.sign_in_to_continue') : t('auth.sign_up_to_start')}
+            {mode === 'login' ? (copyOverride?.description || t('auth.sign_in_to_continue')) : t('auth.sign_up_to_start')}
           </DialogDescription>
         </DialogHeader>
 
@@ -321,15 +327,18 @@ const AuthModal: React.FC<{
 export const AuthModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>('login');
+  const [copyOverride, setCopyOverride] = useState<AuthModalCopyOverride | undefined>(undefined);
 
-  const openAuthModal = useCallback((nextMode: AuthMode = 'login') => {
+  const openAuthModal = useCallback((nextMode: AuthMode = 'login', nextCopyOverride?: AuthModalCopyOverride) => {
     setMode(nextMode);
+    setCopyOverride(nextCopyOverride);
     setOpen(true);
   }, []);
 
   const closeAuthModal = useCallback(() => {
     setOpen(false);
     setMode('login');
+    setCopyOverride(undefined);
   }, []);
 
   const value = useMemo(
@@ -342,8 +351,8 @@ export const AuthModalProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     const handler = (event: Event) => {
-      const custom = event as CustomEvent<{ mode?: AuthMode }>;
-      openAuthModal(custom.detail?.mode ?? 'login');
+      const custom = event as CustomEvent<{ mode?: AuthMode; copy?: AuthModalCopyOverride }>;
+      openAuthModal(custom.detail?.mode ?? 'login', custom.detail?.copy);
     };
 
     window.addEventListener('pakalspot:auth-required', handler);
@@ -353,7 +362,7 @@ export const AuthModalProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   return (
     <AuthModalContext.Provider value={value}>
       {children}
-      <AuthModal open={open} mode={mode} onOpenChange={setOpen} onModeChange={setMode} />
+      <AuthModal open={open} mode={mode} copyOverride={copyOverride} onOpenChange={setOpen} onModeChange={setMode} />
     </AuthModalContext.Provider>
   );
 };

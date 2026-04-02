@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../hooks/use-toast';
-import AuthDialog from './AuthDialog';
+import { useAuthModal } from './AuthModalProvider';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
 
 interface FavoriteSpotCardProps {
@@ -22,9 +22,9 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
   const { selectSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const { isFavorited, unfavoriteSpot } = useFavorites();
+  const { openAuthModal } = useAuthModal();
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -43,7 +43,10 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      setShowAuthDialog(true);
+      openAuthModal('login', {
+        title: t('auth.sign_in_required'),
+        description: t('auth.favorites_sign_in_description'),
+      });
       return;
     }
 
@@ -206,15 +209,6 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
           </div>
         </div>
       </Card>
-
-      <AuthDialog
-        open={showAuthDialog}
-        onOpenChange={setShowAuthDialog}
-        title={t('auth.sign_in_required')}
-        description={t('auth.favorites_sign_in_description')}
-        actionText={t('auth.sign_in')}
-        cancelText={t('common.cancel')}
-      />
     </>
   );
 };
