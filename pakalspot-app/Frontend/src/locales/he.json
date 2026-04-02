@@ -14,7 +14,8 @@
       "about": "אודות",
       "contact": "צור קשר",
       "moderation": "ממתינים לאישור",
-      "profile": "פרופיל"
+      "profile": "פרופיל",
+      "logout": "התנתקות"
     },
     "profile": {
       "title": "הפרופיל שלכם",

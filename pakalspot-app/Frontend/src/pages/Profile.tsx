@@ -391,8 +391,8 @@ const Profile: React.FC = () => {
                   key={spot.id}
                   className={`overflow-hidden border-border shadow-soft ${approved && !hasPr ? 'ring-2 ring-green-600/70' : ''}`}
                 >
-                  <CardContent className="p-0">
-                    <div className="flex gap-3 p-4">
+                  <CardContent className="p-3">
+                    <div className="flex gap-3" dir="ltr">
                       <div className="w-24 h-24 rounded-lg bg-muted shrink-0 overflow-hidden">
                         {thumb ? (
                           <img src={thumb} alt="" className="w-full h-full object-cover" />
@@ -402,41 +402,81 @@ const Profile: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex w-full flex-wrap items-center gap-2 justify-start mb-2">
-                          {approved ? (
-                            <Badge
-                              variant="outline"
-                              className="border-2 border-green-600 text-green-800 dark:text-green-400 dark:border-green-500"
+                      <div
+                        className="flex flex-1 min-w-0 items-start justify-between"
+                        dir={isHebrew ? 'rtl' : 'ltr'}
+                      >
+                        <div className={`flex-1 min-w-0 ${isHebrew ? 'pr-3' : 'pl-3'}`}>
+                          <div
+                            className={`flex items-center gap-2 mb-1 ${isHebrew ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <h3
+                              className={`font-semibold text-base text-foreground truncate ${isHebrew ? 'text-right' : 'text-left'}`}
                             >
-                              {t('profile.badge_approved')}
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="border-2 border-muted-foreground/45 text-muted-foreground"
+                              {spot.title}
+                            </h3>
+                          </div>
+                          {spot.subtitle ? (
+                            <p
+                              className={`text-muted-foreground text-sm mb-2 line-clamp-1 ${isHebrew ? 'text-right' : 'text-left'}`}
                             >
-                              {t('profile.badge_pending')}
-                            </Badge>
-                          )}
-                          {approved && hasPr && (
-                            <Badge
-                              variant="outline"
-                              className="border-2 border-amber-500/80 text-amber-900 dark:text-amber-200"
-                            >
-                              {t('profile.badge_changes_pending')}
-                            </Badge>
-                          )}
+                              {spot.subtitle}
+                            </p>
+                          ) : null}
+                          <div
+                            className={`flex w-full flex-wrap items-center gap-2 text-xs ${isHebrew ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {approved ? (
+                              <Badge
+                                variant="outline"
+                                className="border-2 border-green-600 text-green-800 dark:text-green-400 dark:border-green-500"
+                              >
+                                {t('profile.badge_approved')}
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="border-2 border-muted-foreground/45 text-muted-foreground"
+                              >
+                                {t('profile.badge_pending')}
+                              </Badge>
+                            )}
+                            {approved && hasPr && (
+                              <Badge
+                                variant="outline"
+                                className="border-2 border-amber-500/80 text-amber-900 dark:text-amber-200"
+                              >
+                                {t('profile.badge_changes_pending')}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <h3 className="font-semibold text-foreground truncate">{spot.title}</h3>
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          <Button size="sm" variant="outline" onClick={() => setEditingSpot(spot)}>
-                            <Pencil className="w-4 h-4 me-1" />
-                            {t('profile.edit_spot')}
+                        <div className="flex flex-col items-center gap-2 shrink-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingSpot(spot);
+                            }}
+                          >
+                            <Pencil className="w-4 h-4 text-muted-foreground" />
+                            <span className="sr-only">{t('profile.edit_spot')}</span>
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => navigate(`/spot/${spot.id}`)}>
-                            <ExternalLink className="w-4 h-4 me-1" />
-                            {t('profile.view_spot')}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full border border-muted-foreground/20 hover:border-primary hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/spot/${spot.id}`);
+                            }}
+                          >
+                            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                            <span className="sr-only">{t('profile.view_spot')}</span>
                           </Button>
                         </div>
                       </div>
