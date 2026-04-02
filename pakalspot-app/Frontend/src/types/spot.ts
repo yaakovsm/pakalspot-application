@@ -32,6 +32,13 @@ export interface Spot {
   description: string;
   subtitle?: string;
   how_to_get_there?: string;
+  /** Optional English copy (admin-edited while pending); used when UI language is English */
+  title_en?: string | null;
+  description_en?: string | null;
+  subtitle_en?: string | null;
+  how_to_get_there_en?: string | null;
+  location_name_en?: string | null;
+  location_name?: string | null;
   spot_type: SpotType;
   lat: number;
   lon: number;

@@ -152,6 +152,11 @@ class Spot(Base):
     how_to_get_there: Mapped[str] = mapped_column(Text, nullable=True)  # Optional directions
     spot_type: Mapped[SpotType] = mapped_column("type", EnumValueType(SpotType, length=50), nullable=False)  # Maps to 'type' column in DB
     location_name: Mapped[str] = mapped_column(Text, nullable=True)  # Optional location name
+    title_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    subtitle_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    how_to_get_there_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    location_name_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     geom: Mapped[str] = mapped_column(Geometry("POINT", srid=4326), nullable=False)
     approval_status: Mapped[SpotApprovalStatus] = mapped_column(
         EnumValueType(SpotApprovalStatus, length=20),

@@ -124,6 +124,16 @@ class SpotUpdate(BaseModel):
     lon: Optional[float] = None
 
 
+class SpotTranslationUpdate(BaseModel):
+    """Admin-only English copy for a pending spot (optional fields)."""
+
+    title_en: Optional[str] = None
+    description_en: Optional[str] = None
+    subtitle_en: Optional[str] = None
+    how_to_get_there_en: Optional[str] = None
+    location_name_en: Optional[str] = None
+
+
 class SpotOut(BaseModel):
     id: uuid.UUID
     title: str
@@ -134,6 +144,11 @@ class SpotOut(BaseModel):
     lat: float
     lon: float
     location_name: Optional[str] = None
+    title_en: Optional[str] = None
+    description_en: Optional[str] = None
+    subtitle_en: Optional[str] = None
+    how_to_get_there_en: Optional[str] = None
+    location_name_en: Optional[str] = None
     created_at: datetime
     owner_id: uuid.UUID
     approval_status: SpotApprovalStatus = SpotApprovalStatus.approved

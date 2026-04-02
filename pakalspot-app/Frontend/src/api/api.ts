@@ -166,6 +166,17 @@ export const spotsAPI = {
 
   getPendingSpots: (): Promise<AxiosResponse<Spot[]>> => api.get('/spots/pending'),
 
+  updateSpotTranslations: (
+    id: string,
+    body: Partial<{
+      title_en: string | null;
+      description_en: string | null;
+      subtitle_en: string | null;
+      how_to_get_there_en: string | null;
+      location_name_en: string | null;
+    }>,
+  ): Promise<AxiosResponse<Spot>> => api.patch(`/spots/${id}/translations`, body),
+
   approveSpot: (id: string): Promise<AxiosResponse<Spot>> => api.post(`/spots/${id}/approve`),
 
   searchLocations: (query: string, limit: number = 10): Promise<AxiosResponse<LocationSearchResponse>> =>

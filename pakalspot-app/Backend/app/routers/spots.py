@@ -157,6 +157,11 @@ def _spot_payload(
         "lat": lat,
         "lon": lon,
         "location_name": spot.location_name,
+        "title_en": getattr(spot, "title_en", None),
+        "description_en": getattr(spot, "description_en", None),
+        "subtitle_en": getattr(spot, "subtitle_en", None),
+        "how_to_get_there_en": getattr(spot, "how_to_get_there_en", None),
+        "location_name_en": getattr(spot, "location_name_en", None),
         "createdAt": spot.created_at,
         "created_at": spot.created_at,
         "owner_id": spot.user_id,
@@ -281,11 +286,8 @@ async def create_spot(
         raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
 
     point = from_shape(Point(longitude, latitude), srid=4326)
-    approval = (
-        SpotApprovalStatus.approved
-        if user_is_admin(current_user)
-        else SpotApprovalStatus.pending
-    )
+    # All new spots go through the same moderation queue (including admins).
+    approval = SpotApprovalStatus.pending
     spot = models.Spot(
         title=title,
         description=description,
@@ -762,6 +764,58 @@ def list_pending_spots(
             )
         )
     return result
+
+
+def _normalize_optional_en_text(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped if stripped else None
+
+
+@router.patch("/{spot_id}/translations", response_model=schemas.SpotOut)
+def update_spot_translations(
+    spot_id: str,
+    body: schemas.SpotTranslationUpdate,
+    db: Session = Depends(get_db),
+    _admin: models.User = Depends(get_current_admin_user),
+):
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    if _approval_status_str(spot) != SpotApprovalStatus.pending.value:
+        raise HTTPException(
+            status_code=400,
+            detail="English translations can only be edited while the spot is pending approval.",
+        )
+    patch = body.model_dump(exclude_unset=True)
+    for key in (
+        "title_en",
+        "description_en",
+        "subtitle_en",
+        "how_to_get_there_en",
+        "location_name_en",
+    ):
+        if key in patch:
+            setattr(spot, key, _normalize_optional_en_text(patch[key]))
+    db.commit()
+    db.refresh(spot)
+
+    lat, lon = _spot_coords(db, spot, 0.0, 0.0)
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    photos_data = [_photo_out_from_db(p) for p in photos]
+    user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+    user_data = _user_out_from_db(user)
+    return _spot_payload(
+        spot,
+        db,
+        lat=lat,
+        lon=lon,
+        photos_data=photos_data,
+        user_data=user_data,
+        is_favorited=False,
+        expose_pending=True,
+    )
 
 
 @router.post("/{spot_id}/approve", response_model=schemas.SpotOut)

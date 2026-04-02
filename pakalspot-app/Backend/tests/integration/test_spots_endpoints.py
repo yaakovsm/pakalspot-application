@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from app.main import app
 from app.core.database import get_db
+from app.core.settings import settings
 from app import models
 from app.core.security import create_access_token
 import uuid
@@ -61,6 +62,22 @@ class TestSpotsEndpoints:
         token = create_access_token(str(user.id))
         return token, user
 
+    def create_admin_user(self):
+        """Create the configured admin user and return auth token."""
+        db = TestingSessionLocal()
+        user = models.User(
+            id=str(uuid.uuid4()),
+            email=settings.ADMIN_EMAIL,
+            password_hash="hashed_password",
+            display_name="Admin User",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        db.close()
+        token = create_access_token(str(user.id))
+        return token, user
+
     def test_create_spot_success(self):
         """Test successful spot creation (multipart form, no photos)."""
         token, user = self.create_test_user()
@@ -83,6 +100,7 @@ class TestSpotsEndpoints:
         assert body["spot_type"] == data["type"]
         assert "id" in body
         assert "created_at" in body
+        assert body.get("approval_status") == "pending" or body.get("approvalStatus") == "pending"
 
     def test_create_spot_multipart_with_photo(self):
         """POST /api/spots/ with form + file; S3 client mocked."""
@@ -108,6 +126,7 @@ class TestSpotsEndpoints:
         assert body["title"] == "With Photo"
         assert mock_s3.put_object.called
         assert len(body.get("photos") or []) == 1
+        assert body.get("approval_status") == "pending" or body.get("approvalStatus") == "pending"
 
     def test_create_spot_unauthorized(self):
         """Test spot creation without authentication."""
@@ -137,7 +156,7 @@ class TestSpotsEndpoints:
         assert response.status_code == 422
 
     def test_list_spots(self):
-        """Test listing all spots."""
+        """Pending spots are excluded from the public list until approved."""
         token, user = self.create_test_user()
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -148,13 +167,24 @@ class TestSpotsEndpoints:
             "latitude": "32.5",
             "longitude": "35.0",
         }
-        client.post(API_SPOTS, data=spot_data, headers=headers)
+        create_resp = client.post(API_SPOTS, data=spot_data, headers=headers)
+        assert create_resp.status_code == 200
+        spot_id = create_resp.json()["id"]
 
         response = client.get(API_SPOTS)
-
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
+        assert len(data) == 0
+
+        admin_token, _ = self.create_admin_user()
+        admin_headers = {"Authorization": f"Bearer {admin_token}"}
+        approve_resp = client.post(f"/api/spots/{spot_id}/approve", headers=admin_headers)
+        assert approve_resp.status_code == 200
+
+        response = client.get(API_SPOTS)
+        assert response.status_code == 200
+        data = response.json()
         assert len(data) == 1
         assert data[0]["title"] == spot_data["title"]
 
@@ -173,7 +203,8 @@ class TestSpotsEndpoints:
         create_response = client.post(API_SPOTS, data=spot_data, headers=headers)
         spot_id = create_response.json()["id"]
 
-        response = client.get(f"/api/spots/{spot_id}")
+        # Pending spots are not visible to anonymous clients; owner can fetch by id.
+        response = client.get(f"/api/spots/{spot_id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -219,6 +250,34 @@ class TestSpotsEndpoints:
         response = client.post(API_SPOTS, data=data, headers=headers)
         assert response.status_code == 200
         assert response.json()["spot_type"] == "viewpoint"
+
+    def test_admin_create_spot_is_pending(self):
+        """Admin-created spots use the same pending queue as everyone else."""
+        admin_token, _ = self.create_admin_user()
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        form = {
+            "title": "Admin New Spot",
+            "description": "Desc",
+            "type": "viewpoint",
+            "latitude": "32.5",
+            "longitude": "35.0",
+        }
+        cr = client.post(API_SPOTS, data=form, headers=headers)
+        assert cr.status_code == 200, cr.text
+        body = cr.json()
+        assert body.get("approval_status") == "pending" or body.get("approvalStatus") == "pending"
+        spot_id = body["id"]
+
+        public = client.get(API_SPOTS)
+        assert public.status_code == 200
+        public_ids = {str(x["id"]) for x in public.json()}
+        assert str(spot_id) not in public_ids
+
+        ar = client.post(f"/api/spots/{spot_id}/approve", headers=headers)
+        assert ar.status_code == 200, ar.text
+        public2 = client.get(API_SPOTS)
+        public_ids2 = {str(x["id"]) for x in public2.json()}
+        assert str(spot_id) in public_ids2
 
     @pytest.mark.skipif(
         "sqlite" in SQLALCHEMY_DATABASE_URL.lower(),

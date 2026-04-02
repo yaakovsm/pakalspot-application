@@ -1,4 +1,5 @@
 import { TFunction } from 'i18next';
+import i18n from '../i18n';
 import { Spot } from '../types/spot';
 
 /**
@@ -44,11 +45,37 @@ export const getSpotTranslationKey = (spot: Spot): string | null => {
  * Get translated spot content
  * Returns the translated content if available, otherwise returns the original
  */
+const enFieldFromSpot = (
+  spot: Spot,
+  field: 'title' | 'subtitle' | 'description' | 'how_to_get_there',
+): string | null | undefined => {
+  switch (field) {
+    case 'title':
+      return spot.title_en;
+    case 'subtitle':
+      return spot.subtitle_en;
+    case 'description':
+      return spot.description_en;
+    case 'how_to_get_there':
+      return spot.how_to_get_there_en;
+    default:
+      return undefined;
+  }
+};
+
 export const getTranslatedSpotContent = (
   spot: Spot,
   t: TFunction,
   field: 'title' | 'subtitle' | 'description' | 'how_to_get_there'
 ): string => {
+  const lang = (i18n.language || 'he').split('-')[0]?.toLowerCase();
+  if (lang === 'en') {
+    const en = enFieldFromSpot(spot, field);
+    if (typeof en === 'string' && en.trim()) {
+      return en;
+    }
+  }
+
   const translationKey = getSpotTranslationKey(spot);
   
   if (translationKey) {

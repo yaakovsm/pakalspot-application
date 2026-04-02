@@ -181,6 +181,21 @@ def create_spot(session: requests.Session, token: str, spot_data: dict) -> str:
     return spot_id
 
 
+def approve_spot(session: requests.Session, token: str, spot_id: str) -> None:
+    """
+    Approve a spot so it appears on the public list (same queue as UI moderation).
+    New spots are created as pending even for admin users.
+    """
+    url = f"{BACKEND_BASE_URL}/spots/{spot_id}/approve"
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = session.post(url, headers=headers)
+    if resp.status_code not in (200, 201):
+        raise RuntimeError(
+            f"Failed to approve spot {spot_id}: {resp.status_code} {resp.text}"
+        )
+    log(f"Approved spot id={spot_id}")
+
+
 def upload_photo(session, token: str, spot_id: str, image_path: Path) -> None:
     """
     Upload a single photo to a specific spot via API.
@@ -263,6 +278,13 @@ def main() -> None:
         except Exception as e:
             log(
                 f"Error uploading photos for spot '{spot_data.get('title', 'Unnamed')}': {e}"
+            )
+
+        try:
+            approve_spot(session, token, spot_id)
+        except Exception as e:
+            log(
+                f"Error approving spot '{spot_data.get('title', 'Unnamed')}' (id={spot_id}): {e}"
             )
 
     log("Seeding completed")
