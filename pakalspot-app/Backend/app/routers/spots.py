@@ -19,7 +19,7 @@ from app.core.security import get_current_user, decode_access_token
 from app.core.settings import settings
 from app.models import parse_spot_type, SpotApprovalStatus
 from app.services.geocoding import geocoding_service
-from app.services.photo_url import build_photo_url
+from app.services.photo_url import build_photo_url, normalized_init_object_key
 from app.core.authz import user_is_admin, get_current_admin_user
 
 router = APIRouter(prefix="/spots", tags=["spots"])
@@ -62,7 +62,10 @@ def _photo_out_from_db(photo: models.Photo) -> dict:
     # build_photo_url: init photos -> CloudFront (if set) or public S3; user uploads -> stored url
     url = build_photo_url(photo)
     thumb = photo.thumbnail_url or url
-    if photo.thumbnail_url and "pakalspot.local" in photo.thumbnail_url:
+    # Keep seeded-init thumbnails aligned with computed URL to avoid stale persisted hosts.
+    if normalized_init_object_key(photo):
+        thumb = url
+    elif photo.thumbnail_url and "pakalspot.local" in photo.thumbnail_url:
         thumb = url
 
     return {
