@@ -29,6 +29,7 @@ import {
 } from '../components/ui/select';
 import { useToast } from '../hooks/use-toast';
 import { useAuthModal } from '../components/AuthModalProvider';
+import { useAddSpotModal } from '../components/AddSpotModalProvider';
 import { User, MapPin, Pencil, ExternalLink, Plus } from 'lucide-react';
 
 const spotTypes: SpotType[] = [
@@ -111,6 +112,7 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { openAuthModal } = useAuthModal();
+  const { openAddSpot } = useAddSpotModal();
   const { user, isAuthenticated, updateUser } = useAuth();
 
   const isHebrew = (i18n.language || 'he') === 'he';
@@ -357,7 +359,7 @@ const Profile: React.FC = () => {
               type="button"
               variant="hero"
               className="gap-2 shrink-0 w-full sm:w-auto"
-              onClick={() => navigate('/?add=1')}
+              onClick={() => openAddSpot({ onSuccess: loadMySpots })}
             >
               <Plus className="w-4 h-4" />
               {t('profile.add_spot')}
@@ -373,7 +375,7 @@ const Profile: React.FC = () => {
           <Card className="border-dashed">
             <CardContent className="py-12 text-center text-muted-foreground">
               <p>{t('profile.no_spots')}</p>
-              <Button variant="link" className="mt-2" onClick={() => navigate('/?add=1')}>
+              <Button variant="link" className="mt-2" onClick={() => openAddSpot({ onSuccess: loadMySpots })}>
                 {t('profile.add_spot_hint')}
               </Button>
             </CardContent>

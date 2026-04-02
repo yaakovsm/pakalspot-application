@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { spotsAPI } from "./api/api";
 import { AuthModalProvider, useAuthModal } from "./components/AuthModalProvider";
+import { AddSpotModalProvider } from "./components/AddSpotModalProvider";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Favorites from "./pages/Favorites";
@@ -64,18 +65,20 @@ const AppContent = () => {
   return (
     <AuthModalProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/login" element={<AuthRouteHandler mode="login" />} />
-          <Route path="/register" element={<AuthRouteHandler mode="register" />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/spot/:id" element={<SpotDetails />} />
-          <Route path="/admin/pending-spots" element={<AdminPendingSpots />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AddSpotModalProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/login" element={<AuthRouteHandler mode="login" />} />
+            <Route path="/register" element={<AuthRouteHandler mode="register" />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/spot/:id" element={<SpotDetails />} />
+            <Route path="/admin/pending-spots" element={<AdminPendingSpots />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AddSpotModalProvider>
       </BrowserRouter>
     </AuthModalProvider>
   );

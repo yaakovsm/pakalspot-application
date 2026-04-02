@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Dialog, DialogContent } from '../components/ui/dialog';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import MapView from '../components/MapView';
-import AddSpotForm from '../components/AddSpotForm';
 import SpotDetailSidebar from '../components/SpotDetailSidebar';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
@@ -12,13 +10,14 @@ import { Button } from '../components/ui/button';
 import { Plus, Menu, X } from 'lucide-react';
 import { Spot } from '../types/spot';
 import { useAuthModal } from '../components/AuthModalProvider';
+import { useAddSpotModal } from '../components/AddSpotModalProvider';
 
 const Home: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { fetchSpots, setUserLocation, selectedSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const { openAuthModal } = useAuthModal();
-  const [showAddForm, setShowAddForm] = useState(false);
+  const { openAddSpot } = useAddSpotModal();
   const [showSidebar, setShowSidebar] = useState(false);
   const [showDetailSidebar, setShowDetailSidebar] = useState(false);
   const [isClosingSidebar, setIsClosingSidebar] = useState(false);
@@ -67,20 +66,11 @@ const Home: React.FC = () => {
       openAuthModal('login');
       return;
     }
-    setShowAddForm(true);
-  }, [searchParams, setSearchParams, isAuthenticated, openAuthModal]);
+    openAddSpot();
+  }, [searchParams, setSearchParams, isAuthenticated, openAddSpot, openAuthModal]);
 
   const handleAddSpot = () => {
-    if (!isAuthenticated) {
-      openAuthModal('login');
-      return;
-    }
-    setShowAddForm(true);
-  };
-
-  const handleAddSpotSuccess = () => {
-    setShowAddForm(false);
-    fetchSpots(); // Refresh spots
+    openAddSpot();
   };
 
   const handleInfoClick = () => {
@@ -175,16 +165,6 @@ const Home: React.FC = () => {
           isOpening={isOpeningSidebar}
         />
       )}
-
-      {/* Add Spot Dialog */}
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-          <AddSpotForm 
-            onClose={() => setShowAddForm(false)}
-            onSuccess={handleAddSpotSuccess}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
