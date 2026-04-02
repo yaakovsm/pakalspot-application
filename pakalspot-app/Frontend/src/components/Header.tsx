@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAuth } from '../hooks/useAuth';
 import { useSpots } from '../hooks/useSpots';
-import { User, LogOut, Heart, Settings, MapPin, Moon, Sun, ListChecks } from 'lucide-react';
+import { User, LogOut, Heart, MapPin, Moon, Sun, ListChecks } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
@@ -179,11 +179,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                           )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                             <User className="mr-2 h-4 w-4" />
-                            <span>Profile</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Settings</span>
+                            <span>{t('navbar.profile')}</span>
                           </DropdownMenuItem>
                           <div className="h-px bg-border my-1" />
                           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
@@ -271,11 +267,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                           )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                             <User className="mr-2 h-4 w-4" />
-                            <span>Profile</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Settings</span>
+                            <span>{t('navbar.profile')}</span>
                           </DropdownMenuItem>
                           <div className="h-px bg-border my-1" />
                           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">

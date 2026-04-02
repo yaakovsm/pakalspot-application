@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Form, UploadFile, 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -85,6 +85,7 @@ def _user_out_from_db(user: Optional[models.User]) -> Optional[dict]:
         "email": user.email,
         "display_name": user.display_name,
         "username": user.display_name,
+        "avatar": getattr(user, "avatar_url", None),
         "created_at": user.created_at,
         "is_admin": user_is_admin(user),
     }
@@ -141,8 +142,11 @@ def _spot_payload(
     photos_data: list,
     user_data: Optional[dict],
     is_favorited: bool,
+    expose_pending: bool = False,
 ) -> dict:
     approval = _approval_status_str(spot)
+    has_pr = bool(getattr(spot, "has_pending_revision", False))
+    rev = getattr(spot, "pending_revision", None)
     return {
         "id": spot.id,
         "title": spot.title,
@@ -158,11 +162,85 @@ def _spot_payload(
         "owner_id": spot.user_id,
         "approval_status": approval,
         "approvalStatus": approval,
+        "has_pending_revision": has_pr if expose_pending else False,
+        "hasPendingRevision": has_pr if expose_pending else False,
+        "pending_revision": rev if expose_pending else None,
+        "pendingRevision": rev if expose_pending else None,
         "createdBy": user_data,
         "photos": photos_data,
         "is_favorited": is_favorited,
         "isFavorited": is_favorited,
     }
+
+
+def _cleanup_s3_keys(s3_client, keys: list, bucket_name: str) -> None:
+    for key in keys or []:
+        if not key:
+            continue
+        try:
+            s3_client.delete_object(Bucket=bucket_name, Key=key)
+        except ClientError:
+            pass
+
+
+def _discard_pending_revision_assets(s3_client, spot: models.Spot) -> None:
+    rev = spot.pending_revision
+    if not rev or not isinstance(rev, dict):
+        return
+    keys = rev.get("photo_object_keys")
+    if keys:
+        _cleanup_s3_keys(s3_client, keys, settings.S3_BUCKET)
+
+
+def _delete_all_spot_photos_db_and_s3(db: Session, spot: models.Spot, s3_client) -> None:
+    bucket_default = settings.S3_BUCKET
+    photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+    for photo in photos:
+        if photo.object_key:
+            try:
+                if photo.object_key.startswith("photos/") or photo.object_key.startswith(
+                    "pakalspot-init-photos/"
+                ):
+                    bucket_name = settings.INIT_SEED_BUCKET
+                    key = photo.object_key.replace("pakalspot-init-photos/", "")
+                else:
+                    bucket_name = bucket_default
+                    key = photo.object_key
+                s3_client.delete_object(Bucket=bucket_name, Key=key)
+            except ClientError:
+                pass
+        db.delete(photo)
+
+
+def _merge_pending_revision_into_spot(db: Session, spot: models.Spot, s3_client) -> None:
+    rev = spot.pending_revision
+    if not rev or not isinstance(rev, dict):
+        spot.has_pending_revision = False
+        spot.pending_revision = None
+        return
+    spot.title = rev["title"]
+    spot.description = rev["description"]
+    spot.subtitle = rev.get("subtitle")
+    spot.how_to_get_there = rev.get("how_to_get_there")
+    spot.location_name = rev.get("location_name")
+    spot.spot_type = parse_spot_type(rev.get("spot_type") or "viewpoint")
+    spot.geom = from_shape(Point(rev["longitude"], rev["latitude"]), srid=4326)
+    if "photo_object_keys" in rev:
+        _delete_all_spot_photos_db_and_s3(db, spot, s3_client)
+        bucket_default = settings.S3_BUCKET
+        for key in rev.get("photo_object_keys") or []:
+            db_url = build_s3_url(bucket_default, key)
+            db.add(
+                models.Photo(
+                    spot_id=spot.id,
+                    object_key=key,
+                    url=db_url,
+                    thumbnail_url=db_url,
+                )
+            )
+    spot.has_pending_revision = False
+    spot.pending_revision = None
+    spot.approval_status = SpotApprovalStatus.approved
 
 
 def get_current_user_optional(
@@ -328,6 +406,86 @@ async def update_spot(
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid spot type: {type}")
 
+    is_admin = user_is_admin(current_user)
+    published = _approval_status_str(spot) == SpotApprovalStatus.approved.value
+
+    expose_pending = is_admin or (current_user.id == spot.user_id)
+
+    # Published spot, non-admin: store edits as pending revision; public snapshot unchanged.
+    if published and not is_admin:
+        s3_client = get_s3_client()
+        _discard_pending_revision_assets(s3_client, spot)
+
+        st_val = spot_type.value if hasattr(spot_type, "value") else str(spot_type)
+        rev = {
+            "title": title,
+            "description": description,
+            "subtitle": subtitle,
+            "how_to_get_there": how_to_get_there,
+            "spot_type": st_val,
+            "location_name": location_name,
+            "latitude": latitude,
+            "longitude": longitude,
+        }
+        photo_keys: list = []
+        if photos:
+            bucket_default = settings.S3_BUCKET
+            for photo in photos:
+                if not photo or not photo.filename:
+                    continue
+                try:
+                    ext = os.path.splitext(photo.filename)[1] or ".jpg"
+                    unique_filename = f"{uuid.uuid4()}{ext}"
+                    object_key = f"{spot.id}/pending_rev/{unique_filename}"
+                    content = await photo.read()
+                    content_type = photo.content_type or "image/jpeg"
+                    if not content_type.startswith("image/"):
+                        content_type = "image/jpeg"
+                    s3_client.put_object(
+                        Bucket=bucket_default,
+                        Key=object_key,
+                        Body=content,
+                        ContentType=content_type,
+                    )
+                    photo_keys.append(object_key)
+                except ClientError as e:
+                    raise HTTPException(
+                        status_code=500, detail=f"Error uploading photo to S3: {str(e)}"
+                    ) from e
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=500, detail=f"Unexpected error uploading photo: {str(e)}"
+                    ) from e
+            rev["photo_object_keys"] = photo_keys
+
+        spot.pending_revision = rev
+        spot.has_pending_revision = True
+        db.commit()
+        db.refresh(spot)
+
+        lat, lon = _spot_coords(db, spot, latitude, longitude)
+        photos_db = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        photos_data = [_photo_out_from_db(p) for p in photos_db]
+        is_favorited = _check_if_favorited(db, spot.id, current_user.id)
+        user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+        return _spot_payload(
+            spot,
+            db,
+            lat=lat,
+            lon=lon,
+            photos_data=photos_data,
+            user_data=_user_out_from_db(user),
+            is_favorited=is_favorited,
+            expose_pending=expose_pending,
+        )
+
+    # Admin or unpublished spot: apply directly to row (and optional photo replace)
+    if is_admin:
+        s3_client = get_s3_client()
+        _discard_pending_revision_assets(s3_client, spot)
+        spot.has_pending_revision = False
+        spot.pending_revision = None
+
     spot.title = title
     spot.description = description
     spot.subtitle = subtitle
@@ -347,8 +505,9 @@ async def update_spot(
         for existing_photo in existing_photos:
             if existing_photo.object_key:
                 try:
-                    # Delete from whichever bucket is relevant (best effort)
-                    if existing_photo.object_key.startswith("photos/") or existing_photo.object_key.startswith("pakalspot-init-photos/"):
+                    if existing_photo.object_key.startswith("photos/") or existing_photo.object_key.startswith(
+                        "pakalspot-init-photos/"
+                    ):
                         bucket_name = settings.INIT_SEED_BUCKET
                         key = existing_photo.object_key.replace("pakalspot-init-photos/", "")
                     else:
@@ -402,8 +561,7 @@ async def update_spot(
 
     photos_db = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
     photos_data = [_photo_out_from_db(p) for p in photos_db]
-    
-    # Check if user has favorited this spot
+
     is_favorited = _check_if_favorited(db, spot.id, current_user.id)
 
     user = db.query(models.User).filter(models.User.id == spot.user_id).first()
@@ -415,6 +573,7 @@ async def update_spot(
         photos_data=photos_data,
         user_data=_user_out_from_db(user),
         is_favorited=is_favorited,
+        expose_pending=expose_pending,
     )
 
 
@@ -574,7 +733,12 @@ def list_pending_spots(
     spots = (
         db.query(models.Spot)
         .join(models.User)
-        .filter(models.Spot.approval_status == SpotApprovalStatus.pending)
+        .filter(
+            or_(
+                models.Spot.approval_status == SpotApprovalStatus.pending,
+                models.Spot.has_pending_revision.is_(True),
+            )
+        )
         .order_by(models.Spot.created_at.asc())
         .all()
     )
@@ -594,6 +758,7 @@ def list_pending_spots(
                 photos_data=photos_data,
                 user_data=user_data,
                 is_favorited=False,
+                expose_pending=True,
             )
         )
     return result
@@ -608,7 +773,11 @@ def approve_spot(
     spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
-    spot.approval_status = SpotApprovalStatus.approved
+    s3_client = get_s3_client()
+    if spot.has_pending_revision and spot.pending_revision:
+        _merge_pending_revision_into_spot(db, spot, s3_client)
+    else:
+        spot.approval_status = SpotApprovalStatus.approved
     db.commit()
     db.refresh(spot)
 
@@ -625,7 +794,42 @@ def approve_spot(
         photos_data=photos_data,
         user_data=user_data,
         is_favorited=False,
+        expose_pending=True,
     )
+
+
+@router.get("/mine", response_model=List[schemas.SpotOut])
+def list_my_spots(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    spots = (
+        db.query(models.Spot)
+        .filter(models.Spot.user_id == current_user.id)
+        .order_by(models.Spot.created_at.desc())
+        .all()
+    )
+    result = []
+    for spot in spots:
+        lat, lon = _spot_coords(db, spot, 0.0, 0.0)
+        photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
+        photos_data = [_photo_out_from_db(p) for p in photos]
+        user = db.query(models.User).filter(models.User.id == spot.user_id).first()
+        user_data = _user_out_from_db(user)
+        is_favorited = _check_if_favorited(db, spot.id, current_user.id)
+        result.append(
+            _spot_payload(
+                spot,
+                db,
+                lat=lat,
+                lon=lon,
+                photos_data=photos_data,
+                user_data=user_data,
+                is_favorited=is_favorited,
+                expose_pending=True,
+            )
+        )
+    return result
 
 
 @router.get("/{spot_id}", response_model=schemas.SpotOut)
@@ -652,6 +856,11 @@ def get_spot(
     user_id = current_user.id if current_user else None
     is_favorited = _check_if_favorited(db, spot.id, user_id)
 
+    expose_pending = bool(
+        current_user
+        and (spot.user_id == current_user.id or user_is_admin(current_user))
+    )
+
     return _spot_payload(
         spot,
         db,
@@ -660,6 +869,7 @@ def get_spot(
         photos_data=photos_data,
         user_data=user_data,
         is_favorited=is_favorited,
+        expose_pending=expose_pending,
     )
 
 

@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     func,
     Boolean,
+    JSON,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
@@ -124,6 +125,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     display_name: Mapped[str] = mapped_column(Text, nullable=False)
+    avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -155,6 +157,10 @@ class Spot(Base):
         EnumValueType(SpotApprovalStatus, length=20),
         nullable=False,
         default=SpotApprovalStatus.approved,
+    )
+    pending_revision: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    has_pending_revision: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

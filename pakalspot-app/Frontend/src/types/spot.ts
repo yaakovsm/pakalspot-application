@@ -39,6 +39,11 @@ export interface Spot {
   owner_id?: string;
   /** Moderation: pending spots are hidden from the map until approved */
   approval_status?: SpotApprovalStatus;
+  /** Owner/admin only: submitted edits awaiting merge to published */
+  has_pending_revision?: boolean;
+  hasPendingRevision?: boolean;
+  pending_revision?: Record<string, unknown> | null;
+  pendingRevision?: Record<string, unknown> | null;
   createdBy?: User;
   photos?: Photo[];
   likes?: Like[];

@@ -169,3 +169,66 @@ class TestAuthEndpoints:
         }
         response = client.post("/auth/login", json=login_data)
         assert response.status_code == 422
+
+
+class TestAuthProfileEndpoints:
+    """PATCH /me and change-password (requires /api prefix)."""
+
+    def setup_method(self):
+        db = TestingSessionLocal()
+        db.query(models.User).delete()
+        db.commit()
+        db.close()
+
+    def _register_token(self):
+        user_data = {
+            "email": "profile@example.com",
+            "password": "secretpass123",
+            "display_name": "Profile User",
+        }
+        r = client.post("/api/auth/register", json=user_data)
+        assert r.status_code == 200, r.text
+        return r.json()["token"], user_data
+
+    def test_patch_me_display_name_and_avatar(self):
+        token, user_data = self._register_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        r = client.patch(
+            "/api/auth/me",
+            json={"display_name": "New Display", "avatar": "https://example.com/p.png"},
+            headers=headers,
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["username"] == "New Display"
+        assert body.get("avatar") == "https://example.com/p.png"
+
+    def test_change_password(self):
+        token, ud = self._register_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        r = client.post(
+            "/api/auth/change-password",
+            json={"current_password": ud["password"], "new_password": "newsecret456"},
+            headers=headers,
+        )
+        assert r.status_code == 200, r.text
+        login_old = client.post(
+            "/api/auth/login",
+            json={"email": ud["email"], "password": ud["password"]},
+        )
+        assert login_old.status_code == 401
+        login_new = client.post(
+            "/api/auth/login",
+            json={"email": ud["email"], "password": "newsecret456"},
+        )
+        assert login_new.status_code == 200
+
+    def test_change_password_wrong_current(self):
+        token, ud = self._register_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        r = client.post(
+            "/api/auth/change-password",
+            json={"current_password": "wrong", "new_password": "newsecret456"},
+            headers=headers,
+        )
+        assert r.status_code == 400

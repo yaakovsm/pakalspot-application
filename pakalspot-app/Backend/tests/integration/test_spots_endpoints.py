@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -218,3 +219,57 @@ class TestSpotsEndpoints:
         response = client.post(API_SPOTS, data=data, headers=headers)
         assert response.status_code == 200
         assert response.json()["spot_type"] == "viewpoint"
+
+    @pytest.mark.skipif(
+        "sqlite" in SQLALCHEMY_DATABASE_URL.lower(),
+        reason="SQLite lacks PostGIS geometry functions used on spot insert",
+    )
+    def test_non_admin_update_approved_spot_keeps_public_snapshot(self):
+        """Edits to approved spots go to pending_revision; public list still shows old title."""
+        token, user = self.create_test_user()
+        headers = {"Authorization": f"Bearer {token}"}
+
+        spot_data = {
+            "title": "Published Title",
+            "description": "Desc",
+            "type": "viewpoint",
+            "latitude": "32.5",
+            "longitude": "35.0",
+        }
+        mock_s3 = MagicMock()
+        with patch("app.routers.spots.get_s3_client", return_value=mock_s3):
+            cr = client.post(API_SPOTS, data=spot_data, headers=headers)
+        assert cr.status_code == 200, cr.text
+        spot_id = cr.json()["id"]
+
+        db = TestingSessionLocal()
+        sp = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+        assert sp is not None
+        sp.approval_status = models.SpotApprovalStatus.approved
+        db.commit()
+        db.close()
+
+        upd = {
+            "title": "Secret New Title",
+            "description": "New desc",
+            "type": "viewpoint",
+            "latitude": "32.6",
+            "longitude": "35.1",
+        }
+        ur = client.put(f"/api/spots/{spot_id}", data=upd, headers=headers)
+        assert ur.status_code == 200, ur.text
+        body = ur.json()
+        assert body.get("has_pending_revision") or body.get("hasPendingRevision")
+        assert body["title"] == "Published Title"
+
+        lr = client.get(API_SPOTS)
+        assert lr.status_code == 200
+        titles = [x["title"] for x in lr.json()]
+        assert "Secret New Title" not in titles
+        assert "Published Title" in titles
+
+        mine = client.get("/api/spots/mine", headers=headers)
+        assert mine.status_code == 200
+        mine_body = mine.json()
+        assert len(mine_body) == 1
+        assert mine_body[0].get("has_pending_revision") or mine_body[0].get("hasPendingRevision")

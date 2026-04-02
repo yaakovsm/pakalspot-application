@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Favorites from "./pages/Favorites";
 import SpotDetails from "./pages/SpotDetails";
 import AdminPendingSpots from "./pages/AdminPendingSpots";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const AppContent = () => {
           <Route path="/login" element={<AuthRouteHandler mode="login" />} />
           <Route path="/register" element={<AuthRouteHandler mode="register" />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/spot/:id" element={<SpotDetails />} />
           <Route path="/admin/pending-spots" element={<AdminPendingSpots />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

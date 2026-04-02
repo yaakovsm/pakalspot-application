@@ -45,3 +45,39 @@ def login(user_in: schemas.UserLogin, db: Session = Depends(get_db)):
 @router.get("/me", response_model=schemas.UserOut)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
     return schemas.UserOut.from_orm(current_user)
+
+
+@router.patch("/me", response_model=schemas.UserOut)
+def update_me(
+    body: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if body.display_name is None and body.avatar is None:
+        return schemas.UserOut.from_orm(current_user)
+    if body.display_name is not None:
+        current_user.display_name = body.display_name.strip()
+    if body.avatar is not None:
+        av = body.avatar.strip()
+        current_user.avatar_url = av or None
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return schemas.UserOut.from_orm(current_user)
+
+
+@router.post("/change-password")
+def change_password(
+    body: schemas.PasswordChangeRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if not verify_password(body.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+    current_user.password_hash = get_password_hash(body.new_password)
+    db.add(current_user)
+    db.commit()
+    return {"message": "Password updated"}

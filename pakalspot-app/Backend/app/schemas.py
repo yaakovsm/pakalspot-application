@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from enum import Enum
 from app.models import SpotType as SpotTypeEnum
 from app.core.authz import user_is_admin
@@ -47,6 +47,7 @@ class UserLogin(BaseModel):
 class UserOut(UserBase):
     id: uuid.UUID
     username: str  # Alias for display_name to match frontend
+    avatar: Optional[str] = None
     created_at: datetime
     is_admin: bool = False
 
@@ -61,9 +62,20 @@ class UserOut(UserBase):
             email=user.email,
             display_name=user.display_name,
             username=user.display_name,  # Map display_name to username
+            avatar=getattr(user, "avatar_url", None) or None,
             created_at=user.created_at,
             is_admin=user_is_admin(user),
         )
+
+
+class UserUpdate(BaseModel):
+    display_name: Optional[str] = Field(None, min_length=1, max_length=200)
+    avatar: Optional[str] = Field(None, max_length=2048)
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=6, max_length=128)
 
 
 # ----------------------
@@ -125,6 +137,8 @@ class SpotOut(BaseModel):
     created_at: datetime
     owner_id: uuid.UUID
     approval_status: SpotApprovalStatus = SpotApprovalStatus.approved
+    has_pending_revision: bool = False
+    pending_revision: Optional[Dict[str, Any]] = None
     createdBy: Optional[UserOut] = None  # User information
     photos: Optional[List[PhotoOut]] = []
     is_favorited: Optional[bool] = False  # Whether current user has favorited this spot

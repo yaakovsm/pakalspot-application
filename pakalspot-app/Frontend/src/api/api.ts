@@ -90,6 +90,10 @@ export const authAPI = {
   register: (data: RegisterRequest): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/register', data),
   logout: (): Promise<AxiosResponse<void>> => api.post('/auth/logout'),
   getProfile: (): Promise<AxiosResponse<User>> => api.get('/auth/me'),
+  updateProfile: (data: { display_name?: string; avatar?: string }): Promise<AxiosResponse<User>> =>
+    api.patch('/auth/me', data),
+  changePassword: (data: { current_password: string; new_password: string }): Promise<AxiosResponse<{ message: string }>> =>
+    api.post('/auth/change-password', data),
 };
 
 export const spotsAPI = {
@@ -127,8 +131,27 @@ export const spotsAPI = {
     });
   },
 
-  updateSpot: (id: string, data: Partial<CreateSpotRequest>): Promise<AxiosResponse<Spot>> =>
-    api.patch(`/spots/${id}`, data),
+  updateSpot: (id: string, data: Partial<CreateSpotRequest> & { photos?: File[] }): Promise<AxiosResponse<Spot>> => {
+    const formData = new FormData();
+    formData.append('title', data.title ?? '');
+    formData.append('description', data.description ?? '');
+    formData.append('type', data.type ?? 'viewpoint');
+    formData.append('latitude', String(data.latitude ?? 0));
+    formData.append('longitude', String(data.longitude ?? 0));
+    if (data.subtitle) formData.append('subtitle', data.subtitle);
+    if (data.how_to_get_there) formData.append('how_to_get_there', data.how_to_get_there);
+    if (data.locationName) formData.append('location_name', data.locationName);
+    if (data.photos?.length) {
+      data.photos.forEach((photo) => formData.append('photos', photo));
+    }
+    return api.put(`/spots/${id}`, formData, {
+      headers: {
+        'Content-Type': false,
+      },
+    });
+  },
+
+  getMySpots: (): Promise<AxiosResponse<Spot[]>> => api.get('/spots/mine'),
 
   deleteSpot: (id: string): Promise<AxiosResponse<void>> => api.delete(`/spots/${id}`),
 
