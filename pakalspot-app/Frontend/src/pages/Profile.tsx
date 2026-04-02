@@ -408,7 +408,7 @@ const Profile: React.FC = () => {
                       >
                         <div className={`flex-1 min-w-0 ${isHebrew ? 'pr-3' : 'pl-3'}`}>
                           <div
-                            className={`flex items-center gap-2 mb-1 ${isHebrew ? 'justify-end' : 'justify-start'}`}
+                            className={`flex w-full items-center gap-2 mb-1 ${isHebrew ? 'justify-end' : 'justify-start'}`}
                           >
                             <h3
                               className={`font-semibold text-base text-foreground truncate ${isHebrew ? 'text-right' : 'text-left'}`}
@@ -417,11 +417,15 @@ const Profile: React.FC = () => {
                             </h3>
                           </div>
                           {spot.subtitle ? (
-                            <p
-                              className={`text-muted-foreground text-sm mb-2 line-clamp-1 ${isHebrew ? 'text-right' : 'text-left'}`}
+                            <div
+                              className={`flex w-full items-center gap-2 mb-2 ${isHebrew ? 'justify-end' : 'justify-start'}`}
                             >
-                              {spot.subtitle}
-                            </p>
+                              <p
+                                className={`text-muted-foreground text-sm line-clamp-1 min-w-0 max-w-full ${isHebrew ? 'text-right' : 'text-left'}`}
+                              >
+                                {spot.subtitle}
+                              </p>
+                            </div>
                           ) : null}
                           <div
                             className={`flex w-full flex-wrap items-center gap-2 text-xs ${isHebrew ? 'justify-end' : 'justify-start'}`}
