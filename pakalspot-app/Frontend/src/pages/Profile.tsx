@@ -29,7 +29,7 @@ import {
 } from '../components/ui/select';
 import { useToast } from '../hooks/use-toast';
 import { useAuthModal } from '../components/AuthModalProvider';
-import { User, MapPin, Pencil, ExternalLink } from 'lucide-react';
+import { User, MapPin, Pencil, ExternalLink, Plus } from 'lucide-react';
 
 const spotTypes: SpotType[] = [
   'waterfall',
@@ -124,6 +124,7 @@ const Profile: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const [editingSpot, setEditingSpot] = useState<Spot | null>(null);
   const [editForm, setEditForm] = useState(emptyEditForm);
@@ -216,6 +217,7 @@ const Profile: React.FC = () => {
       setNewPassword('');
       setConfirmPassword('');
       toast({ title: t('profile.password_updated') });
+      setShowPasswordDialog(false);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
@@ -312,89 +314,55 @@ const Profile: React.FC = () => {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
-          <Card className="border-border shadow-soft">
-            <CardHeader>
-              <CardTitle className="text-lg">{t('profile.edit_profile')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">{t('profile.display_name')}</label>
-                  <Input
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">{t('profile.avatar_url')}</label>
-                  <Input
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    className="mt-1"
-                    placeholder="https://..."
-                  />
-                </div>
+        <Card className="mb-8 border-border shadow-soft">
+          <CardHeader>
+            <CardTitle className="text-lg">{t('profile.edit_profile')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">{t('profile.display_name')}</label>
+                <Input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">{t('profile.avatar_url')}</label>
+                <Input
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  className="mt-1"
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="flex flex-wrap gap-3">
                 <Button type="submit" variant="hero" disabled={savingProfile}>
                   {savingProfile ? t('common.loading') : t('profile.save_profile')}
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border shadow-soft">
-            <CardHeader>
-              <CardTitle className="text-lg">{t('profile.password_section')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">{t('profile.current_password')}</label>
-                  <Input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="mt-1"
-                    autoComplete="current-password"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">{t('profile.new_password')}</label>
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="mt-1"
-                    autoComplete="new-password"
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">{t('profile.confirm_password')}</label>
-                  <Input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1"
-                    autoComplete="new-password"
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <Button type="submit" variant="outline" disabled={savingPassword}>
-                  {savingPassword ? t('common.loading') : t('profile.change_password')}
+                <Button type="button" variant="outline" onClick={() => setShowPasswordDialog(true)}>
+                  {t('profile.open_change_password')}
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-foreground mb-1">{t('profile.my_spots')}</h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-3">
+            <h2 className="text-2xl font-bold text-foreground">{t('profile.my_spots')}</h2>
+            <Button
+              type="button"
+              variant="hero"
+              className="gap-2 shrink-0 w-full sm:w-auto"
+              onClick={() => navigate('/?add=1')}
+            >
+              <Plus className="w-4 h-4" />
+              {t('profile.add_spot')}
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground mb-1">{t('profile.reapproval_notice')}</p>
           <p className="text-sm text-muted-foreground">{t('profile.public_sees_approved')}</p>
         </div>
@@ -405,7 +373,7 @@ const Profile: React.FC = () => {
           <Card className="border-dashed">
             <CardContent className="py-12 text-center text-muted-foreground">
               <p>{t('profile.no_spots')}</p>
-              <Button variant="link" className="mt-2" onClick={() => navigate('/')}>
+              <Button variant="link" className="mt-2" onClick={() => navigate('/?add=1')}>
                 {t('profile.add_spot_hint')}
               </Button>
             </CardContent>
@@ -470,6 +438,78 @@ const Profile: React.FC = () => {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={showPasswordDialog}
+        onOpenChange={(open) => {
+          setShowPasswordDialog(open);
+          if (!open) {
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-md" dir={isHebrew ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle>{t('profile.password_section')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">{t('profile.current_password')}</label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="mt-1"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">{t('profile.new_password')}</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="mt-1"
+                autoComplete="new-password"
+                required
+                minLength={6}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">{t('profile.confirm_password')}</label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1"
+                autoComplete="new-password"
+                required
+                minLength={6}
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowPasswordDialog(false);
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" variant="hero" disabled={savingPassword}>
+                {savingPassword ? t('common.loading') : t('profile.change_password')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editingSpot} onOpenChange={(o) => !o && setEditingSpot(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir={isHebrew ? 'rtl' : 'ltr'}>

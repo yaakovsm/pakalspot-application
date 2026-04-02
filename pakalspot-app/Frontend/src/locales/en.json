@@ -29,6 +29,8 @@
       "new_password": "New password",
       "confirm_password": "Confirm new password",
       "change_password": "Update password",
+      "open_change_password": "Change password…",
+      "add_spot": "Add spot",
       "password_mismatch": "New passwords do not match",
       "profile_updated": "Profile updated",
       "password_updated": "Password updated",

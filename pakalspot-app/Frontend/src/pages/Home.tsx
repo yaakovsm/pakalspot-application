@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Dialog, DialogContent } from '../components/ui/dialog';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -13,6 +14,7 @@ import { Spot } from '../types/spot';
 import { useAuthModal } from '../components/AuthModalProvider';
 
 const Home: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { fetchSpots, setUserLocation, selectedSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const { openAuthModal } = useAuthModal();
@@ -55,6 +57,18 @@ const Home: React.FC = () => {
 
     fetchSpots();
   }, [fetchSpots, setUserLocation]);
+
+  useEffect(() => {
+    if (searchParams.get('add') !== '1') return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('add');
+    setSearchParams(next, { replace: true });
+    if (!isAuthenticated) {
+      openAuthModal('login');
+      return;
+    }
+    setShowAddForm(true);
+  }, [searchParams, setSearchParams, isAuthenticated, openAuthModal]);
 
   const handleAddSpot = () => {
     if (!isAuthenticated) {
