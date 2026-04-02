@@ -48,7 +48,8 @@
       "add_spot_hint": "Add a spot from the map.",
       "sign_in_title": "Sign in to view your profile",
       "sign_in_description": "Sign in to manage your account and the spots you added.",
-      "photos_optional": "New photos (optional — replaces photos when your edit is approved)"
+      "photos_optional": "New photos (optional — replaces photos when your edit is approved)",
+      "save_spot_changes": "Save changes"
     },
     "auth": {
       "login": "Login",

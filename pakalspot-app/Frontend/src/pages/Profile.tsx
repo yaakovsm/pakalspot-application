@@ -667,7 +667,7 @@ const Profile: React.FC = () => {
                 {t('common.cancel')}
               </Button>
               <Button type="submit" variant="hero" disabled={savingSpot}>
-                {savingSpot ? t('common.loading') : t('profile.save_profile')}
+                {savingSpot ? t('common.loading') : t('profile.save_spot_changes')}
               </Button>
             </DialogFooter>
           </form>
