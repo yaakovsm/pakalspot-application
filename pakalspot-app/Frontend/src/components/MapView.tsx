@@ -293,12 +293,6 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
     }
   }, [hoveredSpot]);
 
-  // Handle navigation to spot (opens Google Maps)
-  const handleNavigateToSpot = (spot: Spot) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}`;
-    window.open(url, '_blank');
-  };
-
   // Handle favorite toggle
   const handleFavoriteSpot = (spotId: string) => {
     if (!isAuthenticated) {
@@ -432,7 +426,6 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
                 onOpenDetails();
               }
             }}
-            onNavigate={() => handleNavigateToSpot(selectedSpot)}
             onToggleFavorite={() => handleFavoriteSpot(selectedSpot.id)}
             onClearSelection={handleClearSelection}
           />

@@ -5,11 +5,11 @@ import { Spot } from '../types/spot';
 import { Heart, MapPin, Info, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 interface SpotActionCardProps {
   spot: Spot;
   onOpenDetails: () => void;
-  onNavigate: () => void;
   onToggleFavorite: () => void;
   isFavorite: boolean;
   onClearSelection?: () => void;
@@ -19,7 +19,6 @@ interface SpotActionCardProps {
 const SpotActionCard: React.FC<SpotActionCardProps> = ({
   spot,
   onOpenDetails,
-  onNavigate,
   onToggleFavorite,
   isFavorite,
   onClearSelection,
@@ -29,10 +28,23 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
   const currentLanguage = i18n.language || 'he';
   const isRTL = currentLanguage === 'he';
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [navigationPopoverOpen, setNavigationPopoverOpen] = useState(false);
 
   // Get translated content
   const translatedTitle = getTranslatedSpotContent(spot, t, 'title');
   const translatedSubtitle = getTranslatedSpotContent(spot, t, 'subtitle');
+
+  const openGoogleMaps = () => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setNavigationPopoverOpen(false);
+  };
+
+  const openWaze = () => {
+    const url = `https://waze.com/ul?ll=${spot.lat},${spot.lon}&navigate=yes`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setNavigationPopoverOpen(false);
+  };
 
   const photos = spot.photos || [];
   const hasMultiplePhotos = photos.length > 1;
@@ -191,15 +203,44 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
           {isRTL ? (
             // Hebrew: Navigate first, then Details
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onNavigate}
-                className="flex-1 gap-1.5 text-xs h-8 min-w-0 px-2"
-              >
-                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">{t('spots.get_directions') || 'Navigate'}</span>
-              </Button>
+              <Popover open={navigationPopoverOpen} onOpenChange={setNavigationPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-8 min-w-0 px-2"
+                  >
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">{t('spots.get_directions') || 'Navigate'}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[220px] p-2 rounded-xl border-border/70 shadow-strong"
+                  align={isRTL ? 'start' : 'center'}
+                >
+                  <p className="text-xs text-muted-foreground font-medium px-2 pt-1 pb-2">
+                    {t('spots.choose_navigation_app')}
+                  </p>
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      onClick={openGoogleMaps}
+                      className="w-full h-10 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                    >
+                      <img src="/navigation/google-maps.svg" alt={t('spots.google_maps')} className="w-4 h-4 rounded-sm" />
+                      <span className="font-medium">{t('spots.google_maps')}</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={openWaze}
+                      className="w-full h-10 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                    >
+                      <img src="/navigation/waze.svg" alt={t('spots.waze')} className="w-4 h-4 rounded-sm" />
+                      <span className="font-medium">{t('spots.waze')}</span>
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button
                 variant="default"
                 size="sm"
@@ -222,15 +263,44 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
                 <Info className="w-3.5 h-3.5 flex-shrink-0" />
                 <span className="truncate">{t('spots.view_details')}</span>
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onNavigate}
-                className="flex-1 gap-1.5 text-xs h-8 min-w-0 px-2"
-              >
-                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">{t('spots.get_directions') || 'Navigate'}</span>
-              </Button>
+              <Popover open={navigationPopoverOpen} onOpenChange={setNavigationPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1.5 text-xs h-8 min-w-0 px-2"
+                  >
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">{t('spots.get_directions') || 'Navigate'}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[220px] p-2 rounded-xl border-border/70 shadow-strong"
+                  align={isRTL ? 'end' : 'center'}
+                >
+                  <p className="text-xs text-muted-foreground font-medium px-2 pt-1 pb-2">
+                    {t('spots.choose_navigation_app')}
+                  </p>
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      onClick={openGoogleMaps}
+                      className="w-full h-10 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                    >
+                      <img src="/navigation/google-maps.svg" alt={t('spots.google_maps')} className="w-4 h-4 rounded-sm" />
+                      <span className="font-medium">{t('spots.google_maps')}</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={openWaze}
+                      className="w-full h-10 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                    >
+                      <img src="/navigation/waze.svg" alt={t('spots.waze')} className="w-4 h-4 rounded-sm" />
+                      <span className="font-medium">{t('spots.waze')}</span>
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </>
           )}
         </div>

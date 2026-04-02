@@ -156,6 +156,9 @@
       "how_to_get_there": "איך מגיעים?",
       "how_to_get_there_placeholder": "תאר איך להגיע למקום...",
       "get_directions": "ניווט לספוט",
+      "choose_navigation_app": "פתיחה באמצעות",
+      "google_maps": "Google Maps",
+      "waze": "Waze",
       "location_search_hint": "💡 התחל להקליד כדי לחפש מיקומים בישראל",
       "location_search_examples": "דוגמאות: \"ירושלים\", \"תל אביב\", \"חיפה\", \"אילת\""
     },

@@ -156,6 +156,9 @@
       "how_to_get_there": "How to get there",
       "how_to_get_there_placeholder": "Describe how to get to the spot...",
       "get_directions": "Get Directions",
+      "choose_navigation_app": "Open with",
+      "google_maps": "Google Maps",
+      "waze": "Waze",
       "location_search_hint": "💡 Start typing to search for locations in Israel",
       "location_search_examples": "Examples: \"Jerusalem\", \"Tel Aviv\", \"Haifa\", \"Eilat\""
     },

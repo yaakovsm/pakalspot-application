@@ -23,6 +23,7 @@ import { getTranslatedSpotContent } from '../utils/spotTranslations';
 import { ADMIN_EMAIL } from '../utils/authUser';
 import { getApiErrorDetail } from '../utils/apiError';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from './ui/carousel';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import AuthDialog from './AuthDialog';
 
 interface SpotDetailSidebarProps {
@@ -38,11 +39,12 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
   const { isAuthenticated, user } = useAuth();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(isOpening);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [navigationPopoverOpen, setNavigationPopoverOpen] = useState(false);
 
   const isAdmin = Boolean(
     user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
@@ -134,6 +136,18 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
       // Fallback to clipboard
       navigator.clipboard.writeText(window.location.href);
     }
+  };
+
+  const openGoogleMaps = () => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${currentSpot.lat},${currentSpot.lon}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setNavigationPopoverOpen(false);
+  };
+
+  const openWaze = () => {
+    const url = `https://waze.com/ul?ll=${currentSpot.lat},${currentSpot.lon}&navigate=yes`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setNavigationPopoverOpen(false);
   };
 
   const getTypeColor = (type: string) => {
@@ -290,17 +304,40 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
             )}
 
             {/* Get Directions Button */}
-            <Button 
-              variant="default" 
-              onClick={() => {
-                const url = `https://www.google.com/maps/dir/?api=1&destination=${currentSpot.lat},${currentSpot.lon}`;
-                window.open(url, '_blank');
-              }}
-              className="w-full gap-2"
-            >
-              <MapPin className="w-4 h-4" />
-              {t('spots.get_directions')}
-            </Button>
+            <Popover open={navigationPopoverOpen} onOpenChange={setNavigationPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="default" className="w-full gap-2">
+                  <MapPin className="w-4 h-4" />
+                  {t('spots.get_directions')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[230px] p-2 rounded-xl border-border/70 shadow-strong"
+                align={i18n.language === 'he' ? 'start' : 'center'}
+              >
+                <p className="text-xs text-muted-foreground font-medium px-2 pt-1 pb-2">
+                  {t('spots.choose_navigation_app')}
+                </p>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    onClick={openGoogleMaps}
+                    className="w-full h-11 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                  >
+                    <img src="/navigation/google-maps.svg" alt={t('spots.google_maps')} className="w-5 h-5 rounded-sm" />
+                    <span className="font-medium">{t('spots.google_maps')}</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={openWaze}
+                    className="w-full h-11 justify-start rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/10"
+                  >
+                    <img src="/navigation/waze.svg" alt={t('spots.waze')} className="w-5 h-5 rounded-sm" />
+                    <span className="font-medium">{t('spots.waze')}</span>
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </CardContent>
         </Card>
       </div>
