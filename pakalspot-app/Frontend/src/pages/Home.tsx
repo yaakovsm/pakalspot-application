@@ -10,10 +10,12 @@ import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Plus, Menu, X } from 'lucide-react';
 import { Spot } from '../types/spot';
+import { useAuthModal } from '../components/AuthModalProvider';
 
 const Home: React.FC = () => {
   const { fetchSpots, setUserLocation, selectedSpot } = useSpots();
   const { isAuthenticated } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showDetailSidebar, setShowDetailSidebar] = useState(false);
@@ -56,8 +58,7 @@ const Home: React.FC = () => {
 
   const handleAddSpot = () => {
     if (!isAuthenticated) {
-      // Redirect to login or show login modal
-      window.location.href = '/login';
+      openAuthModal('login');
       return;
     }
     setShowAddForm(true);

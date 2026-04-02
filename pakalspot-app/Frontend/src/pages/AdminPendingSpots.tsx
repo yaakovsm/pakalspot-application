@@ -11,9 +11,11 @@ import { Card, CardHeader, CardTitle } from '../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../hooks/use-toast';
 import { getApiErrorDetail } from '../utils/apiError';
+import { useAuthModal } from '../components/AuthModalProvider';
 
 const AdminPendingSpots: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -40,7 +42,8 @@ const AdminPendingSpots: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
+      openAuthModal('login');
+      navigate('/');
       return;
     }
     if (!isAdmin) {
@@ -48,7 +51,7 @@ const AdminPendingSpots: React.FC = () => {
       return;
     }
     load();
-  }, [isAuthenticated, isAdmin, navigate, load]);
+  }, [isAuthenticated, isAdmin, navigate, load, openAuthModal]);
 
   const handleApprove = async (spot: Spot) => {
     setApprovingId(spot.id);

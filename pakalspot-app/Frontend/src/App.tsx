@@ -2,20 +2,31 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { spotsAPI } from "./api/api";
+import { AuthModalProvider, useAuthModal } from "./components/AuthModalProvider";
 import Home from "./pages/Home";
 import About from "./pages/About";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Favorites from "./pages/Favorites";
 import SpotDetails from "./pages/SpotDetails";
 import AdminPendingSpots from "./pages/AdminPendingSpots";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const AuthRouteHandler = ({ mode }: { mode: "login" | "register" }) => {
+  const { openAuthModal } = useAuthModal();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    openAuthModal(mode);
+    navigate("/", { replace: true });
+  }, [mode, navigate, openAuthModal]);
+
+  return null;
+};
 
 const AppContent = () => {
   const { initialize, isAuthenticated } = useAuth();
@@ -50,19 +61,21 @@ const AppContent = () => {
   }, [isAuthenticated, client]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/favorites" element={<Favorites />} />
-        <Route path="/spot/:id" element={<SpotDetails />} />
-        <Route path="/admin/pending-spots" element={<AdminPendingSpots />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthModalProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/login" element={<AuthRouteHandler mode="login" />} />
+          <Route path="/register" element={<AuthRouteHandler mode="register" />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/spot/:id" element={<SpotDetails />} />
+          <Route path="/admin/pending-spots" element={<AdminPendingSpots />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthModalProvider>
   );
 };
 

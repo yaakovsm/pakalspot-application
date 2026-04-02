@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +9,7 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Button } from './ui/button';
+import { useAuthModal } from './AuthModalProvider';
 
 interface AuthDialogProps {
   open: boolean;
@@ -29,11 +29,11 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   cancelText,
 }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const { openAuthModal } = useAuthModal();
 
   const handleSignIn = () => {
     onOpenChange(false);
-    navigate('/login');
+    openAuthModal('login');
   };
 
   const handleCancel = () => {

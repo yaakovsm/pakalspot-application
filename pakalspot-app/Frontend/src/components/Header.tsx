@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 import { ADMIN_EMAIL } from '../utils/authUser';
+import { useAuthModal } from './AuthModalProvider';
 
 interface HeaderProps {
   className?: string;
@@ -17,6 +18,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ className }) => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const { setUserLocation, userLocation } = useSpots();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -191,14 +193,9 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <div className="flex items-center gap-3">
-                        <Button variant="hero" onClick={() => navigate('/register')} className="text-lg font-medium px-6 py-2">
-                          {t('auth.signup')}
-                        </Button>
-                        <Button variant="ghost" onClick={() => navigate('/login')} className="text-lg font-medium px-6 py-2">
-                          {t('auth.login')}
-                        </Button>
-                      </div>
+                      <Button variant="hero" onClick={() => openAuthModal('login')} className="text-lg font-medium px-6 py-2">
+                        {t('auth.login')}
+                      </Button>
                     )}
                     {/* Language switcher */}
                     <LanguageSwitcher />
@@ -288,14 +285,9 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <div className="flex items-center gap-3">
-                        <Button variant="ghost" onClick={() => navigate('/login')} className="text-lg font-medium px-6 py-2">
-                          {t('auth.login')}
-                        </Button>
-                        <Button variant="hero" onClick={() => navigate('/register')} className="text-lg font-medium px-6 py-2">
-                          {t('auth.signup')}
-                        </Button>
-                      </div>
+                      <Button variant="hero" onClick={() => openAuthModal('login')} className="text-lg font-medium px-6 py-2">
+                        {t('auth.login')}
+                      </Button>
                     )}
                   </>
                 );
