@@ -254,32 +254,74 @@
       "hexagon_pool": {
         "title": "Hexagon Pool",
         "subtitle": "A unique natural pool",
-        "description": "Hexagon Pool is one of the coolest pools in Israel: cold, deep water year-round, hexagonal basalt walls that look like a movie set, and the atmosphere of a closed canyon in the middle of the Golan. It's an excellent spot for jumping into the water, a small snack, and coffee that feels like you've gone abroad for an hour.\n\nImportant! Entry is paid and it's a regulated site by the Nature and Parks Authority, so it's worth checking the opening hours and updates on the Nature and Parks Authority website before arriving.",
-        "how_to_get_there": "Type \"Nahal Meshushim\" into Waze. The entrance to the reserve is from Road 888, north of the settlement Had Nes, and from there follow the signs to \"Hexagon Pool\" and reach the organized parking lot of the Nature and Parks Authority. From the parking lot, walk down a marked and steep trail, about 50 minutes to the pool."
+        "description": "Hexagon Pool is one of the Golan's most striking water spots: cold, deep water and hexagonal basalt walls that give the place a very special look. It's a great coffee stop if you want to combine a hike with a beautiful break by the water, in an atmosphere that feels different from the usual landscape. Entry is paid and the site is run by the Nature and Parks Authority, so check their website for hours and updates before you go. The hike down is about 50 minutes, so bring water, sturdy shoes, and a little patience for the climb back.",
+        "how_to_get_there": "Type \"Nahal Meshushim\" into Waze. The reserve entrance is from Road 888, north of Had Nes; follow the signs to \"Hexagon Pool\" to the Nature and Parks Authority parking lot. From there, take the marked steep trail on foot—about 50 minutes down to the pool."
       },
       "biriya_fortress": {
         "title": "Biriya Fortress",
         "subtitle": "Forest with a view of the Upper Galilee",
-        "description": "Biriya Fortress sits on a mountain peak above Safed, in the heart of a large pine forest. It's an ideal spot to open a coffee kit: picnic tables, cool mountain air, the smell of the forest, and views extending to Meron and the Hula Valley. You can also combine a visit to the fortress itself (during opening hours, of course) and catch some history along the way.\n\nAround the fortress there are pleasant picnic areas in the forest, so it's easy to find a quiet corner to sit in. In summer it's a great place to escape the heat, and in winter it can be very cold, so it's worth bringing a warm layer.",
-        "how_to_get_there": "Type \"Biriya Fortress\" into Waze. Arrive from Road 8900 (old Safed-Rosh Pina) following the signs to Biriya Fortress. The paved forest road leads directly to the parking lot next to the fortress, suitable for all vehicles."
+        "description": "Biriya Fortress is a classic coffee stop for anyone who loves forest, elevation, and open views. Pine trees, picnic tables, cool air, and a lookout toward the Upper Galilee make it easy to stop for coffee without much fuss. You can add a short visit to the fortress itself for a bit of history. In summer it's a great escape from the heat; in winter it can be very cold, so bring a warm layer.",
+        "how_to_get_there": "Type \"Biriya Fortress\" into Waze. From Road 8900 (Safed–old Rosh Pina), follow the signs to Biriya Fortress. The paved forest road leads to the parking lot by the fortress, suitable for all vehicles."
       },
       "jilabun_waterfall": {
         "title": "Jilabun Waterfall",
         "subtitle": "The second highest waterfall in Israel",
-        "description": "Jilabun Waterfall is a Golan classic: water falling from a serious height into a large pool, surrounded by dramatic basalt walls. Those who come in the vibe of a descent-ascent hike can reach the pool below, and those who just want \"coffee with a view\" can settle for the view from above. In any case, it's one of those places where coffee feels like a break from life.\n\nThe trail is exposed to the sun, so it's recommended to arrive in the morning or afternoon hours and bring a hat, water, and good shoes.",
-        "how_to_get_there": "Type \"Jilabun Waterfall\" into Waze and drive on Road 91. Park according to the signs, and start walking on a trail marked in blue going downhill. After about 300 meters you reach a blue-red trail junction and a viewing platform overlooking the waterfall. From there turn left and continue with the red marking another about 400 meters downhill to the pool. The descent takes about half an hour, as does the ascent back."
+        "description": "Jilabun Waterfall has real presence: the tall drop and basalt walls feel powerful whether you only stop for coffee at the upper viewpoint or hike all the way down to the pool. The trail is exposed to sun, so morning or late afternoon are best; bring a hat, water, and good shoes.",
+        "how_to_get_there": "Type \"Jilabun Waterfall\" into Waze and drive on Road 91. Park by the signs, then follow the blue-marked trail downhill. After about 300 meters you reach a blue–red junction and a viewing deck over the waterfall. Turn left and follow the red markers another ~400 meters down to the pool. Allow about half an hour down and the same back up."
       },
       "mount_tabor": {
         "title": "Mount Tabor",
         "subtitle": "A prominent mountain and view in every direction",
-        "description": "Mount Tabor, one of the mountains most identified with the landscape of the Galilee, provides a circular view in all directions: valleys, fields, villages, and mountains. At the summit are the Church of the Transfiguration complex and a Franciscan monastery, and alongside them are great viewing points where coffee always feels a bit more elevated. Those who want can also complete the circular trail around the summit (about an hour, about 2 km) and stop for coffee at one of the viewing stations along the way.\n\nThe wind at the summit can be strong and cool even on hot days, especially in the morning and at sunset, so it's worth bringing an extra thin layer.",
-        "how_to_get_there": "In Waze: \"Mount Tabor Summit – Church of the Transfiguration\". From Road 65, enter the village of Daburiyah or Shibli (two common access routes), and from there climb a winding and narrow road to the summit (private vehicles only). At the top there is a parking lot near the church complex and from there walk to the viewpoints and the circular trail."
+        "description": "Mount Tabor is one of the Galilee's prettiest open-view coffee stops. At the summit you'll find wide viewpoints, fresh air, and a sense of height that makes the break feel a little special. You can keep it short near the parking or add the circular summit trail (about an hour, ~2 km) and pause at viewing spots along the way. Wind on top can be strong and cool even on hot days, especially mornings and sunset—bring a light extra layer.",
+        "how_to_get_there": "In Waze: \"Mount Tabor Summit – Church of the Transfiguration\". From Road 65, enter Daburiyah or Shibli (two common routes), then wind up the narrow road to the summit (private cars only). Park near the church complex and walk to the viewpoints and circular trail."
       },
       "sidna_ali": {
         "title": "Sidna Ali",
         "subtitle": "Ancient coastal viewpoint",
-        "description": "Sidna Ali has a good sunset vibe: a high kurkar cliff, an ancient mosque, open sea, and a long stretch of Sharon beach. A few steps from the parking and you're on a sand embankment with a historic view of the sea – a perfect place to sit with a cup of coffee, breathe sea air, and catch some quiet.\n\nThe cliff itself is sensitive, so don't get too close to the edge and there are plenty of safe spots with excellent views. The place is exposed to wind, especially in winter and on stormy days, so it's worth bringing something long. There's no organized picnic area here, so it's advisable to come equipped with what's comfortable for you to sit on and take everything back at the end.",
-        "how_to_get_there": "In Waze: \"Sidna Ali Mosque\". Drive on the coastal road in the Herzliya area, turn according to the signs to the mosque, and continue on the adjacent road to the parking area near the cliff. From there walk a few meters on foot to the sand area and the viewpoint."
+        "description": "Sidna Ali is a great seafront coffee spot, especially when the light is soft and sunset is building. The cliff, open sea, and easy parking make for a simple but effective stop with no long trail. It's ideal for sitting by the water and catching a quiet moment. It can be windy, especially in winter and rough weather, and the cliff edge is fragile—don't stand right on the lip.",
+        "how_to_get_there": "In Waze: \"Sidna Ali Mosque\". Take the coastal road near Herzliya, follow signs to the mosque, then continue to the lot by the cliff. Walk a few meters to the sand and viewpoint."
+      },
+      "ein_zikhri_amihi": {
+        "title": "Ein Zikhri (Amihai Pool)",
+        "subtitle": "A hidden spring in Nahal Meshushim",
+        "description": "Ein Zikhri, also called Amihai Pool, was recently upgraded by friends of Amihai and his grandchildren, of blessed memory, for whom the pool is named. They built a wooden deck and a cozy sitting area right at the water—perfect for a dip and opening a coffee kit in the Golan's quiet countryside. It's small and intimate, not an official marked trail, so weekdays and off-peak hours are best. There are no trash bins—pack out everything you bring.",
+        "how_to_get_there": "In Waze use \"Ein Ampy\". From Road 91, turn at Beit HaMekhes junction toward Had Nes, then left onto a rough paved road. When the asphalt ends, continue on a dirt track along the wadi past \"Ein Ampy\" until you see a blue barrel or beehives on the side of the road. Park there and take the short path down to the pool."
+      },
+      "jordan_river": {
+        "title": "Jordan River",
+        "subtitle": "Coffee on the riverbank",
+        "description": "The Jordan River stretch near Gesher HaPakak (the \"cork bridge\") is an easy, pleasant stop by flowing water: trees, shade, a bank to sit on, and a calm vibe that suits coffee without much effort. It works as a quick break or a longer sit by the water. Mosquitoes love it in summer as much as you might—if you stay toward evening, bring repellent.",
+        "how_to_get_there": "Type \"Gesher HaPakak\" into Waze. Drive Road 918 north from Gadot junction until you see the bridge. Just after the bridge, turn right (east) onto a dirt road along the river, drive a short way, and pick a spot that looks good to stop."
+      },
+      "yeruham_lake": {
+        "title": "Lake Yeruham",
+        "subtitle": "A desert oasis lake in the Negev",
+        "description": "Lake Yeruham is a comfortable southern coffee stop: water, lawns, trees, and surprising calm in the desert landscape. Little effort is required, so it suits both a spontaneous break and a slow morning facing the water. The area is fairly organized and accessible. The lake is not for swimming; in summer, mornings or late afternoons are best—midday heat can be intense.",
+        "how_to_get_there": "In Waze: \"Lake Yeruham\". From Road 204, turn at Yeruham junction and follow signs to \"Yeruham Lake Park\". Enter through the park gate and drive the internal road to a lot near the lake."
+      },
+      "mount_precipice": {
+        "title": "Mount Precipice",
+        "subtitle": "Open view over the Jezreel Valley",
+        "description": "Mount Precipice (Har HaKfitsa) is an open viewpoint above Nazareth and the Jezreel Valley—ideal for coffee without a long hike. Easy access, wide views, and a short-stop feel that still delivers. Sunrise and sunset both work well.",
+        "how_to_get_there": "In Waze: \"Har HaKfitsa\" / Mount Precipice. From Road 60 toward Nazareth, near South Nazareth junction / Tunnels Road, follow brown signs to Har HaKfitsa (Har Kedumim). You can approach via the old Nazareth road or the interchange; brown signage leads to the site and viewpoint."
+      },
+      "montfort_fortress": {
+        "title": "Montfort Castle",
+        "subtitle": "Crusader fortress in the Upper Galilee",
+        "description": "Montfort is one of the Upper Galilee's standout places, mixing history, scenery, and a real nature feel. Reaching the fortress itself makes coffee feel like part of a special outing, with ancient stone and views over Nahal Kziv. If you prefer not to hike all the way in, Montfort lookout in Park Goren is an excellent coffee viewpoint toward the castle on its own.",
+        "how_to_get_there": "In Waze: \"Montfort lookout\" or \"Montfort Castle National Park\". From Road 899, head toward Park Goren. Stay at the lookout for coffee with a view, or take the hiking trail that continues to the fortress."
+      },
+      "david_waterfall": {
+        "title": "David Waterfall",
+        "subtitle": "Waterfall in Nahal David",
+        "description": "David Waterfall is one of the prettiest spots near Ein Gedi, mixing desert scenery with flowing water. It's a strong choice for coffee if you want water, a relatively short trail, and an oasis-in-the-desert feeling. The site is run by the Nature and Parks Authority; entry is paid—check opening hours and notices before you go.",
+        "how_to_get_there": "In Waze: \"Ein Gedi Nahal David reserve\". From Road 90, enter Nahal David reserve and follow the marked trail toward the waterfall."
+      },
+      "devorah_waterfall": {
+        "title": "Devorah Waterfall",
+        "subtitle": "Waterfall and natural pool",
+        "description": "Devorah Waterfall is smaller and lower-key than places like Jilabun, which makes it quieter and more local. The natural pool, basalt walls, and short descent make a great coffee-by-the-water stop without a full-day hike feel. The walk down isn't long, but wear good shoes and take care on the slope.",
+        "how_to_get_there": "In Waze: \"Devorah Waterfall\" or route via \"Jilabun Waterfall\". Park in the lot and follow the marked trail down to the waterfall and pool."
       }
     }
   }

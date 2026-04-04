@@ -11,6 +11,13 @@ const spotTitleToKey: Record<string, string> = {
   'מפל ג\'ילבון': 'jilabun_waterfall',
   'הר תבור': 'mount_tabor',
   'סידנא עלי': 'sidna_ali',
+  'עין זכרי (בריכת עמיחי)': 'ein_zikhri_amihi',
+  'נהר הירדן': 'jordan_river',
+  'אגם ירוחם': 'yeruham_lake',
+  'הר הקפיצה': 'mount_precipice',
+  'מבצר מונפורט': 'montfort_fortress',
+  'מפל דוד': 'david_waterfall',
+  'מפל דבורה': 'devorah_waterfall',
 };
 
 /**
@@ -22,6 +29,13 @@ const locationNameToKey: Record<string, string> = {
   'מפל ג\'ילבון': 'jilabun_waterfall',
   'הר תבור': 'mount_tabor',
   'סידנא עלי': 'sidna_ali',
+  'עין זכרי (בריכת עמיחי)': 'ein_zikhri_amihi',
+  'נהר הירדן': 'jordan_river',
+  'אגם ירוחם': 'yeruham_lake',
+  'הר הקפיצה': 'mount_precipice',
+  'מבצר מונפורט': 'montfort_fortress',
+  'מפל דוד': 'david_waterfall',
+  'מפל דבורה': 'devorah_waterfall',
 };
 
 /**
