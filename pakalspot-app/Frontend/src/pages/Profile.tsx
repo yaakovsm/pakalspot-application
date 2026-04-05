@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import { useAuth } from '../hooks/useAuth';
 import { authAPI, spotsAPI, getMediaUrl } from '../api/api';
 import { normalizeAuthUser } from '../utils/authUser';
-import { Spot, SpotType } from '../types/spot';
+import { normalizeSpotType, Spot, SpotType } from '../types/spot';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -38,19 +38,12 @@ const spotTypes: SpotType[] = [
   'waterfall',
   'spring',
   'viewpoint',
-  'beach',
-  'lake',
-  'river',
-  'cave',
-  'park',
   'forest',
-  'historical',
-  'archaeological',
-  'religious',
-  'restaurant',
-  'cafe',
-  'camping',
-  'other',
+  'desert',
+  'river',
+  'lake',
+  'beach',
+  'park',
 ];
 
 function revisionPayload(spot: Spot): Record<string, unknown> | null {
@@ -82,7 +75,7 @@ function buildEditForm(spot: Spot) {
       description: String(rev.description ?? ''),
       subtitle: rev.subtitle != null ? String(rev.subtitle) : '',
       how_to_get_there: rev.how_to_get_there != null ? String(rev.how_to_get_there) : '',
-      type: (String(rev.spot_type ?? rev.spotType ?? spot.spot_type) as SpotType) || spot.spot_type,
+      type: normalizeSpotType(String(rev.spot_type ?? rev.spotType ?? spot.spot_type)),
       latitude: Number(rev.latitude ?? spot.lat),
       longitude: Number(rev.longitude ?? spot.lon),
       locationName: rev.location_name != null ? String(rev.location_name) : '',
@@ -94,7 +87,7 @@ function buildEditForm(spot: Spot) {
     description: spot.description,
     subtitle: spot.subtitle ?? '',
     how_to_get_there: spot.how_to_get_there ?? '',
-    type: spot.spot_type,
+    type: normalizeSpotType(String(spot.spot_type)),
     latitude: spot.lat,
     longitude: spot.lon,
     locationName: '',
@@ -614,7 +607,7 @@ const Profile: React.FC = () => {
                 <SelectContent>
                   {spotTypes.map((st) => (
                     <SelectItem key={st} value={st}>
-                      {t(`spot_types.${st}`)}
+                      {t(`spots.spot_types.${st}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>

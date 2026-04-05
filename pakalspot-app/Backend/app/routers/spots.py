@@ -1,7 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Set
 import os
 import uuid
 import logging
+import math
 
 import boto3
 from botocore.exceptions import ClientError
@@ -9,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Form, UploadFile, 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -24,6 +25,38 @@ from app.core.authz import user_is_admin, get_current_admin_user
 
 router = APIRouter(prefix="/spots", tags=["spots"])
 logger = logging.getLogger(__name__)
+
+
+def _parse_type_filter_param(type_param: Optional[str]) -> List[models.SpotType]:
+    """Comma-separated spot types for GET /spots/; invalid tokens skipped."""
+    if not type_param or not str(type_param).strip():
+        return []
+    out: List[models.SpotType] = []
+    seen: Set[models.SpotType] = set()
+    for part in str(type_param).split(","):
+        p = part.strip()
+        if not p:
+            continue
+        pl = p.lower()
+        match: Optional[models.SpotType] = None
+        for st in models.SpotType:
+            if st.value.lower() == pl or st.name.lower() == pl:
+                match = st
+                break
+        if match is not None and match not in seen:
+            seen.add(match)
+            out.append(match)
+    return out
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance in kilometers."""
+    rlat1, rlon1, rlat2, rlon2 = map(math.radians, (lat1, lon1, lat2, lon2))
+    dlat = rlat2 - rlat1
+    dlon = rlon2 - rlon1
+    a = math.sin(dlat / 2) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlon / 2) ** 2
+    c = 2 * math.asin(min(1.0, math.sqrt(a)))
+    return 6371.0 * c
 
 
 def get_s3_client():
@@ -153,7 +186,9 @@ def _spot_payload(
         "description": spot.description,
         "subtitle": spot.subtitle,
         "how_to_get_there": spot.how_to_get_there,
-        "spot_type": spot.spot_type,
+        "spot_type": spot.spot_type.value
+        if hasattr(spot.spot_type, "value")
+        else spot.spot_type,
         "lat": lat,
         "lon": lon,
         "location_name": spot.location_name,
@@ -647,18 +682,76 @@ def delete_spot(
 def list_spots(
     db: Session = Depends(get_db),
     current_user: Optional[models.User] = Depends(get_current_user_optional),
+    lat: Optional[float] = Query(None),
+    lng: Optional[float] = Query(None),
+    radius: Optional[float] = Query(
+        None, description="Search radius in kilometers; omit or use >= 100 for no radius limit"
+    ),
+    type_filter: Optional[str] = Query(
+        None,
+        alias="type",
+        description="Comma-separated spot types (e.g. spring,viewpoint)",
+    ),
+    sortBy: Optional[str] = Query(None, description="distance, popularity, newest, oldest"),
 ):
-    spots = (
+    q = (
         db.query(models.Spot)
         .join(models.User)
         .filter(models.Spot.approval_status == SpotApprovalStatus.approved)
-        .all()
     )
+
+    type_list = _parse_type_filter_param(type_filter)
+    if type_list:
+        q = q.filter(models.Spot.spot_type.in_(type_list))
+
+    dialect_name = db.get_bind().dialect.name
+    apply_radius = (
+        lat is not None
+        and lng is not None
+        and radius is not None
+        and float(radius) > 0
+        and float(radius) < 100
+    )
+    if apply_radius and dialect_name == "postgresql":
+        radius_m = int(float(radius) * 1000)
+        q = q.filter(
+            text(
+                "ST_DWithin(spots.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius_m)"
+            ).bindparams(lng=lng, lat=lat, radius_m=radius_m)
+        )
+
+    spots: List[models.Spot] = q.all()
+
+    if apply_radius and dialect_name != "postgresql":
+        filtered: List[models.Spot] = []
+        r_km = float(radius)
+        for spot in spots:
+            slat, slon = _spot_coords(db, spot, 0.0, 0.0)
+            if _haversine_km(lat, lng, slat, slon) <= r_km:
+                filtered.append(spot)
+        spots = filtered
+
+    sort_key = (sortBy or "distance").lower()
+    if sort_key == "newest":
+        spots = sorted(spots, key=lambda s: s.created_at, reverse=True)
+    elif sort_key == "oldest":
+        spots = sorted(spots, key=lambda s: s.created_at)
+    elif sort_key == "popularity":
+        spots = sorted(spots, key=lambda s: getattr(s, "popularity", 0) or 0, reverse=True)
+    elif sort_key == "distance" and lat is not None and lng is not None:
+        def dist_key(sp: models.Spot) -> float:
+            slat, slon = _spot_coords(db, sp, 0.0, 0.0)
+            return _haversine_km(lat, lng, slat, slon)
+
+        spots = sorted(spots, key=dist_key)
+    else:
+        spots = sorted(spots, key=lambda s: s.created_at, reverse=True)
+
     result = []
     user_id = current_user.id if current_user else None
 
     for spot in spots:
-        lat, lon = _spot_coords(db, spot, 0.0, 0.0)
+        slat, slon = _spot_coords(db, spot, 0.0, 0.0)
 
         photos = db.query(models.Photo).filter(models.Photo.spot_id == spot.id).all()
         photos_data = [_photo_out_from_db(p) for p in photos]
@@ -668,17 +761,18 @@ def list_spots(
 
         is_favorited = _check_if_favorited(db, spot.id, user_id)
 
-        result.append(
-            _spot_payload(
-                spot,
-                db,
-                lat=lat,
-                lon=lon,
-                photos_data=photos_data,
-                user_data=user_data,
-                is_favorited=is_favorited,
-            )
+        row = _spot_payload(
+            spot,
+            db,
+            lat=slat,
+            lon=slon,
+            photos_data=photos_data,
+            user_data=user_data,
+            is_favorited=is_favorited,
         )
+        if lat is not None and lng is not None:
+            row["distance"] = _haversine_km(lat, lng, slat, slon)
+        result.append(row)
 
     return result
 

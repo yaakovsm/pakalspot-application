@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Spot } from '../types/spot';
+import { Spot, normalizeSpotType, type SpotType } from '../types/spot';
 import { Heart, Info } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
@@ -81,24 +81,21 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails
     selectSpot(spot);
   };
 
-  const getTypeColor = (type: string) => {
-    const typeColors: { [key: string]: string } = {
+  const spotTypeNorm = normalizeSpotType(String(spot.spot_type));
+
+  const getTypeColor = (type: SpotType) => {
+    const typeColors: Record<SpotType, string> = {
       viewpoint: 'bg-blue-500',
-      beach: 'bg-cyan-500',
-      mountain: 'bg-green-600',
       lake: 'bg-blue-600',
       forest: 'bg-green-500',
       waterfall: 'bg-blue-400',
-      cave: 'bg-gray-600',
+      spring: 'bg-cyan-600',
+      desert: 'bg-amber-700',
+      river: 'bg-sky-600',
+      beach: 'bg-cyan-500',
       park: 'bg-green-400',
-      historical: 'bg-amber-600',
-      restaurant: 'bg-orange-500',
-      cafe: 'bg-yellow-500',
-      bar: 'bg-purple-500',
-      shop: 'bg-pink-500',
-      other: 'bg-gray-500',
     };
-    return typeColors[type] || typeColors.other;
+    return typeColors[type] ?? 'bg-gray-500';
   };
 
   return (
@@ -108,7 +105,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails
     >
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
-          <div className={`flex-1 ${isRTL ? 'pr-3' : 'pl-3'}`}>
+          <div className="flex-1 ps-3 pe-3">
             <div className={`flex items-center gap-2 mb-1 ${isRTL ? 'justify-end' : 'justify-start'}`}>
               <h3 className={`font-semibold text-base text-foreground group-hover:text-primary transition-colors ${isRTL ? 'text-right' : 'text-left'}`}>
                 {translatedTitle}
@@ -132,17 +129,17 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails
                 <>
                   <span className="whitespace-nowrap">{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
                   <Badge
-                    className={`text-xs flex-shrink-0 ${getTypeColor(spot.spot_type)} text-white`}
+                    className={`text-xs flex-shrink-0 ${getTypeColor(spotTypeNorm)} text-white`}
                   >
-                    {t(`spot_types.${spot.spot_type}`)}
+                    {t(`spots.spot_types.${spotTypeNorm}`)}
                   </Badge>
                 </>
               ) : (
                 <>
                   <Badge
-                    className={`text-xs flex-shrink-0 ${getTypeColor(spot.spot_type)} text-white`}
+                    className={`text-xs flex-shrink-0 ${getTypeColor(spotTypeNorm)} text-white`}
                   >
-                    {t(`spot_types.${spot.spot_type}`)}
+                    {t(`spots.spot_types.${spotTypeNorm}`)}
                   </Badge>
                   <span className="whitespace-nowrap">{t('spots.created_by')} {spot.createdBy?.username || t('spots.unknown')}</span>
                 </>

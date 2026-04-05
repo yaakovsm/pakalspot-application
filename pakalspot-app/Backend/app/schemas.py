@@ -16,6 +16,9 @@ class SpotType(str, Enum):
     forest = SpotTypeEnum.forest.value
     desert = SpotTypeEnum.desert.value
     river = SpotTypeEnum.river.value
+    lake = SpotTypeEnum.lake.value
+    beach = SpotTypeEnum.beach.value
+    park = SpotTypeEnum.park.value
 
 
 class SpotApprovalStatus(str, Enum):
@@ -157,6 +160,7 @@ class SpotOut(BaseModel):
     createdBy: Optional[UserOut] = None  # User information
     photos: Optional[List[PhotoOut]] = []
     is_favorited: Optional[bool] = False  # Whether current user has favorited this spot
+    distance: Optional[float] = None  # km from request lat/lng when provided on list endpoint
 
     class Config:
         from_attributes = True

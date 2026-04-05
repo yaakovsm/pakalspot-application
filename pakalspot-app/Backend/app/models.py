@@ -10,6 +10,7 @@ from sqlalchemy import (
     func,
     Boolean,
     JSON,
+    Integer,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
@@ -64,6 +65,9 @@ class SpotType(enum.Enum):
     forest = "forest"
     desert = "desert"
     river = "river"
+    lake = "lake"
+    beach = "beach"
+    park = "park"
 
 
 def parse_spot_type(spot_type_str: str) -> SpotType:
@@ -169,6 +173,9 @@ class Spot(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+    popularity: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
     )
 
     owner = relationship("User", back_populates="spots")

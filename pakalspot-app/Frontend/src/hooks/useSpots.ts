@@ -43,7 +43,7 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
         params.lat = userLocation.lat;
         params.lng = userLocation.lng;
       }
-      if (filters.maxDistance) {
+      if (filters.maxDistance && filters.maxDistance > 0 && filters.maxDistance < 100) {
         params.radius = filters.maxDistance;
       }
       if (filters.types.length > 0) {
@@ -156,6 +156,7 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
 
   setUserLocation: (location: { lat: number; lng: number }) => {
     set({ userLocation: location });
+    get().fetchSpots();
   },
 }));
 

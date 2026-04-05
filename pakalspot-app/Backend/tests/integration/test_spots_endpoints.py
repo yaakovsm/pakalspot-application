@@ -332,3 +332,60 @@ class TestSpotsEndpoints:
         mine_body = mine.json()
         assert len(mine_body) == 1
         assert mine_body[0].get("has_pending_revision") or mine_body[0].get("hasPendingRevision")
+
+    def test_list_spots_filters_by_type(self):
+        """GET /api/spots/?type= respects comma-separated types (approved only)."""
+        token, user = self.create_test_user()
+        headers = {"Authorization": f"Bearer {token}"}
+
+        def add_approved(title: str, spot_type: str) -> None:
+            r = client.post(
+                API_SPOTS,
+                data={
+                    "title": title,
+                    "description": "d",
+                    "type": spot_type,
+                    "latitude": "32.0",
+                    "longitude": "35.0",
+                },
+                headers=headers,
+            )
+            assert r.status_code == 200, r.text
+            sid = r.json()["id"]
+            db = TestingSessionLocal()
+            sp = db.query(models.Spot).filter(models.Spot.id == sid).first()
+            assert sp is not None
+            sp.approval_status = models.SpotApprovalStatus.approved
+            db.commit()
+            db.close()
+
+        add_approved("Spring spot", "spring")
+        add_approved("River spot", "river")
+
+        r_one = client.get(f"{API_SPOTS}?type=spring")
+        assert r_one.status_code == 200
+        one = r_one.json()
+        assert len(one) == 1
+        assert one[0]["title"] == "Spring spot"
+
+        r_two = client.get(f"{API_SPOTS}?type=spring,river")
+        assert r_two.status_code == 200
+        assert len(r_two.json()) == 2
+
+    def test_create_spot_lake_and_park_types(self):
+        token, user = self.create_test_user()
+        headers = {"Authorization": f"Bearer {token}"}
+        for st in ("lake", "beach", "park"):
+            r = client.post(
+                API_SPOTS,
+                data={
+                    "title": f"T-{st}",
+                    "description": "d",
+                    "type": st,
+                    "latitude": "31.5",
+                    "longitude": "34.8",
+                },
+                headers=headers,
+            )
+            assert r.status_code == 200, r.text
+            assert r.json()["spot_type"] == st

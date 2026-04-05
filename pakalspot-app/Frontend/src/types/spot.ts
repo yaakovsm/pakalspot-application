@@ -64,23 +64,37 @@ export interface Spot {
   updatedAt?: string;
 }
 
-export type SpotType = 
+export type SpotType =
   | 'waterfall'
   | 'spring'
   | 'viewpoint'
-  | 'beach'
-  | 'lake'
-  | 'river'
-  | 'cave'
-  | 'park'
   | 'forest'
-  | 'historical'
-  | 'archaeological'
-  | 'religious'
-  | 'restaurant'
-  | 'cafe'
-  | 'camping'
-  | 'other';
+  | 'desert'
+  | 'river'
+  | 'lake'
+  | 'beach'
+  | 'park';
+
+/** Map API/legacy string to a known SpotType for display when DB still has old values */
+export const KNOWN_SPOT_TYPES: readonly SpotType[] = [
+  'waterfall',
+  'spring',
+  'viewpoint',
+  'forest',
+  'desert',
+  'river',
+  'lake',
+  'beach',
+  'park',
+] as const;
+
+export function normalizeSpotType(raw: string | undefined | null): SpotType {
+  const v = String(raw ?? '').toLowerCase();
+  if ((KNOWN_SPOT_TYPES as readonly string[]).includes(v)) {
+    return v as SpotType;
+  }
+  return 'viewpoint';
+}
 
 
 export interface SpotFilters {

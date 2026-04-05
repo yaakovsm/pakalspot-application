@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Slider } from './ui/slider';
 import { useSpots } from '../hooks/useSpots';
-import { SpotType } from '../types/spot';
+import { SpotType, normalizeSpotType } from '../types/spot';
 import { Search, Filter, MapPin, Plus } from 'lucide-react';
 import SpotCard from './SpotCard';
 import { useTranslation } from 'react-i18next';
@@ -20,9 +20,15 @@ interface SidebarProps {
 }
 
 const spotTypes: SpotType[] = [
-  'waterfall', 'spring', 'viewpoint', 'beach', 'lake', 'river', 'cave', 'park', 
-  'forest', 'historical', 'archaeological', 'religious', 'restaurant', 'cafe', 
-  'camping', 'other'
+  'waterfall',
+  'spring',
+  'viewpoint',
+  'forest',
+  'desert',
+  'river',
+  'lake',
+  'beach',
+  'park',
 ];
 
 const distanceOptions = [
@@ -55,18 +61,24 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
     setSearchQuery(e.target.value);
   };
 
-  // Defensive check: ensure spots is an array before filtering
-  const filteredSpots = Array.isArray(spots)
-    ? spots.filter((spot) => {
-        const q = searchQuery.toLowerCase();
-        const st = String(spot.spot_type ?? '').toLowerCase();
-        return (
-          spot.title.toLowerCase().includes(q) ||
-          spot.description.toLowerCase().includes(q) ||
-          st.includes(q)
-        );
-      })
-    : [];
+  // API applies type / distance / sort; filter list by search text only (incl. translated type label)
+  const filteredSpots = useMemo(() => {
+    if (!Array.isArray(spots)) return [];
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return spots;
+    return spots.filter((spot) => {
+      const st = normalizeSpotType(String(spot.spot_type ?? ''));
+      const typeLabel = t(`spots.spot_types.${st}`).toLowerCase();
+      const title = spot.title.toLowerCase();
+      const desc = spot.description.toLowerCase();
+      return (
+        title.includes(q) ||
+        desc.includes(q) ||
+        st.includes(q) ||
+        typeLabel.includes(q)
+      );
+    });
+  }, [spots, searchQuery, t]);
 
   const handleTypeToggle = (type: SpotType) => {
     const currentTypes = filters.types;
@@ -100,12 +112,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
         
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder={t('spots.search_placeholder')}
             value={searchQuery}
             onChange={handleSearchChange}
-            className="pl-10"
+            className="ps-10"
           />
         </div>
       </div>
@@ -193,7 +205,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
                     className="cursor-pointer text-xs"
                     onClick={() => handleTypeToggle(type)}
                   >
-                    {t(`spot_types.${type}`)}
+                    {t(`spots.spot_types.${type}`)}
                   </Badge>
                 ))}
               </div>

@@ -21,9 +21,15 @@ interface AddSpotFormProps {
 }
 
 const spotTypes: SpotType[] = [
-  'waterfall', 'spring', 'viewpoint', 'beach', 'lake', 'river', 'cave', 'park', 
-  'forest', 'historical', 'archaeological', 'religious', 'restaurant', 'cafe', 
-  'camping', 'other'
+  'waterfall',
+  'spring',
+  'viewpoint',
+  'forest',
+  'desert',
+  'river',
+  'lake',
+  'beach',
+  'park',
 ];
 
 const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLocation }) => {
@@ -277,7 +283,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                 <SelectContent>
                   {spotTypes.map(type => (
                     <SelectItem key={type} value={type}>
-                      {t(`spot_types.${type}`)}
+                      {t(`spots.spot_types.${type}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>

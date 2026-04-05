@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Spot } from '../types/spot';
+import { Spot, normalizeSpotType, type SpotType } from '../types/spot';
 import { Heart, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
@@ -75,25 +75,21 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
     setCurrentImageIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
   };
 
-  const getTypeColor = (type: string) => {
-    const typeColors: { [key: string]: string } = {
+  const spotTypeNorm = normalizeSpotType(String(spot.spot_type));
+
+  const getTypeColor = (type: SpotType) => {
+    const typeColors: Record<SpotType, string> = {
       viewpoint: 'bg-blue-500',
-      beach: 'bg-cyan-500',
-      mountain: 'bg-green-600',
       lake: 'bg-blue-600',
       forest: 'bg-green-500',
       waterfall: 'bg-blue-400',
-      cave: 'bg-gray-600',
+      spring: 'bg-cyan-600',
+      desert: 'bg-amber-700',
+      river: 'bg-sky-600',
+      beach: 'bg-cyan-500',
       park: 'bg-green-400',
-      historical: 'bg-amber-600',
-      restaurant: 'bg-orange-500',
-      cafe: 'bg-yellow-500',
-      bar: 'bg-purple-500',
-      shop: 'bg-pink-500',
-      spring: 'bg-blue-500',
-      other: 'bg-gray-500',
     };
-    return typeColors[type] || typeColors.other;
+    return typeColors[type] ?? 'bg-gray-500';
   };
 
   return (
@@ -115,7 +111,7 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
               />
               
               {/* Heart button overlay - top right */}
-              <div className="absolute top-3 right-3 z-10">
+              <div className="absolute top-3 end-3 z-10">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -165,11 +161,11 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
               )}
 
               {/* Type badge - top left */}
-              <div className="absolute top-3 left-3 z-10">
+              <div className="absolute top-3 start-3 z-10">
                 <Badge 
-                  className={`${getTypeColor(spot.spot_type)} text-white text-xs font-medium px-2 py-1`}
+                  className={`${getTypeColor(spotTypeNorm)} text-white text-xs font-medium px-2 py-1`}
                 >
-                  {t(`spot_types.${spot.spot_type}`)}
+                  {t(`spots.spot_types.${spotTypeNorm}`)}
                 </Badge>
               </div>
             </>

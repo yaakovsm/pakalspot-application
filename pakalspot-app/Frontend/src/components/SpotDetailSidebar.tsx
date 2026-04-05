@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Spot } from '../types/spot';
+import { Spot, normalizeSpotType, type SpotType } from '../types/spot';
 import { spotsAPI } from '../api/api';
 import {
   AlertDialog,
@@ -154,24 +154,21 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
     setNavigationPopoverOpen(false);
   };
 
-  const getTypeColor = (type: string) => {
-    const typeColors: { [key: string]: string } = {
+  const spotTypeNorm = normalizeSpotType(String(currentSpot.spot_type));
+
+  const getTypeColor = (type: SpotType) => {
+    const typeColors: Record<SpotType, string> = {
       viewpoint: 'bg-blue-500',
-      beach: 'bg-cyan-500',
-      mountain: 'bg-green-600',
       lake: 'bg-blue-600',
       forest: 'bg-green-500',
       waterfall: 'bg-blue-400',
-      cave: 'bg-gray-600',
+      spring: 'bg-cyan-600',
+      desert: 'bg-amber-700',
+      river: 'bg-sky-600',
+      beach: 'bg-cyan-500',
       park: 'bg-green-400',
-      historical: 'bg-amber-600',
-      restaurant: 'bg-orange-500',
-      cafe: 'bg-yellow-500',
-      bar: 'bg-purple-500',
-      shop: 'bg-pink-500',
-      other: 'bg-gray-500',
     };
-    return typeColors[type] || typeColors.other;
+    return typeColors[type] ?? 'bg-gray-500';
   };
 
   return (
@@ -234,9 +231,9 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
           
           {/* Type Badge */}
           <Badge 
-            className={`absolute top-3 left-3 z-10 ${getTypeColor(currentSpot.spot_type)} text-white`}
+            className={`absolute top-3 start-3 z-10 ${getTypeColor(spotTypeNorm)} text-white`}
           >
-            {t(`spot_types.${currentSpot.spot_type}`)}
+            {t(`spots.spot_types.${spotTypeNorm}`)}
           </Badge>
           
           {/* Distance */}

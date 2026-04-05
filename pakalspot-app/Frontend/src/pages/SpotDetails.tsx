@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { ADMIN_EMAIL } from '../utils/authUser';
 import { getApiErrorDetail } from '../utils/apiError';
 import { resolvePhotoUrl } from '../utils/spotMedia';
+import { normalizeSpotType, type SpotType } from '../types/spot';
 
 const SpotDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -209,28 +210,6 @@ const SpotDetails: React.FC = () => {
     }
   };
 
-  const getTypeColor = (type: string) => {
-    const typeColors: { [key: string]: string } = {
-      waterfall: 'bg-blue-500',
-      spring: 'bg-cyan-500',
-      viewpoint: 'bg-green-600',
-      beach: 'bg-blue-400',
-      lake: 'bg-blue-600',
-      river: 'bg-blue-500',
-      cave: 'bg-gray-600',
-      park: 'bg-green-400',
-      forest: 'bg-green-500',
-      historical: 'bg-amber-600',
-      archaeological: 'bg-orange-600',
-      religious: 'bg-purple-600',
-      restaurant: 'bg-orange-500',
-      cafe: 'bg-yellow-500',
-      camping: 'bg-green-700',
-      other: 'bg-gray-500',
-    };
-    return typeColors[type] || typeColors.other;
-  };
-
   if (detailLoading || !selectedSpot || selectedSpot.id !== id) {
     return (
       <div className="min-h-screen bg-background">
@@ -241,6 +220,22 @@ const SpotDetails: React.FC = () => {
       </div>
     );
   }
+
+  const spotTypeNorm = normalizeSpotType(String(selectedSpot.spot_type));
+  const getTypeColor = (type: SpotType) => {
+    const typeColors: Record<SpotType, string> = {
+      waterfall: 'bg-blue-500',
+      spring: 'bg-cyan-500',
+      viewpoint: 'bg-green-600',
+      lake: 'bg-blue-600',
+      river: 'bg-blue-500',
+      forest: 'bg-green-500',
+      desert: 'bg-amber-700',
+      beach: 'bg-cyan-500',
+      park: 'bg-green-400',
+    };
+    return typeColors[type] ?? 'bg-gray-500';
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -331,8 +326,8 @@ const SpotDetails: React.FC = () => {
                         {selectedSpot.title}
                       </h1>
                       <div className="flex items-center gap-2 mb-4">
-                        <Badge className={`${getTypeColor(selectedSpot.spot_type)} text-white`}>
-                          {t(`spot_types.${selectedSpot.spot_type}`)}
+                        <Badge className={`${getTypeColor(spotTypeNorm)} text-white`}>
+                          {t(`spots.spot_types.${spotTypeNorm}`)}
                         </Badge>
                       </div>
                     </div>
