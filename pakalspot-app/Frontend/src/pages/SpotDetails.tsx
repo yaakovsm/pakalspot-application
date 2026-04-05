@@ -24,6 +24,7 @@ import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_EMAIL } from '../utils/authUser';
 import { getApiErrorDetail } from '../utils/apiError';
+import { resolvePhotoUrl } from '../utils/spotMedia';
 
 const SpotDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -271,7 +272,7 @@ const SpotDetails: React.FC = () => {
             <Card className="mb-6 overflow-hidden">
               <div className="relative">
                 <img 
-                  src={selectedSpot.photos[currentImageIndex].url}
+                  src={resolvePhotoUrl(selectedSpot.photos[currentImageIndex]) || ''}
                   alt={selectedSpot.title}
                   className="w-full h-96 object-cover"
                 />

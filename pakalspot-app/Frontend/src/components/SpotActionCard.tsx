@@ -5,6 +5,7 @@ import { Spot } from '../types/spot';
 import { Heart, MapPin, Info, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import { resolvePhotoUrl } from '../utils/spotMedia';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 interface SpotActionCardProps {
@@ -90,7 +91,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
               {photos.map((photo, index) => (
                 <img 
                   key={photo.id || index}
-                  src={photo.url} 
+                  src={resolvePhotoUrl(photo) || ''} 
                   alt={`${translatedTitle} - ${index + 1}`}
                   className="w-full h-full object-cover flex-shrink-0"
                   style={{ width: '240px', height: '155.55px' }}

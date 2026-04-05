@@ -23,6 +23,7 @@ import { getTranslatedSpotContent } from '../utils/spotTranslations';
 import { ADMIN_EMAIL } from '../utils/authUser';
 import { getApiErrorDetail } from '../utils/apiError';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from './ui/carousel';
+import { resolvePhotoUrl } from '../utils/spotMedia';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { useAuthModal } from './AuthModalProvider';
 
@@ -204,13 +205,13 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
         {/* Spot Image Carousel */}
         <div className="relative mb-6">
           {currentSpot.photos && currentSpot.photos.length > 0 ? (
-            <Carousel className="w-full">
+            <Carousel className="w-full" opts={{ direction: 'ltr' }}>
               <CarouselContent>
                 {currentSpot.photos.map((photo, index) => (
                   <CarouselItem key={photo.id || index}>
                     <div className="relative">
                       <img 
-                        src={photo.url} 
+                        src={resolvePhotoUrl(photo) || ''} 
                         alt={`${currentSpot.title} - ${index + 1}`}
                         className="w-full h-80 object-cover rounded-lg"
                       />

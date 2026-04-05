@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import { useAuth } from '../hooks/useAuth';
 import { authAPI, spotsAPI, getMediaUrl } from '../api/api';
 import { normalizeAuthUser } from '../utils/authUser';
-import { Photo, Spot, SpotType } from '../types/spot';
+import { Spot, SpotType } from '../types/spot';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -32,6 +32,7 @@ import { useAuthModal } from '../components/AuthModalProvider';
 import { useAddSpotModal } from '../components/AddSpotModalProvider';
 import { User, MapPin, Pencil, ExternalLink, Plus } from 'lucide-react';
 import SpotPhotoDropzone from '../components/SpotPhotoDropzone';
+import { resolveSpotCoverUrl } from '../utils/spotMedia';
 
 const spotTypes: SpotType[] = [
   'waterfall',
@@ -99,14 +100,6 @@ function buildEditForm(spot: Spot) {
     locationName: '',
     photos: [] as File[],
   };
-}
-
-function photoThumbUrl(spot: Spot): string | null {
-  const p = spot.photos?.[0];
-  if (!p) return null;
-  const api = p as Photo & { thumbnail_url?: string };
-  const u = api.thumbnailUrl || api.thumbnail_url || api.url;
-  return u ? getMediaUrl(u) : null;
 }
 
 const Profile: React.FC = () => {
@@ -387,7 +380,7 @@ const Profile: React.FC = () => {
             {mySpots.map((spot) => {
               const approved = spot.approval_status === 'approved';
               const hasPr = Boolean(spot.has_pending_revision || spot.hasPendingRevision);
-              const thumb = photoThumbUrl(spot);
+              const thumb = resolveSpotCoverUrl(spot);
               return (
                 <Card
                   key={spot.id}

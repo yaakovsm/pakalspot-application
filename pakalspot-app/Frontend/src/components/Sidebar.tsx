@@ -56,11 +56,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
   };
 
   // Defensive check: ensure spots is an array before filtering
-  const filteredSpots = Array.isArray(spots) ? spots.filter(spot =>
-    spot.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    spot.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    spot.type.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredSpots = Array.isArray(spots)
+    ? spots.filter((spot) => {
+        const q = searchQuery.toLowerCase();
+        const st = String(spot.spot_type ?? '').toLowerCase();
+        return (
+          spot.title.toLowerCase().includes(q) ||
+          spot.description.toLowerCase().includes(q) ||
+          st.includes(q)
+        );
+      })
+    : [];
 
   const handleTypeToggle = (type: SpotType) => {
     const currentTypes = filters.types;
@@ -210,12 +216,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           {isLoading && (
             <>
-              <div className="h-40 rounded-lg skeleton" />
-              <div className="h-40 rounded-lg skeleton" />
-              <div className="h-40 rounded-lg skeleton" />
+              <div className="h-24 rounded-lg skeleton" />
+              <div className="h-24 rounded-lg skeleton" />
+              <div className="h-24 rounded-lg skeleton" />
             </>
           )}
           {!isLoading && filteredSpots.map(spot => (

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '../hooks/use-toast';
 import { useAuthModal } from './AuthModalProvider';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import { resolvePhotoUrl } from '../utils/spotMedia';
 
 interface FavoriteSpotCardProps {
   spot: Spot;
@@ -31,6 +32,7 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
   const photos = spot.photos || [];
   const hasMultiplePhotos = photos.length > 1;
   const currentPhoto = photos[currentImageIndex];
+  const currentPhotoSrc = currentPhoto ? resolvePhotoUrl(currentPhoto) : null;
 
   // Get translated content
   const translatedTitle = getTranslatedSpotContent(spot, t, 'title');
@@ -104,10 +106,10 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
       >
         {/* Image Section - Airbnb style */}
         <div className="relative w-full aspect-[4/3] bg-gradient-card overflow-hidden">
-          {currentPhoto ? (
+          {currentPhotoSrc ? (
             <>
               <img 
-                src={currentPhoto.url} 
+                src={currentPhotoSrc} 
                 alt={translatedTitle}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
