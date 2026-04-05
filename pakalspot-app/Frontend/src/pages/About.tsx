@@ -47,7 +47,7 @@ const About: React.FC = () => {
             {/* Top Left - Story Image */}
             <div className="overflow-hidden">
               <img 
-                src="/IMG_5307.JPG" 
+                src="/IMG_6930.JPG" 
                 alt="קפה בטבע" 
                 className="w-full h-full object-cover"
               />
