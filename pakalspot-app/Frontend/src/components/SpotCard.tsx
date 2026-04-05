@@ -119,7 +119,9 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails
             {spot.distance && (
               <div className={`flex items-center gap-2 text-xs text-muted-foreground mb-2 ${isRTL ? 'justify-end' : 'justify-start'}`}>
                 <span>
-                  {spot.distance < 1 ? `${Math.round(spot.distance * 1000)}m away` : `${spot.distance.toFixed(1)}km away`}
+                  {spot.distance < 1
+                    ? t('spots.distance_m_away', { distance: Math.round(spot.distance * 1000) })
+                    : t('spots.distance_km_away', { distance: spot.distance.toFixed(1) })}
                 </span>
               </div>
             )}

@@ -239,7 +239,9 @@ const SpotDetailSidebar: React.FC<SpotDetailSidebarProps> = ({ spot, onClose, is
           {/* Distance */}
           {currentSpot.distance && (
             <div className="absolute bottom-3 left-3 z-10 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-foreground">
-              {currentSpot.distance < 1 ? `${Math.round(currentSpot.distance * 1000)}m away` : `${currentSpot.distance.toFixed(1)}km away`}
+              {currentSpot.distance < 1
+                ? t('spots.distance_m_away', { distance: Math.round(currentSpot.distance * 1000) })
+                : t('spots.distance_km_away', { distance: currentSpot.distance.toFixed(1) })}
             </div>
           )}
         </div>

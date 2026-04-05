@@ -215,18 +215,20 @@
       "google_maps": "Google Maps",
       "waze": "Waze",
       "location_search_hint": "💡 Start typing to search for locations in Israel",
-      "location_search_examples": "Examples: \"Jerusalem\", \"Tel Aviv\", \"Haifa\", \"Eilat\""
-    },
-    "spot_types": {
-      "waterfall": "Waterfall",
-      "spring": "Spring",
-      "viewpoint": "Viewpoint",
-      "forest": "Forest",
-      "desert": "Desert",
-      "river": "River",
-      "lake": "Lake",
-      "beach": "Beach",
-      "park": "Park"
+      "location_search_examples": "Examples: \"Jerusalem\", \"Tel Aviv\", \"Haifa\", \"Eilat\"",
+      "distance_m_away": "{{distance}} m away",
+      "distance_km_away": "{{distance}} km away",
+      "spot_types": {
+        "waterfall": "Waterfall",
+        "spring": "Spring",
+        "viewpoint": "Viewpoint",
+        "forest": "Forest",
+        "desert": "Desert",
+        "river": "River",
+        "lake": "Lake",
+        "beach": "Beach",
+        "park": "Park"
+      }
     },
     "districts": {
       "jerusalem": "Jerusalem District",

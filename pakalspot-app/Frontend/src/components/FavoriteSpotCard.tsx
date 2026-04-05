@@ -194,9 +194,9 @@ const FavoriteSpotCard: React.FC<FavoriteSpotCardProps> = ({ spot, onViewDetails
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             {spot.distance && (
               <span>
-                {spot.distance < 1 
-                  ? `${Math.round(spot.distance * 1000)}m away` 
-                  : `${spot.distance.toFixed(1)}km away`}
+                {spot.distance < 1
+                  ? t('spots.distance_m_away', { distance: Math.round(spot.distance * 1000) })
+                  : t('spots.distance_km_away', { distance: spot.distance.toFixed(1) })}
               </span>
             )}
             {spot.createdBy && (

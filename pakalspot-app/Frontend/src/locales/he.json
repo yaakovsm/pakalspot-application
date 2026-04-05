@@ -216,18 +216,20 @@
       "google_maps": "Google Maps",
       "waze": "Waze",
       "location_search_hint": "💡 התחל להקליד כדי לחפש מיקומים בישראל",
-      "location_search_examples": "דוגמאות: \"ירושלים\", \"תל אביב\", \"חיפה\", \"אילת\""
-    },
-    "spot_types": {
-      "waterfall": "מפל",
-      "spring": "מעיין",
-      "viewpoint": "נקודת תצפית",
-      "forest": "יער",
-      "desert": "מדבר",
-      "river": "נהר",
-      "lake": "אגם",
-      "beach": "חוף",
-      "park": "פארק"
+      "location_search_examples": "דוגמאות: \"ירושלים\", \"תל אביב\", \"חיפה\", \"אילת\"",
+      "distance_m_away": "{{distance}} מ׳ מכאן",
+      "distance_km_away": "{{distance}} ק״מ מכאן",
+      "spot_types": {
+        "waterfall": "מפל",
+        "spring": "מעיין",
+        "viewpoint": "נקודת תצפית",
+        "forest": "יער",
+        "desert": "מדבר",
+        "river": "נהר",
+        "lake": "אגם",
+        "beach": "חוף",
+        "park": "פארק"
+      }
     },
     "districts": {
       "jerusalem": "מחוז ירושלים",
