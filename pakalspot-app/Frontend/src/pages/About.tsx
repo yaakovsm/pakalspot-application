@@ -14,57 +14,63 @@ const About: React.FC = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <Header />
-      
-      {/* Hero Section */}
-      <section className="relative py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          {/* Logo */}
-          <div className="mb-8">
-            <img 
-              src="/PakalSpot_Transperent_logo.png" 
-              alt="PakalSpot Logo" 
-              className="w-56 h-56 mx-auto object-contain"
-            />
-          </div>
-          
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-            ברוכים הבאים ל־PakalSpot
-          </h1>
-          
-          {/* Subtitle */}
-          <p className="text-xl sm:text-2xl text-foreground/80 max-w-3xl mx-auto leading-relaxed">
-            קהילה של אנשים שאוהבים קפה, טבע ורגעים טובים.
-          </p>
-        </div>
-      </section>
 
-      {/* Combined Story and How It Works Section - Starbucks Style Collage */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
+      <section className="pt-0 pb-16 px-4 sm:px-6 lg:px-8 bg-background">
         <div className="max-w-7xl mx-auto">
-          {/* First 2x2 Grid */}
-          <div className="grid grid-cols-2 grid-rows-2 gap-0 h-[1130px]">
-            {/* Top Left - Story Image */}
-            <div className="overflow-hidden">
-              <img 
-                src="/IMG_6930.JPG" 
-                alt="קפה בטבע" 
+          {/* First 2x2 Grid: welcome + story (ltr grid so TL/TR match layout spec) */}
+          <div dir="ltr" className="grid grid-cols-2 grid-rows-2 gap-0 h-[1130px]">
+            {/* Top Left - Welcome (title + subtitle + logo) */}
+            <div className="bg-background flex items-center justify-center p-6 sm:p-8 min-h-0 overflow-y-auto">
+              <div
+                className="flex flex-col items-center justify-center text-center gap-6 w-full max-w-xl"
+                dir="rtl"
+              >
+                <img
+                  src="/PakalSpot_Transperent_logo.png"
+                  alt="PakalSpot Logo"
+                  className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 object-contain"
+                />
+                <div className="space-y-4 shrink">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight text-center">
+                    ברוכים הבאים ל־PakalSpot
+                  </h1>
+                  <p className="text-lg sm:text-xl text-foreground/80 leading-relaxed text-center">
+                    קהילה של אנשים שאוהבים קפה, טבע ורגעים טובים.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Right - Welcome image */}
+            <div className="overflow-hidden min-h-0">
+              <img
+                src="/IMG_1396.JPG"
+                alt="קפה בטבע"
                 className="w-full h-full object-cover"
               />
             </div>
-            
-            {/* Top Right - Story Text */}
-            <div className="bg-background flex items-center justify-end p-8">
-              <div className="space-y-6" dir="rtl">
-                <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+
+            {/* Bottom Left - Story image */}
+            <div className="overflow-hidden min-h-0">
+              <img
+                src="/IMG_5755.jpg"
+                alt="חוויית PakalSpot בטבע"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Bottom Right - Story text */}
+            <div className="bg-background flex items-center justify-end p-6 sm:p-8 min-h-0 overflow-y-auto">
+              <div className="space-y-4 sm:space-y-6" dir="rtl">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
                   הסיפור שלנו
                 </h2>
-                <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
+                <div className="space-y-3 sm:space-y-4 text-base sm:text-lg text-foreground/90 leading-relaxed">
                   <p>
                     PakalSpot נוצר מתוך אהבה לקפה, לטבע ולשיתוף רגעים עם אחרים.
                   </p>
                   <p>
-                    הרעיון פשוט: לאפשר לכל אחד לשתף את המקום שבו הוא אוהב לשתות קפה, 
+                    הרעיון פשוט: לאפשר לכל אחד לשתף את המקום שבו הוא אוהב לשתות קפה,
                     לראות חוויות של אחרים, ולגלות מקומות חדשים להכין בהם קפה בטבע.
                   </p>
                   <p>
@@ -73,87 +79,62 @@ const About: React.FC = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Bottom Left - Step 1 Text */}
-            <div className="bg-background flex items-center justify-start p-8">
-              <div className="space-y-6" dir="rtl">
-                <h3 className="text-2xl sm:text-3xl font-bold text-foreground">
+          </div>
+
+          {/* Second 2x2 Grid: step 1 + step 2 */}
+          <div dir="ltr" className="grid grid-cols-2 grid-rows-2 gap-0 h-[1130px]">
+            {/* Top Left - Step 1 text */}
+            <div className="bg-background flex items-center justify-start p-6 sm:p-8 min-h-0 overflow-y-auto">
+              <div className="space-y-4 sm:space-y-6" dir="rtl">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                   איך זה עובד?
                 </h3>
-                <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
+                <div className="space-y-3 sm:space-y-4 text-base sm:text-lg text-foreground/90 leading-relaxed">
                   <p>
                     חפש ספוטים על המפה, גלה מקומות מיוחדים להכנת קפה בטבע — לפי אזור, סוג נוף או חוות דעת של אחרים.
-עיין בתמונות, חוויות והמלצות של אנשים שביקרו במקום, ושתף גם אתה את המיקום שלך והוסף תמונה כדי להכניס אחרים לחוויה.
+                    עיין בתמונות, חוויות והמלצות של אנשים שביקרו במקום, ושתף גם אתה את המיקום שלך והוסף תמונה כדי להכניס אחרים לחוויה.
                   </p>
                 </div>
               </div>
             </div>
-            
-            {/* Bottom Right - Step 1 Image */}
-            <div className="overflow-hidden">
-              <img 
-                src="/pakalspot-screenshot.jpg" 
-                alt="חיפוש ספוטים על המפה" 
+
+            {/* Top Right - Step 1 image */}
+            <div className="overflow-hidden min-h-0">
+              <img
+                src="/pakalspot-screenshot.jpg"
+                alt="חיפוש ספוטים על המפה"
                 className="w-full h-full object-cover"
               />
             </div>
-          </div>
-          
-          {/* Second 2x2 Grid */}
-          <div className="grid grid-cols-2 grid-rows-2 gap-0 h-[1130px]">
-            {/* Top Left - Step 2 Image */}
-            <div className="overflow-hidden">
-              <img 
-                src="/IMG_2746(1).jpg" 
-                alt="חוות דעת ותמונות" 
+
+            {/* Bottom Left - Step 2 image */}
+            <div className="overflow-hidden min-h-0">
+              <img
+                src="/IMG_6930.JPG"
+                alt="חוות דעת ותמונות"
                 className="w-full h-full object-cover"
               />
             </div>
-            
-            {/* Top Right - Step 2 Text */}
-            <div className="bg-background flex items-center justify-end p-8">
-              <div className="space-y-6" dir="rtl">
-                <h3 className="text-2xl sm:text-3xl font-bold text-foreground">
+
+            {/* Bottom Right - Step 2 text */}
+            <div className="bg-background flex items-center justify-end p-6 sm:p-8 min-h-0 overflow-y-auto">
+              <div className="space-y-4 sm:space-y-6" dir="rtl">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                   שתף חוויה, לא רק מיקום
                 </h3>
-                <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
+                <div className="space-y-3 sm:space-y-4 text-base sm:text-lg text-foreground/90 leading-relaxed">
                   <p>
                     ב־PakalSpot אנחנו מאמינים שכל רגע קטן של קפה בטבע שווה שיתוף.
-ספר את הסיפור שלך — מה גרם לך לבחור דווקא בספוט הזה, עם מי היית, ואיך הרגע הזה הרגיש.
-כל תמונה והמלצה שלך מוסיפות השראה לאחרים לצאת ולגלות.
+                    ספר את הסיפור שלך — מה גרם לך לבחור דווקא בספוט הזה, עם מי היית, ואיך הרגע הזה הרגיש.
+                    כל תמונה והמלצה שלך מוסיפות השראה לאחרים לצאת ולגלות.
                   </p>
                 </div>
               </div>
-            </div>
-            
-            {/* Bottom Left - Community Text */}
-            <div className="bg-background flex items-center justify-start p-8">
-              <div className="space-y-6" dir="rtl">
-                <h3 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  קהילה של חובבי קפה וטבע
-                </h3>
-                <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
-                  <p>
-                  הקהילה של PakalSpot מחברת בין אנשים שאוהבים קפה, טבע ורגעים טובים.
-                  הצטרף אלינו, גלה ספוטים חדשים, שתף חוויות, ותרום לקהילה שמבינה שלפעמים — הקפה הכי טוב הוא זה שמכינים בחוץ, עם נוף פתוח ולב רגוע.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Bottom Right - Step 3 Image */}
-            <div className="overflow-hidden">
-              <img 
-                src="/IMG_5755.jpg" 
-                alt="שיתוף מיקום ותמונה" 
-                className="w-full h-full object-cover"
-              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <Button

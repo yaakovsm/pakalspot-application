@@ -7,7 +7,7 @@ import SpotDetailSidebar from '../components/SpotDetailSidebar';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
-import { Plus, Menu, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Spot } from '../types/spot';
 import { useAuthModal } from '../components/AuthModalProvider';
 import { useAddSpotModal } from '../components/AddSpotModalProvider';
@@ -18,7 +18,6 @@ const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { openAddSpot } = useAddSpotModal();
-  const [showSidebar, setShowSidebar] = useState(false);
   const [showDetailSidebar, setShowDetailSidebar] = useState(false);
   const [isClosingSidebar, setIsClosingSidebar] = useState(false);
   const [isOpeningSidebar, setIsOpeningSidebar] = useState(false);
@@ -105,24 +104,6 @@ const Home: React.FC = () => {
           <Sidebar onAddSpot={handleAddSpot} onInfoClick={handleInfoClick} onInfoHover={handleInfoHover} />
         </div>
 
-        {/* Mobile Sidebar */}
-        {showSidebar && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setShowSidebar(false)} />
-            <div className="relative w-80 h-full">
-              <Sidebar onAddSpot={handleAddSpot} onInfoClick={handleInfoClick} onInfoHover={handleInfoHover} />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowSidebar(false)}
-                className="absolute top-4 right-4 z-10"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Map */}
         <div className="flex-1 relative">
           <MapView 
@@ -131,18 +112,6 @@ const Home: React.FC = () => {
             isSpotDetailsOpen={showDetailSidebar}
             onOpenDetails={handleInfoClick}
           />
-          
-          {/* Mobile Controls */}
-          <div className="lg:hidden absolute top-4 left-4 flex gap-2">
-            <Button
-              variant="default"
-              size="icon"
-              onClick={() => setShowSidebar(true)}
-              className="shadow-medium"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-          </div>
 
           {/* Add Spot FAB */}
           <Button

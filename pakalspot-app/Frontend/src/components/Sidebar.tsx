@@ -32,11 +32,11 @@ const spotTypes: SpotType[] = [
 ];
 
 const distanceOptions = [
-  { value: 5, label: '5km' },
   { value: 10, label: '10km' },
-  { value: 20, label: '20km' },
+  { value: 25, label: '25km' },
   { value: 50, label: '50km' },
-  { value: 100, label: 'all_israel' },
+  { value: 100, label: '100km' },
+  { value: 1000, label: 'all_israel' },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, className }) => {
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [maxDistance, setMaxDistance] = useState([filters.maxDistance || 100]);
+  const [maxDistance, setMaxDistance] = useState([filters.maxDistance || 1000]);
 
   const handleViewDetails = (spot: any) => {
     selectSpot(spot);
@@ -150,7 +150,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="distance">{t('spots.distance')}</SelectItem>
-                  <SelectItem value="popularity">{t('spots.popularity')}</SelectItem>
                   <SelectItem value="newest">{t('spots.newest')}</SelectItem>
                   <SelectItem value="oldest">{t('spots.oldest')}</SelectItem>
                 </SelectContent>
@@ -185,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
               <Slider
                 value={maxDistance}
                 onValueChange={handleDistanceChange}
-                max={100}
+                max={1000}
                 min={1}
                 step={1}
                 className="w-full"
