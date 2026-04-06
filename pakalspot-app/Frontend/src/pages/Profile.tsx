@@ -260,7 +260,7 @@ const Profile: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background" dir={isHebrew ? 'rtl' : 'ltr'}>
-        <Header />
+        <Header className="hidden lg:block" />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-lg mx-auto text-center py-16">
             <User className="w-14 h-14 mx-auto mb-4 text-muted-foreground" />
@@ -277,7 +277,7 @@ const Profile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={isHebrew ? 'rtl' : 'ltr'}>
-      <Header />
+      <Header className="hidden lg:block" />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <h1 className="text-3xl font-bold text-foreground mb-6">{t('profile.title')}</h1>
 

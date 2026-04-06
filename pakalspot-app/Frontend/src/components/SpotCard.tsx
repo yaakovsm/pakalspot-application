@@ -3,7 +3,7 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Spot, normalizeSpotType, type SpotType } from '../types/spot';
-import { Heart, Info } from 'lucide-react';
+import { Heart, Info, Image as ImageIcon } from 'lucide-react';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '../hooks/use-toast';
 import { useAuthModal } from './AuthModalProvider';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import { resolveSpotCoverUrl } from '../utils/spotMedia';
 
 interface SpotCardProps {
   spot: Spot;
@@ -18,9 +19,18 @@ interface SpotCardProps {
   onInfoClick?: (spot: Spot) => void;
   onInfoHover?: (spot: Spot | null) => void;
   className?: string;
+  /** Vertical image card for mobile carousels; opens details on card tap when onViewDetails is set */
+  variant?: 'default' | 'carousel';
 }
 
-const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails, onInfoClick, onInfoHover, className }) => {
+const SpotCard: React.FC<SpotCardProps> = ({
+  spot,
+  onViewDetails,
+  onInfoClick,
+  onInfoHover,
+  className,
+  variant = 'default',
+}) => {
   const { selectSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
@@ -35,6 +45,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails
   const translatedSubtitle = getTranslatedSpotContent(spot, t, 'subtitle');
 
   const isSpotFavorited = isFavorited(spot.id);
+  const coverUrl = resolveSpotCoverUrl(spot);
 
   const handleFavoriteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -79,6 +90,9 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails
 
   const handleCardClick = () => {
     selectSpot(spot);
+    if (variant === 'carousel' && onViewDetails) {
+      onViewDetails(spot);
+    }
   };
 
   const spotTypeNorm = normalizeSpotType(String(spot.spot_type));
@@ -97,6 +111,65 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onViewDetails: _onViewDetails
     };
     return typeColors[type] ?? 'bg-gray-500';
   };
+
+  if (variant === 'carousel') {
+    return (
+      <Card
+        className={`cursor-pointer flex-shrink-0 w-[min(78vw,17.5rem)] overflow-hidden border border-border/60 shadow-soft rounded-2xl bg-card ${className ?? ''}`}
+        onClick={handleCardClick}
+      >
+        <div className="relative aspect-[4/3] w-full bg-muted">
+          {coverUrl ? (
+            <img
+              src={coverUrl}
+              alt=""
+              className="h-full w-full object-cover rounded-t-2xl"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center rounded-t-2xl bg-muted">
+              <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+            </div>
+          )}
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            onClick={handleFavoriteToggle}
+            className="absolute end-2 top-2 h-9 w-9 rounded-full border-0 bg-background/90 shadow-soft backdrop-blur-sm hover:bg-background"
+            aria-label={t('navbar.favorites')}
+          >
+            <Heart
+              className={`h-4 w-4 ${isSpotFavorited ? 'fill-primary text-primary' : 'text-foreground'}`}
+            />
+          </Button>
+        </div>
+        <CardContent className="space-y-1 p-3 bg-muted/25">
+          <h3
+            className={`line-clamp-2 text-sm font-semibold text-foreground ${isRTL ? 'text-right' : 'text-left'}`}
+          >
+            {translatedTitle}
+          </h3>
+          <p
+            className={`line-clamp-2 text-xs text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}
+          >
+            {translatedSubtitle}
+          </p>
+          {spot.distance != null && (
+            <p
+              className={`text-xs text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}
+            >
+              {spot.distance < 1
+                ? t('spots.distance_m_away', { distance: Math.round(spot.distance * 1000) })
+                : t('spots.distance_km_away', { distance: spot.distance.toFixed(1) })}
+            </p>
+          )}
+          <Badge className={`text-[10px] ${getTypeColor(spotTypeNorm)} text-white`}>
+            {t(`spots.spot_types.${spotTypeNorm}`)}
+          </Badge>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card

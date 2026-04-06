@@ -8,6 +8,8 @@ import { Button } from '../components/ui/button';
 import { Heart, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
+import type { Spot } from '../types/spot';
 
 const Favorites: React.FC = () => {
   const { selectSpot } = useSpots();
@@ -15,18 +17,19 @@ const Favorites: React.FC = () => {
   const { favorites } = useFavorites(); // Get full favorites list from React Query
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const isHebrew = (i18n.language || 'he') === 'he';
 
   // No need for useEffect - React Query handles fetching automatically
 
-  const handleViewDetails = (spot: any) => {
+  const handleViewDetails = (spot: Spot) => {
     selectSpot(spot);
-    navigate('/');
+    navigate(`/spot/${spot.id}`);
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
+      <div className="min-h-screen bg-background" dir={isHebrew ? 'rtl' : 'ltr'}>
+        <Header className="hidden lg:block" />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center py-16">
@@ -51,8 +54,8 @@ const Favorites: React.FC = () => {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-background" dir={isHebrew ? 'rtl' : 'ltr'}>
+      <Header className="hidden lg:block" />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
