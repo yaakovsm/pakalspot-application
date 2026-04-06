@@ -159,12 +159,12 @@ All colors MUST be HSL.
   }
 
   /* RTL-specific adjustments */
-  [dir="rtl"] .flex:not(.flex-col):not(.flex-col-reverse):not(.flex-wrap):not(.justify-between):not(.justify-center):not(.justify-start):not(.justify-end):not(.justify-around):not(.justify-evenly):not([role="option"]) {
+  [dir="rtl"] .flex:not(.flex-col):not(.flex-col-reverse):not(.flex-wrap):not(.justify-between):not(.justify-center):not(.justify-start):not(.justify-end):not(.justify-around):not(.justify-evenly):not([role="option"]):not([role^="menuitem"]) {
     flex-direction: row-reverse;
   }
 
   /* Force RTL for specific elements that should always be RTL */
-  [dir="rtl"] .flex.items-center.gap-2:not(.justify-between) {
+  [dir="rtl"] .flex.items-center.gap-2:not(.justify-between):not([role^="menuitem"]) {
     flex-direction: row-reverse;
   }
 
@@ -218,7 +218,7 @@ All colors MUST be HSL.
   }
 
   /* Button icon positioning for RTL */
-  [dir="rtl"] .flex.items-center.gap-2 {
+  [dir="rtl"] .flex.items-center.gap-2:not([role^="menuitem"]) {
     flex-direction: row-reverse;
   }
 

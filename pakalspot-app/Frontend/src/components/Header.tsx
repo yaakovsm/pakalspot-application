@@ -168,22 +168,22 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                           </div>
                           <div className="h-px bg-border my-1" />
                           <DropdownMenuItem onClick={() => navigate('/favorites')} className="cursor-pointer">
-                            <Heart className="mr-2 h-4 w-4" />
+                            <Heart className="h-4 w-4" />
                             <span>{t('navbar.favorites')}</span>
                           </DropdownMenuItem>
                           {isAdmin && (
                             <DropdownMenuItem onClick={() => navigate('/admin/pending-spots')} className="cursor-pointer">
-                              <ListChecks className="mr-2 h-4 w-4" />
+                              <ListChecks className="h-4 w-4" />
                               <span>{t('navbar.moderation')}</span>
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
-                            <User className="mr-2 h-4 w-4" />
+                            <User className="h-4 w-4" />
                             <span>{t('navbar.profile')}</span>
                           </DropdownMenuItem>
                           <div className="h-px bg-border my-1" />
                           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
-                            <LogOut className="mr-2 h-4 w-4" />
+                            <LogOut className="h-4 w-4" />
                             <span>{t('auth.logout')}</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -256,22 +256,22 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                           </div>
                           <div className="h-px bg-border my-1" />
                           <DropdownMenuItem onClick={() => navigate('/favorites')} className="cursor-pointer">
-                            <Heart className="mr-2 h-4 w-4" />
+                            <Heart className="h-4 w-4" />
                             <span>{t('navbar.favorites')}</span>
                           </DropdownMenuItem>
                           {isAdmin && (
                             <DropdownMenuItem onClick={() => navigate('/admin/pending-spots')} className="cursor-pointer">
-                              <ListChecks className="mr-2 h-4 w-4" />
+                              <ListChecks className="h-4 w-4" />
                               <span>{t('navbar.moderation')}</span>
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
-                            <User className="mr-2 h-4 w-4" />
+                            <User className="h-4 w-4" />
                             <span>{t('navbar.profile')}</span>
                           </DropdownMenuItem>
                           <div className="h-px bg-border my-1" />
                           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
-                            <LogOut className="mr-2 h-4 w-4" />
+                            <LogOut className="h-4 w-4" />
                             <span>{t('auth.logout')}</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
