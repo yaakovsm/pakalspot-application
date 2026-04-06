@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSpots } from '../../hooks/useSpots';
 import { useSpotsTextFilter } from '../../hooks/useSpotsTextFilter';
@@ -16,7 +16,8 @@ import { Button } from '../ui/button';
 import MobileMoreMenu from './MobileMoreMenu';
 
 const MobileExploreFeed: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = (i18n.language || 'he').startsWith('he');
   const navigate = useNavigate();
   const { spots, filters, updateFilters, isLoading, selectSpot } = useSpots();
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,7 +42,8 @@ const MobileExploreFeed: React.FC = () => {
   const scrollRowEnd = (id: DistrictId) => {
     const el = rowRefs.current[id];
     if (!el) return;
-    el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    el.scrollTo({ left: isRtl ? 0 : max, behavior: 'smooth' });
   };
 
   const districtTitle = (id: DistrictId) =>
@@ -50,7 +52,7 @@ const MobileExploreFeed: React.FC = () => {
   return (
     <div className="flex flex-col min-h-0 flex-1 bg-background">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md pt-3 pb-2 px-4 border-b border-border/60 space-y-3">
-        <div className="flex items-center gap-2">
+        <div className="flex !flex-row items-center gap-2">
           <div className="relative flex-1 min-w-0">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
@@ -58,7 +60,7 @@ const MobileExploreFeed: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('mobile.search_spots')}
-              className="w-full rounded-full border border-border bg-card py-2.5 ps-10 pe-4 text-sm shadow-soft placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full rounded-full border border-border bg-card py-2.5 ps-10 pe-4 text-sm text-start shadow-soft placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               autoComplete="off"
             />
           </div>
@@ -66,7 +68,7 @@ const MobileExploreFeed: React.FC = () => {
         </div>
 
         <div
-          className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide"
+          className="flex !flex-row gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {SPOT_FILTER_TYPES.map((type) => {
@@ -115,14 +117,14 @@ const MobileExploreFeed: React.FC = () => {
                   aria-label={t('mobile.see_all')}
                   onClick={() => scrollRowEnd(id)}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  {isRtl ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </Button>
               </div>
               <div
                 ref={(el) => {
                   rowRefs.current[id] = el;
                 }}
-                className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide"
+                className="flex !flex-row gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {sectionSpots.map((spot: Spot) => (

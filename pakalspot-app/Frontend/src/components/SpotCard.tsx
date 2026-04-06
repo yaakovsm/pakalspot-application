@@ -135,7 +135,7 @@ const SpotCard: React.FC<SpotCardProps> = ({
             variant="secondary"
             size="icon"
             onClick={handleFavoriteToggle}
-            className="absolute end-2 top-2 h-9 w-9 rounded-full border-0 bg-background/90 shadow-soft backdrop-blur-sm hover:bg-background"
+            className="absolute right-2 top-2 h-9 w-9 rounded-full border-0 bg-background/90 shadow-soft backdrop-blur-sm hover:bg-background"
             aria-label={t('navbar.favorites')}
           >
             <Heart
@@ -143,27 +143,21 @@ const SpotCard: React.FC<SpotCardProps> = ({
             />
           </Button>
         </div>
-        <CardContent className="space-y-1 p-3 bg-muted/25">
-          <h3
-            className={`line-clamp-2 text-sm font-semibold text-foreground ${isRTL ? 'text-right' : 'text-left'}`}
-          >
+        <CardContent className="flex flex-col gap-1 p-3 bg-muted/25 text-start">
+          <h3 className="line-clamp-2 text-sm font-semibold text-foreground">
             {translatedTitle}
           </h3>
-          <p
-            className={`line-clamp-2 text-xs text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}
-          >
+          <p className="line-clamp-2 text-xs text-muted-foreground">
             {translatedSubtitle}
           </p>
           {spot.distance != null && (
-            <p
-              className={`text-xs text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}
-            >
+            <p className="text-xs text-muted-foreground">
               {spot.distance < 1
                 ? t('spots.distance_m_away', { distance: Math.round(spot.distance * 1000) })
                 : t('spots.distance_km_away', { distance: spot.distance.toFixed(1) })}
             </p>
           )}
-          <Badge className={`text-[10px] ${getTypeColor(spotTypeNorm)} text-white`}>
+          <Badge className={`w-fit text-[10px] ${getTypeColor(spotTypeNorm)} text-white`}>
             {t(`spots.spot_types.${spotTypeNorm}`)}
           </Badge>
         </CardContent>
