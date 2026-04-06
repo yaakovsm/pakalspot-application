@@ -159,7 +159,7 @@ All colors MUST be HSL.
   }
 
   /* RTL-specific adjustments */
-  [dir="rtl"] .flex:not(.flex-col):not(.flex-col-reverse):not(.justify-between):not(.justify-center):not(.justify-start):not(.justify-end):not(.justify-around):not(.justify-evenly) {
+  [dir="rtl"] .flex:not(.flex-col):not(.flex-col-reverse):not(.flex-wrap):not(.justify-between):not(.justify-center):not(.justify-start):not(.justify-end):not(.justify-around):not(.justify-evenly):not([role="option"]) {
     flex-direction: row-reverse;
   }
 
@@ -312,30 +312,6 @@ All colors MUST be HSL.
   [dir="rtl"] input[type="number"],
   [dir="rtl"] textarea {
     text-align: right;
-  }
-
-  /* Select RTL fixes */
-  [dir="rtl"] [data-radix-select-trigger] {
-    text-align: right;
-    flex-direction: row-reverse;
-  }
-  
-  /* SelectTrigger icon positioning in RTL */
-  [dir="rtl"] [data-radix-select-trigger] > [data-radix-select-icon] {
-    order: -1;
-  }
-  
-  /* SelectItem checkmark positioning in RTL */
-  [dir="rtl"] [data-radix-select-item] > span.absolute.left-2 {
-    left: auto;
-    right: 0.5rem;
-  }
-  
-  /* SelectItem text alignment and padding in RTL */
-  [dir="rtl"] [data-radix-select-item] {
-    text-align: right;
-    padding-left: 0.5rem;
-    padding-right: 2rem;
   }
 
   /* Modal RTL fixes */
