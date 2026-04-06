@@ -106,7 +106,7 @@ const MobileMoreMenu: React.FC = () => {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer gap-2">
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          {t('mobile.theme')}
+          {theme === 'dark' ? t('mobile.light_mode') : t('mobile.dark_mode')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {isAuthenticated ? (

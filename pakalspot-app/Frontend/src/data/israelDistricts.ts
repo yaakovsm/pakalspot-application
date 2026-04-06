@@ -1,18 +1,10 @@
 /**
  * Approximate district grouping for UX (carousel sections). Boundaries are coarse;
- * Judea and Samaria coverage is simplified — adjust polygons if you need stricter CBS alignment.
+ * Jerusalem area coverage is simplified — adjust polygons if you need stricter CBS alignment.
  */
 import type { Spot } from '../types/spot';
 
-export type DistrictId =
-  | 'jerusalem'
-  | 'tel_aviv'
-  | 'haifa'
-  | 'judea_samaria'
-  | 'south'
-  | 'north'
-  | 'center'
-  | 'unknown';
+export type DistrictId = 'north' | 'center' | 'south' | 'jerusalem' | 'unknown';
 
 const IL_BOUNDS = { minLat: 29.45, maxLat: 33.42, minLon: 34.2, maxLon: 35.92 };
 
@@ -20,20 +12,9 @@ type Rule = { id: DistrictId; test: (lat: number, lon: number) => boolean };
 
 /** First matching rule wins (more specific regions before broader ones). */
 const RULES: Rule[] = [
-  { id: 'tel_aviv', test: (la, lo) => la >= 31.98 && la <= 32.22 && lo >= 34.68 && lo <= 34.92 },
-  { id: 'haifa', test: (la, lo) => la >= 32.68 && la <= 32.92 && lo >= 34.94 && lo <= 35.15 },
   {
     id: 'jerusalem',
-    test: (la, lo) => la >= 31.65 && la <= 31.98 && lo >= 35.05 && lo <= 35.35,
-  },
-  {
-    id: 'judea_samaria',
-    test: (la, lo) =>
-      la >= 31.4 &&
-      la <= 32.22 &&
-      lo >= 35.05 &&
-      lo <= 35.58 &&
-      !(la >= 31.65 && la <= 31.98 && lo >= 35.05 && lo <= 35.35),
+    test: (la, lo) => la >= 31.4 && la <= 32.22 && lo >= 35.05 && lo <= 35.58,
   },
   { id: 'south', test: (la, lo) => la < 31.55 && lo >= 34.2 && lo <= 35.55 },
   { id: 'north', test: (la) => la >= 32.42 },
@@ -43,12 +24,9 @@ const RULES: Rule[] = [
 /** Preferred carousel order for non-empty districts. */
 export const DISTRICT_DISPLAY_ORDER: DistrictId[] = [
   'north',
-  'haifa',
   'center',
-  'tel_aviv',
-  'jerusalem',
-  'judea_samaria',
   'south',
+  'jerusalem',
   'unknown',
 ];
 
@@ -70,13 +48,10 @@ export function getDistrictForSpot(lat: number, lon: number): DistrictId {
 
 export function groupSpotsByDistrict(spots: Spot[]): Record<DistrictId, Spot[]> {
   const out: Record<DistrictId, Spot[]> = {
-    jerusalem: [],
-    tel_aviv: [],
-    haifa: [],
-    judea_samaria: [],
-    south: [],
     north: [],
     center: [],
+    south: [],
+    jerusalem: [],
     unknown: [],
   };
   for (const spot of spots) {

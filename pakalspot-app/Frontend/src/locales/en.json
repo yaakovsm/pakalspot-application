@@ -231,13 +231,10 @@
       }
     },
     "districts": {
-      "jerusalem": "Jerusalem District",
-      "north": "Northern District",
-      "haifa": "Haifa District",
-      "center": "Central District",
-      "tel_aviv": "Tel Aviv District",
-      "south": "Southern District",
-      "judea_samaria": "Judea and Samaria Area",
+      "north": "Northern Israel",
+      "center": "Central Israel",
+      "south": "Southern Israel",
+      "jerusalem": "Jerusalem and the surrounding area",
       "unknown": "Other areas"
     },
     "mobile": {
@@ -248,11 +245,12 @@
       "tab_profile": "Profile",
       "more": "More",
       "about": "About",
-      "theme": "Theme",
-      "light": "Light",
-      "dark": "Dark",
+      "light_mode": "Light mode",
+      "dark_mode": "Dark mode",
       "location": "Update location",
       "district_section_title": "Beautiful spots in {{area}}",
+      "expand_district": "Expand category",
+      "collapse_district": "Collapse category",
       "see_all": "See all",
       "no_spots_match": "No spots match your search or filters.",
       "add_spot_fab": "Add spot"

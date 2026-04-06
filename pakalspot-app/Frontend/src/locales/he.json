@@ -232,13 +232,10 @@
       }
     },
     "districts": {
-      "jerusalem": "מחוז ירושלים",
-      "north": "מחוז הצפון",
-      "haifa": "מחוז חיפה",
-      "center": "מחוז המרכז",
-      "tel_aviv": "מחוז תל אביב",
-      "south": "מחוז הדרום",
-      "judea_samaria": "אזור יהודה ושומרון",
+      "north": "אזור הצפון",
+      "center": "אזור המרכז",
+      "south": "אזור הדרום",
+      "jerusalem": "ירושלים והסביבה",
       "unknown": "אזורים נוספים"
     },
     "mobile": {
@@ -249,11 +246,12 @@
       "tab_profile": "פרופיל",
       "more": "עוד",
       "about": "אודות",
-      "theme": "ערכת נושא",
-      "light": "בהיר",
-      "dark": "כהה",
+      "light_mode": "מצב בהיר",
+      "dark_mode": "מצב כהה",
       "location": "עדכון מיקום",
       "district_section_title": "ספוטים יפים ב{{area}}",
+      "expand_district": "הרחבת הקטגוריה",
+      "collapse_district": "כיווץ הקטגוריה",
       "see_all": "הצג הכל",
       "no_spots_match": "אין ספוטים שתואמים לחיפוש או למסננים.",
       "add_spot_fab": "הוספת ספוט"
