@@ -1,23 +1,29 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MoreHorizontal, MapPin, Moon, Sun } from 'lucide-react';
+import { Languages, MapPin, Moon, MoreHorizontal, Sun } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { useAuth } from '../../hooks/useAuth';
 import { useSpots } from '../../hooks/useSpots';
 import { useAuthModal } from '../AuthModalProvider';
-import LanguageSwitcher from '../LanguageSwitcher';
+import { changeLanguage } from '../../i18n';
 import { ADMIN_EMAIL } from '../../utils/authUser';
 
 const MobileMoreMenu: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || 'he';
+  const isHe = lang.startsWith('he');
+  const isEn = lang.startsWith('en');
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const { openAuthModal } = useAuthModal();
@@ -74,10 +80,26 @@ const MobileMoreMenu: React.FC = () => {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-          <span className="text-sm text-muted-foreground">{t('app.language')}</span>
-          <LanguageSwitcher />
-        </div>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+            <Languages className="h-4 w-4" />
+            {t('app.language')}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem
+              className={`cursor-pointer ${isHe ? 'bg-accent' : ''}`}
+              onSelect={() => void changeLanguage('he')}
+            >
+              {t('app.hebrew')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className={`cursor-pointer ${isEn ? 'bg-accent' : ''}`}
+              onSelect={() => void changeLanguage('en')}
+            >
+              {t('app.english')}
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuItem onClick={handleLocation} className="cursor-pointer gap-2">
           <MapPin className="h-4 w-4" />
           {t('mobile.location')}
