@@ -4,6 +4,8 @@ import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import MapView from '../components/MapView';
 import SpotDetailSidebar from '../components/SpotDetailSidebar';
+import MobileExploreFeed from '../components/mobile/MobileExploreFeed';
+import { useSpotDiscoveryBootstrap } from '../hooks/useSpotDiscoveryBootstrap';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
@@ -11,50 +13,23 @@ import { Plus } from 'lucide-react';
 import { Spot } from '../types/spot';
 import { useAuthModal } from '../components/AuthModalProvider';
 import { useAddSpotModal } from '../components/AddSpotModalProvider';
+import { useTranslation } from 'react-i18next';
+import { useMediaQuery, MIN_WIDTH_LG } from '../hooks/use-media-query';
 
 const Home: React.FC = () => {
+  const isDesktop = useMediaQuery(MIN_WIDTH_LG);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { fetchSpots, setUserLocation, selectedSpot } = useSpots();
+  const { selectedSpot } = useSpots();
   const { isAuthenticated } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { openAddSpot } = useAddSpotModal();
+  const { t } = useTranslation();
+  useSpotDiscoveryBootstrap();
+
   const [showDetailSidebar, setShowDetailSidebar] = useState(false);
   const [isClosingSidebar, setIsClosingSidebar] = useState(false);
   const [isOpeningSidebar, setIsOpeningSidebar] = useState(false);
   const [hoveredSpot, setHoveredSpot] = useState<Spot | null>(null);
-
-  useEffect(() => {
-    // Get user location and fetch spots
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.warn('Could not get user location:', error);
-          // Set default location to Israel center
-          setUserLocation({ lat: 31.5, lng: 34.8 });
-          
-          // Show user-friendly message based on error type
-          if (error.code === 1) {
-            console.info('Location access denied. You can click the location button in the header to try again.');
-          } else if (error.code === 2) {
-            console.info('Location unavailable. Using default location.');
-          } else if (error.code === 3) {
-            console.info('Location request timed out. Using default location.');
-          }
-        }
-      );
-    } else {
-      // Set default location to Israel center
-      setUserLocation({ lat: 31.5, lng: 34.8 });
-    }
-
-    fetchSpots();
-  }, [fetchSpots, setUserLocation]);
 
   useEffect(() => {
     if (searchParams.get('add') !== '1') return;
@@ -75,7 +50,6 @@ const Home: React.FC = () => {
   const handleInfoClick = () => {
     setShowDetailSidebar(true);
     setIsOpeningSidebar(true);
-    // Reset opening state after animation completes
     setTimeout(() => {
       setIsOpeningSidebar(false);
     }, 300);
@@ -86,8 +60,7 @@ const Home: React.FC = () => {
     setTimeout(() => {
       setShowDetailSidebar(false);
       setIsClosingSidebar(false);
-      // Keep selectedSpot when closing so SpotActionCard can reappear
-    }, 300); // Match the animation duration
+    }, 300);
   };
 
   const handleInfoHover = (spot: Spot | null) => {
@@ -95,40 +68,42 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <Header />
-      
-      <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block w-96 h-full">
-          <Sidebar onAddSpot={handleAddSpot} onInfoClick={handleInfoClick} onInfoHover={handleInfoHover} />
-        </div>
-
-        {/* Map */}
-        <div className="flex-1 relative">
-          <MapView 
-            className="w-full h-full" 
-            hoveredSpot={hoveredSpot}
-            isSpotDetailsOpen={showDetailSidebar}
-            onOpenDetails={handleInfoClick}
-          />
-
-          {/* Add Spot FAB */}
+    <div className="flex flex-col h-[100dvh] lg:h-screen bg-background min-h-0 overflow-hidden">
+      {isDesktop ? (
+        <>
+          <Header className="shrink-0" />
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+            <div className="w-96 h-full shrink-0">
+              <Sidebar onAddSpot={handleAddSpot} onInfoClick={handleInfoClick} onInfoHover={handleInfoHover} />
+            </div>
+            <div className="flex flex-1 relative min-w-0 min-h-0">
+              <MapView
+                className="w-full h-full"
+                hoveredSpot={hoveredSpot}
+                isSpotDetailsOpen={showDetailSidebar}
+                onOpenDetails={handleInfoClick}
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-1 flex-col min-h-0 min-w-0 relative">
+          <MobileExploreFeed />
           <Button
             variant="hero"
             size="icon"
             onClick={handleAddSpot}
-            className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-strong z-40"
+            className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] end-4 w-14 h-14 rounded-full shadow-strong z-40"
+            aria-label={t('mobile.add_spot_fab')}
           >
             <Plus className="w-6 h-6" />
           </Button>
         </div>
-      </div>
+      )}
 
-      {/* Spot Detail Sidebar */}
       {showDetailSidebar && selectedSpot && (
-        <SpotDetailSidebar 
-          spot={selectedSpot} 
+        <SpotDetailSidebar
+          spot={selectedSpot}
           onClose={handleCloseDetailSidebar}
           isClosing={isClosingSidebar}
           isOpening={isOpeningSidebar}

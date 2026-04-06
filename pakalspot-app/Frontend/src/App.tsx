@@ -10,6 +10,8 @@ import { spotsAPI } from "./api/api";
 import { AuthModalProvider, useAuthModal } from "./components/AuthModalProvider";
 import { AddSpotModalProvider } from "./components/AddSpotModalProvider";
 import Home from "./pages/Home";
+import MapPage from "./pages/MapPage";
+import MobileLayout from "./components/mobile/MobileLayout";
 import About from "./pages/About";
 import Favorites from "./pages/Favorites";
 import SpotDetails from "./pages/SpotDetails";
@@ -68,12 +70,13 @@ const AppContent = () => {
       <BrowserRouter>
         <AddSpotModalProvider>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<MobileLayout><Home /></MobileLayout>} />
+            <Route path="/map" element={<MobileLayout><MapPage /></MobileLayout>} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<AuthRouteHandler mode="login" />} />
             <Route path="/register" element={<AuthRouteHandler mode="register" />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/favorites" element={<MobileLayout><Favorites /></MobileLayout>} />
+            <Route path="/profile" element={<MobileLayout><Profile /></MobileLayout>} />
             <Route path="/spot/:id" element={<SpotDetails />} />
             <Route path="/admin/pending-spots" element={<AdminPendingSpots />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

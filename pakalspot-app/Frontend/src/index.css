@@ -388,3 +388,12 @@ All colors MUST be HSL.
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
 }
+
+/* Horizontal carousels (mobile explore) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

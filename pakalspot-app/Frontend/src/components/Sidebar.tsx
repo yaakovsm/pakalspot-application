@@ -1,16 +1,17 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Slider } from './ui/slider';
 import { useSpots } from '../hooks/useSpots';
-import { SpotType, normalizeSpotType } from '../types/spot';
+import type { Spot, SpotType } from '../types/spot';
 import { Search, Filter, MapPin, Plus } from 'lucide-react';
 import SpotCard from './SpotCard';
 import { useTranslation } from 'react-i18next';
+import { useSpotsTextFilter } from '../hooks/useSpotsTextFilter';
+import { SPOT_FILTER_TYPES } from '../constants/spotFilterTypes';
 
 interface SidebarProps {
   onAddSpot?: () => void;
@@ -18,18 +19,6 @@ interface SidebarProps {
   onInfoHover?: (spot: Spot | null) => void;
   className?: string;
 }
-
-const spotTypes: SpotType[] = [
-  'waterfall',
-  'spring',
-  'viewpoint',
-  'forest',
-  'desert',
-  'river',
-  'lake',
-  'beach',
-  'park',
-];
 
 const distanceOptions = [
   { value: 10, label: '10km' },
@@ -61,24 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
     setSearchQuery(e.target.value);
   };
 
-  // API applies type / distance / sort; filter list by search text only (incl. translated type label)
-  const filteredSpots = useMemo(() => {
-    if (!Array.isArray(spots)) return [];
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return spots;
-    return spots.filter((spot) => {
-      const st = normalizeSpotType(String(spot.spot_type ?? ''));
-      const typeLabel = t(`spots.spot_types.${st}`).toLowerCase();
-      const title = spot.title.toLowerCase();
-      const desc = spot.description.toLowerCase();
-      return (
-        title.includes(q) ||
-        desc.includes(q) ||
-        st.includes(q) ||
-        typeLabel.includes(q)
-      );
-    });
-  }, [spots, searchQuery, t]);
+  const filteredSpots = useSpotsTextFilter(spots, searchQuery);
 
   const handleTypeToggle = (type: SpotType) => {
     const currentTypes = filters.types;
@@ -197,7 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAddSpot, onInfoClick, onInfoHover, 
                 {t('spots.types')}
               </label>
               <div className="flex flex-wrap gap-2">
-                {spotTypes.map(type => (
+                {SPOT_FILTER_TYPES.map(type => (
                   <Badge
                     key={type}
                     variant={filters.types.includes(type) ? "default" : "outline"}
