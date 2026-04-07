@@ -5,6 +5,7 @@
 import type { Spot } from '../types/spot';
 
 export type DistrictId = 'north' | 'center' | 'south' | 'jerusalem' | 'unknown';
+export const DISTRICT_IDS: readonly DistrictId[] = ['north', 'center', 'south', 'jerusalem', 'unknown'] as const;
 
 const IL_BOUNDS = { minLat: 29.45, maxLat: 33.42, minLon: 34.2, maxLon: 35.92 };
 
@@ -29,6 +30,10 @@ export const DISTRICT_DISPLAY_ORDER: DistrictId[] = [
   'jerusalem',
   'unknown',
 ];
+
+export function isDistrictId(value: string): value is DistrictId {
+  return (DISTRICT_IDS as readonly string[]).includes(value);
+}
 
 export function getDistrictForSpot(lat: number, lon: number): DistrictId {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 'unknown';

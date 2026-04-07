@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSpots } from '../../hooks/useSpots';
 import { useSpotsTextFilter } from '../../hooks/useSpotsTextFilter';
@@ -16,11 +16,11 @@ import { Button } from '../ui/button';
 import MobileMoreMenu from './MobileMoreMenu';
 
 const MobileExploreFeed: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = (i18n.language || 'he').startsWith('he');
   const navigate = useNavigate();
   const { spots, filters, updateFilters, isLoading, selectSpot } = useSpots();
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedDistrictId, setExpandedDistrictId] = useState<DistrictId | null>(null);
   const filteredSpots = useSpotsTextFilter(spots, searchQuery);
   const grouped = groupSpotsByDistrict(filteredSpots);
   const districtSections = districtsWithSpots(grouped);
@@ -38,8 +38,8 @@ const MobileExploreFeed: React.FC = () => {
     navigate(`/spot/${spot.id}`);
   };
 
-  const toggleDistrictExpand = (id: DistrictId) => {
-    setExpandedDistrictId((current) => (current === id ? null : id));
+  const handleOpenDistrict = (id: DistrictId) => {
+    navigate(`/mobile/district/${id}`);
   };
 
   const districtTitle = (id: DistrictId) =>
@@ -99,62 +99,43 @@ const MobileExploreFeed: React.FC = () => {
         )}
 
         {!isLoading &&
-          districtSections.map(({ id, spots: sectionSpots }) => {
-            const isExpanded = expandedDistrictId === id;
-            return (
-              <section key={id} className="space-y-3">
-                <div className="flex items-start justify-between gap-2 pe-1">
-                  <h2 className="text-base font-bold text-foreground leading-tight flex-1 min-w-0">
-                    {districtTitle(id)}
-                  </h2>
-                  <Button
-                    type="button"
-                    variant="hero"
-                    size="icon"
-                    className="h-9 w-9 shrink-0 rounded-full shadow-soft"
-                    aria-expanded={isExpanded}
-                    aria-label={isExpanded ? t('mobile.collapse_district') : t('mobile.expand_district')}
-                    onClick={() => toggleDistrictExpand(id)}
-                  >
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-primary-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-primary-foreground" />
-                    )}
-                  </Button>
-                </div>
-                {isExpanded ? (
-                  <div className="grid grid-cols-2 gap-3 pb-2">
-                    {sectionSpots.map((spot: Spot) => (
-                      <div key={spot.id} className="min-w-0">
-                        <SpotCard
-                          spot={spot}
-                          variant="carousel"
-                          className="w-full max-w-none min-w-0"
-                          onViewDetails={handleViewDetails}
-                        />
-                      </div>
-                    ))}
+          districtSections.map(({ id, spots: sectionSpots }) => (
+            <section key={id} className="space-y-3">
+              <div className="flex items-start justify-between gap-2 pe-1">
+                <h2 className="text-base font-bold text-foreground leading-tight flex-1 min-w-0">
+                  {districtTitle(id)}
+                </h2>
+                <Button
+                  type="button"
+                  variant="hero"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 rounded-full shadow-soft"
+                  aria-label={t('mobile.open_district_view')}
+                  onClick={() => handleOpenDistrict(id)}
+                >
+                  {isRtl ? (
+                    <ChevronLeft className="h-4 w-4 text-primary-foreground" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-primary-foreground" />
+                  )}
+                </Button>
+              </div>
+              <div
+                className="flex !flex-row gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {sectionSpots.map((spot: Spot) => (
+                  <div key={spot.id} className="snap-start">
+                    <SpotCard
+                      spot={spot}
+                      variant="carousel"
+                      onViewDetails={handleViewDetails}
+                    />
                   </div>
-                ) : (
-                  <div
-                    className="flex !flex-row gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                  >
-                    {sectionSpots.map((spot: Spot) => (
-                      <div key={spot.id} className="snap-start">
-                        <SpotCard
-                          spot={spot}
-                          variant="carousel"
-                          onViewDetails={handleViewDetails}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            );
-          })}
+                ))}
+              </div>
+            </section>
+          ))}
       </div>
     </div>
   );

@@ -35,9 +35,18 @@ interface MapViewProps {
   hoveredSpot?: Spot | null;
   isSpotDetailsOpen?: boolean;
   onOpenDetails?: () => void;
+  visibleSpots?: Spot[];
+  fitToVisibleSpots?: boolean;
 }
 
-const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetailsOpen = false, onOpenDetails }) => {
+const MapView: React.FC<MapViewProps> = ({
+  className,
+  hoveredSpot,
+  isSpotDetailsOpen = false,
+  onOpenDetails,
+  visibleSpots,
+  fitToVisibleSpots = true,
+}) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<(google.maps.marker.AdvancedMarkerElement | google.maps.Marker)[]>([]);
@@ -46,6 +55,7 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
   const overlayRootRef = useRef<Root | null>(null);
   
   const { spots, selectedSpot, selectSpot, userLocation } = useSpots();
+  const spotsToRender = visibleSpots ?? spots;
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -169,7 +179,7 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
 
   // Add spot markers with selection state
   useEffect(() => {
-    if (!map.current || !spots.length) return;
+    if (!map.current || !spotsToRender.length) return;
 
     markersRef.current.forEach(marker => {
       if ('setMap' in marker) {
@@ -180,7 +190,7 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
     });
     markersRef.current = [];
 
-    spots.forEach(spot => {
+    spotsToRender.forEach(spot => {
       // Check if this spot is selected to apply different styling
       const isSelected = selectedSpot && selectedSpot.id === spot.id;
       
@@ -208,15 +218,15 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
     });
 
     // Fit bounds to show all spots if no spot is currently selected
-    if (!selectedSpot && spots.length > 0) {
+    if (!selectedSpot && fitToVisibleSpots && spotsToRender.length > 0) {
       const bounds = new google.maps.LatLngBounds();
-      spots.forEach(spot => {
+      spotsToRender.forEach(spot => {
         bounds.extend({ lat: spot.lat, lng: spot.lon });
       });
       // Add padding around the bounds
       map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
     }
-  }, [spots, selectSpot, selectedSpot]);
+  }, [spotsToRender, selectSpot, selectedSpot, fitToVisibleSpots]);
 
   // Handle selected spot: pan and zoom to selected spot
   useEffect(() => {
@@ -228,16 +238,16 @@ const MapView: React.FC<MapViewProps> = ({ className, hoveredSpot, isSpotDetails
       map.current.setZoom(15);
     } else {
       // When no spot is selected, fit bounds to show all spots
-      if (spots.length > 0) {
+      if (fitToVisibleSpots && spotsToRender.length > 0) {
         const bounds = new google.maps.LatLngBounds();
-        spots.forEach(spot => {
+        spotsToRender.forEach(spot => {
           bounds.extend({ lat: spot.lat, lng: spot.lon });
         });
         // Add padding around the bounds
         map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
       }
     }
-  }, [selectedSpot, spots]);
+  }, [selectedSpot, spotsToRender, fitToVisibleSpots]);
 
   // Handle hovered spot
   useEffect(() => {

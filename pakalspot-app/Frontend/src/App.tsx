@@ -11,6 +11,7 @@ import { AuthModalProvider, useAuthModal } from "./components/AuthModalProvider"
 import { AddSpotModalProvider } from "./components/AddSpotModalProvider";
 import Home from "./pages/Home";
 import MapPage from "./pages/MapPage";
+import MobileDistrictExplorePage from "./pages/MobileDistrictExplorePage";
 import MobileLayout from "./components/mobile/MobileLayout";
 import About from "./pages/About";
 import Favorites from "./pages/Favorites";
@@ -72,6 +73,7 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<MobileLayout><Home /></MobileLayout>} />
             <Route path="/map" element={<MobileLayout><MapPage /></MobileLayout>} />
+            <Route path="/mobile/district/:districtId" element={<MobileLayout><MobileDistrictExplorePage /></MobileLayout>} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<AuthRouteHandler mode="login" />} />
             <Route path="/register" element={<AuthRouteHandler mode="register" />} />
