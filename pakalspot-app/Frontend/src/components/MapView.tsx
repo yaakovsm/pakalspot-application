@@ -58,16 +58,59 @@ const MapView: React.FC<MapViewProps> = ({
   const spotsToRender = visibleSpots ?? spots;
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const { isAuthenticated } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { openAuthModal } = useAuthModal();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
+  const mapLanguage = (i18n.resolvedLanguage || i18n.language || 'he').toLowerCase().startsWith('en') ? 'en' : 'he';
 
-  // Initialize map
+  const clearMapArtifacts = () => {
+    markersRef.current.forEach(marker => {
+      if ('setMap' in marker) {
+        marker.setMap(null);
+      } else {
+        (marker as any).map = null;
+      }
+    });
+    markersRef.current = [];
+
+    if (hoverMarkerRef.current) {
+      if ('setMap' in hoverMarkerRef.current) {
+        hoverMarkerRef.current.setMap(null);
+      } else {
+        (hoverMarkerRef.current as any).map = null;
+      }
+      hoverMarkerRef.current = null;
+    }
+
+    if (userLocationMarker) {
+      if ('setMap' in userLocationMarker) {
+        userLocationMarker.setMap(null);
+      } else {
+        (userLocationMarker as any).map = null;
+      }
+      setUserLocationMarker(null);
+    }
+
+    if (overlayRef.current) {
+      overlayRef.current.setMap(null);
+      overlayRef.current = null;
+    }
+    if (overlayRootRef.current) {
+      overlayRootRef.current.unmount();
+      overlayRootRef.current = null;
+    }
+
+    map.current = null;
+  };
+
+  // Initialize map (re-initialize when app language changes)
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current) return;
 
     const initMap = async () => {
       try {
+        clearMapArtifacts();
+
         // Load Google Maps API with proper configuration
         const apiKey = VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
@@ -77,7 +120,7 @@ const MapView: React.FC<MapViewProps> = ({
 
         await googleMapsLoader.load({
           apiKey,
-          language: 'he',
+          language: mapLanguage,
           region: 'IL',
           libraries: ['places']
         });
@@ -96,10 +139,7 @@ const MapView: React.FC<MapViewProps> = ({
             latLngBounds: ISRAEL_BOUNDS,
             strictBounds: false
           },
-          mapTypeControl: true,
-          streetViewControl: false,
-          fullscreenControl: true,
-          zoomControl: true,
+          disableDefaultUI: true,
           mapTypeId: google.maps.MapTypeId.TERRAIN
         });
 
@@ -113,11 +153,9 @@ const MapView: React.FC<MapViewProps> = ({
     initMap();
 
     return () => {
-      if (map.current) {
-        map.current = null;
-      }
+      clearMapArtifacts();
     };
-  }, []);
+  }, [mapLanguage]);
 
   // Handle user location changes from store
   useEffect(() => {
@@ -175,7 +213,7 @@ const MapView: React.FC<MapViewProps> = ({
       map.current.setCenter(userLocation);
       map.current.setZoom(12);
     }
-  }, [userLocation]);
+  }, [userLocation, mapLanguage]);
 
   // Add spot markers with selection state
   useEffect(() => {
@@ -226,7 +264,7 @@ const MapView: React.FC<MapViewProps> = ({
       // Add padding around the bounds
       map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
     }
-  }, [spotsToRender, selectSpot, selectedSpot, fitToVisibleSpots]);
+  }, [spotsToRender, selectSpot, selectedSpot, fitToVisibleSpots, mapLanguage]);
 
   // Handle selected spot: pan and zoom to selected spot
   useEffect(() => {
@@ -247,7 +285,7 @@ const MapView: React.FC<MapViewProps> = ({
         map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
       }
     }
-  }, [selectedSpot, spotsToRender, fitToVisibleSpots]);
+  }, [selectedSpot, spotsToRender, fitToVisibleSpots, mapLanguage]);
 
   // Handle hovered spot
   useEffect(() => {
@@ -300,7 +338,7 @@ const MapView: React.FC<MapViewProps> = ({
 
       hoverMarkerRef.current = hoverMarker;
     }
-  }, [hoveredSpot]);
+  }, [hoveredSpot, mapLanguage]);
 
   // Handle favorite toggle
   const handleFavoriteSpot = (spotId: string) => {
@@ -459,7 +497,7 @@ const MapView: React.FC<MapViewProps> = ({
         overlayRootRef.current = null;
       }
     };
-  }, [selectedSpot, isSpotDetailsOpen, map, onOpenDetails, isFavorited, favoriteSpot, unfavoriteSpot, selectSpot, isAuthenticated]);
+  }, [selectedSpot, isSpotDetailsOpen, map, onOpenDetails, isFavorited, favoriteSpot, unfavoriteSpot, selectSpot, isAuthenticated, mapLanguage]);
 
   return (
     <div className={`relative w-full h-full ${className}`}>
