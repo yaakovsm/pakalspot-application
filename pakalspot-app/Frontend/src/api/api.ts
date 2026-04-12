@@ -190,4 +190,29 @@ export const spotsAPI = {
     api.get('/spots/reverse-geocode', { params: { lat, lng } }),
 };
 
+export type ContactSubmissionPayload = {
+  name: string;
+  email: string;
+  issue: string;
+};
+
+export type ContactSubmitResponse = {
+  ok: boolean;
+  id: string;
+};
+
+export type ContactSubmission = {
+  id: string;
+  name: string;
+  email: string;
+  issue: string;
+  created_at: string;
+};
+
+export const contactAPI = {
+  submit: (data: ContactSubmissionPayload): Promise<AxiosResponse<ContactSubmitResponse>> =>
+    api.post('/contact', data),
+  listSubmissions: (): Promise<AxiosResponse<ContactSubmission[]>> => api.get('/contact/submissions'),
+};
+
 export default api;

@@ -17,6 +17,8 @@ import About from "./pages/About";
 import Favorites from "./pages/Favorites";
 import SpotDetails from "./pages/SpotDetails";
 import AdminPendingSpots from "./pages/AdminPendingSpots";
+import AdminContactSubmissions from "./pages/AdminContactSubmissions";
+import Contact from "./pages/Contact";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -75,12 +77,14 @@ const AppContent = () => {
             <Route path="/map" element={<MobileLayout><MapPage /></MobileLayout>} />
             <Route path="/mobile/district/:districtId" element={<MobileLayout><MobileDistrictExplorePage /></MobileLayout>} />
             <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<AuthRouteHandler mode="login" />} />
             <Route path="/register" element={<AuthRouteHandler mode="register" />} />
             <Route path="/favorites" element={<MobileLayout><Favorites /></MobileLayout>} />
             <Route path="/profile" element={<MobileLayout><Profile /></MobileLayout>} />
             <Route path="/spot/:id" element={<SpotDetails />} />
             <Route path="/admin/pending-spots" element={<AdminPendingSpots />} />
+            <Route path="/admin/contact" element={<AdminContactSubmissions />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

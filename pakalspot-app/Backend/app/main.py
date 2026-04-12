@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.routers import auth, spots, photos, utils, media, admin
+from app.routers import auth, spots, photos, utils, media, admin, contact
 from app.core.database import engine
 from app.db.bootstrap import migrate_legacy_admin_email
 from app.models import Base
@@ -32,6 +32,7 @@ app.include_router(spots.router, prefix="/api")
 app.include_router(photos.router, prefix="/api")
 app.include_router(utils.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(contact.router, prefix="/api")
 
 app_requests_total = Counter(
     "app_requests_total",

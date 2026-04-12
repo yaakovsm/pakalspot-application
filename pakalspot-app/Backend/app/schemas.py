@@ -86,6 +86,31 @@ class PasswordChangeRequest(BaseModel):
 
 
 # ----------------------
+# Contact
+# ----------------------
+class ContactCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    email: EmailStr
+    issue: str = Field(..., min_length=1, max_length=10000)
+
+
+class ContactSubmitResponse(BaseModel):
+    ok: bool = True
+    id: str
+
+
+class ContactSubmissionOut(BaseModel):
+    id: str
+    name: str
+    email: str
+    issue: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ----------------------
 # Photo Schemas
 # ----------------------
 class PhotoBase(BaseModel):

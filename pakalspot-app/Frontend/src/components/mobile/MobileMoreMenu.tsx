@@ -71,12 +71,20 @@ const MobileMoreMenu: React.FC = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onClick={() => navigate('/contact')} className="cursor-pointer">
+          {t('navbar.contact')}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/about')} className="cursor-pointer">
           {t('mobile.about')}
         </DropdownMenuItem>
         {isAuthenticated && isAdmin && (
           <DropdownMenuItem onClick={() => navigate('/admin/pending-spots')} className="cursor-pointer">
             {t('navbar.moderation')}
+          </DropdownMenuItem>
+        )}
+        {isAuthenticated && isAdmin && (
+          <DropdownMenuItem onClick={() => navigate('/admin/contact')} className="cursor-pointer">
+            {t('contact.admin_title')}
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />

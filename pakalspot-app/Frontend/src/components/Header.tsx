@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAuth } from '../hooks/useAuth';
 import { useSpots } from '../hooks/useSpots';
-import { User, LogOut, Heart, MapPin, Moon, Sun, ListChecks } from 'lucide-react';
+import { User, LogOut, Heart, MapPin, Moon, Sun, ListChecks, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
@@ -26,6 +26,8 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   const isAdmin = Boolean(
     user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
   );
+
+  const navDir = (i18n.language || 'he').startsWith('he') ? 'rtl' : 'ltr';
 
   const handleLogout = () => {
     logout();
@@ -86,15 +88,18 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav dir={navDir} className="hidden md:flex items-center gap-8">
             {(() => {
               const currentLanguage = i18n.language || 'he';
-              const isHebrew = currentLanguage === 'he';
+              const isHebrew = currentLanguage.startsWith('he');
               
               if (isHebrew) {
-                // Hebrew order: About, Favorites, Home (RTL)
+                // Hebrew (RTL): Contact, About, then Favorites, Home
                 return (
                   <>
+                    <Button variant="ghost" onClick={() => navigate('/contact')} className="text-lg font-medium">
+                      {t('navbar.contact')}
+                    </Button>
                     <Button variant="ghost" onClick={() => navigate('/about')} className="text-lg font-medium">
                       {t('navbar.about')}
                     </Button>
@@ -112,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                   </>
                 );
               } else {
-                // English order: Home, Favorites, About (LTR)
+                // English (LTR): Home, Favorites, … then About, Contact (consecutive)
                 return (
                   <>
                     <Button variant="ghost" onClick={() => navigate('/')} className="text-lg font-medium">
@@ -129,6 +134,9 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                     <Button variant="ghost" onClick={() => navigate('/about')} className="text-lg font-medium">
                       {t('navbar.about')}
                     </Button>
+                    <Button variant="ghost" onClick={() => navigate('/contact')} className="text-lg font-medium">
+                      {t('navbar.contact')}
+                    </Button>
                   </>
                 );
               }
@@ -139,7 +147,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
           <div className="flex items-center gap-6">
             {(() => {
               const currentLanguage = i18n.language || 'he';
-              const isHebrew = currentLanguage === 'he';
+              const isHebrew = currentLanguage.startsWith('he');
               
               if (isHebrew) {
                 // Hebrew order: Login/Register first, then Actions
@@ -175,6 +183,12 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                             <DropdownMenuItem onClick={() => navigate('/admin/pending-spots')} className="cursor-pointer">
                               <ListChecks className="h-4 w-4" />
                               <span>{t('navbar.moderation')}</span>
+                            </DropdownMenuItem>
+                          )}
+                          {isAdmin && (
+                            <DropdownMenuItem onClick={() => navigate('/admin/contact')} className="cursor-pointer">
+                              <Mail className="h-4 w-4" />
+                              <span>{t('contact.admin_title')}</span>
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
@@ -263,6 +277,12 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                             <DropdownMenuItem onClick={() => navigate('/admin/pending-spots')} className="cursor-pointer">
                               <ListChecks className="h-4 w-4" />
                               <span>{t('navbar.moderation')}</span>
+                            </DropdownMenuItem>
+                          )}
+                          {isAdmin && (
+                            <DropdownMenuItem onClick={() => navigate('/admin/contact')} className="cursor-pointer">
+                              <Mail className="h-4 w-4" />
+                              <span>{t('contact.admin_title')}</span>
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">

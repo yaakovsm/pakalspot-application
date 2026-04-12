@@ -17,6 +17,25 @@
       "profile": "פרופיל",
       "logout": "התנתקות"
     },
+    "contact": {
+      "title": "נשמח לשמוע מכם",
+      "subtitle": "רוצים לספר על ספוט, לשתף מחשבה, או סתם לדבר איתנו?",
+      "name": "שם",
+      "name_placeholder": "השם שלכם",
+      "email": "אימייל",
+      "email_placeholder": "אימייל לתשובה",
+      "issue": "הודעה",
+      "issue_placeholder": "מה בא לכם לשתף?",
+      "submit": "שליחה",
+      "submitting": "שולחים…",
+      "success_title": "הפנייה נשלחה",
+      "success_description": "קיבלנו את ההודעה ונחזור אליכם בהקדם.",
+      "error_generic": "לא הצלחנו לשלוח את הפנייה. נסו שוב מאוחר יותר.",
+      "admin_title": "פניות צור קשר",
+      "admin_empty": "אין פניות עדיין.",
+      "admin_load_error": "לא ניתן לטעון את רשימת הפניות.",
+      "submitted_at": "נשלח"
+    },
     "profile": {
       "title": "הפרופיל שלכם",
       "account": "חשבון",
