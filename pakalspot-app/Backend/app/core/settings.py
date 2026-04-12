@@ -42,6 +42,7 @@ class Settings(BaseSettings):
 
     DEBUG: bool = Field(default=True)
     ENVIRONMENT: str = Field(default="development")
+    GOOGLE_CLIENT_ID: Optional[str] = Field(default=None)
 
     def model_post_init(self, __context) -> None:
         env = (self.ENVIRONMENT or "").lower()

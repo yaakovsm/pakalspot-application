@@ -10,6 +10,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (data: LoginRequest) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -35,6 +36,28 @@ export const useAuthStore = create<AuthState>()(
           // Store token in localStorage for API interceptor
           localStorage.setItem('auth_token', token);
           
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      loginWithGoogle: async (idToken: string) => {
+        try {
+          set({ isLoading: true });
+          const response = await authAPI.loginWithGoogle(idToken);
+          const { user: rawUser, token } = response.data;
+          const user = normalizeAuthUser(rawUser);
+
+          // Store token in localStorage for API interceptor
+          localStorage.setItem('auth_token', token);
+
           set({
             user,
             token,
@@ -139,6 +162,7 @@ export const useAuth = () => {
     isLoading,
     isAuthenticated,
     login,
+    loginWithGoogle,
     register,
     logout,
     updateUser,
@@ -151,6 +175,7 @@ export const useAuth = () => {
     isLoading,
     isAuthenticated,
     login,
+    loginWithGoogle,
     register,
     logout,
     updateUser,

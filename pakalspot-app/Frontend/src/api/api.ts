@@ -88,6 +88,7 @@ export const getMediaUrl = (value: string | null | undefined): string => {
 export const authAPI = {
   login: (data: LoginRequest): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/login', data),
   register: (data: RegisterRequest): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/register', data),
+  loginWithGoogle: (id_token: string): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/google', { id_token }),
   logout: (): Promise<AxiosResponse<void>> => api.post('/auth/logout'),
   getProfile: (): Promise<AxiosResponse<User>> => api.get('/auth/me'),
   updateProfile: (data: { display_name?: string; avatar?: string }): Promise<AxiosResponse<User>> =>

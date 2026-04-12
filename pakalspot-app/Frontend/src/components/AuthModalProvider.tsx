@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/use-toast';
+import { VITE_GOOGLE_CLIENT_ID } from '../config/env';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
@@ -20,6 +21,32 @@ interface AuthModalContextValue {
 }
 
 const AuthModalContext = createContext<AuthModalContextValue | undefined>(undefined);
+
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        id?: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              type?: 'standard' | 'icon';
+              theme?: 'outline' | 'filled_blue' | 'filled_black';
+              size?: 'large' | 'medium' | 'small';
+              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+              width?: number;
+            }
+          ) => void;
+        };
+      };
+    };
+  }
+}
 
 const getErrorMessage = (error: unknown): string | null => {
   if (typeof error !== 'object' || error === null || !('response' in error)) return null;
@@ -42,10 +69,12 @@ const AuthModal: React.FC<{
   onOpenChange: (open: boolean) => void;
   onModeChange: (mode: AuthMode) => void;
 }> = ({ open, mode, copyOverride, onOpenChange, onModeChange }) => {
-  const { login, register, isLoading } = useAuth();
+  const { login, loginWithGoogle, register, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({
     username: '',
@@ -56,6 +85,8 @@ const AuthModal: React.FC<{
 
   const resetState = useCallback(() => {
     setShowPassword(false);
+    setIsGoogleLoading(false);
+    setGoogleReady(false);
     setLoginForm({ email: '', password: '' });
     setRegisterForm({ username: '', email: '', password: '', confirmPassword: '' });
   }, []);
@@ -65,6 +96,92 @@ const AuthModal: React.FC<{
     resetState();
     onModeChange('login');
   }, [onModeChange, onOpenChange, resetState]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !open || mode !== 'login' || !VITE_GOOGLE_CLIENT_ID) return;
+
+    let cancelled = false;
+
+    const setupGoogleSignIn = () => {
+      if (cancelled || !window.google?.accounts?.id) return;
+
+      const target = document.getElementById('google-signin-button');
+      if (!target) return;
+      target.innerHTML = '';
+
+      window.google.accounts.id.initialize({
+        client_id: VITE_GOOGLE_CLIENT_ID,
+        callback: async ({ credential }) => {
+          if (!credential) {
+            toast({
+              title: 'Google sign-in failed',
+              description: 'Google did not return a valid credential.',
+              variant: 'destructive',
+            });
+            return;
+          }
+
+          try {
+            setIsGoogleLoading(true);
+            await loginWithGoogle(credential);
+            toast({
+              title: t('auth.welcome_back'),
+              description: t('auth.account_created_successfully'),
+            });
+            close();
+          } catch (error: unknown) {
+            toast({
+              title: 'Google sign-in failed',
+              description: getErrorMessage(error) || t('auth.something_went_wrong'),
+              variant: 'destructive',
+            });
+          } finally {
+            setIsGoogleLoading(false);
+          }
+        },
+      });
+
+      window.google.accounts.id.renderButton(target, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'pill',
+        width: 360,
+      });
+
+      setGoogleReady(true);
+    };
+
+    if (window.google?.accounts?.id) {
+      setupGoogleSignIn();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const existingScript = document.getElementById('google-identity-services-script') as HTMLScriptElement | null;
+    if (existingScript) {
+      existingScript.addEventListener('load', setupGoogleSignIn);
+      return () => {
+        cancelled = true;
+        existingScript.removeEventListener('load', setupGoogleSignIn);
+      };
+    }
+
+    const script = document.createElement('script');
+    script.id = 'google-identity-services-script';
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.addEventListener('load', setupGoogleSignIn);
+    document.head.appendChild(script);
+
+    return () => {
+      cancelled = true;
+      script.removeEventListener('load', setupGoogleSignIn);
+    };
+  }, [close, loginWithGoogle, mode, open, toast, t]);
 
   const switchMode = useCallback(
     (nextMode: AuthMode) => {
@@ -222,6 +339,24 @@ const AuthModal: React.FC<{
             <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
               {isLoading ? t('auth.signing_in') : t('auth.sign_in')}
             </Button>
+            {VITE_GOOGLE_CLIENT_ID ? (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+                <div className={isGoogleLoading ? 'pointer-events-none opacity-60' : ''}>
+                  <div id="google-signin-button" className="flex justify-center" />
+                </div>
+                {!googleReady && (
+                  <p className="text-center text-xs text-muted-foreground">Loading Google sign-in...</p>
+                )}
+              </>
+            ) : null}
             <p className="text-center text-sm text-muted-foreground">
               {t('auth.dont_have_account')}{' '}
               <button

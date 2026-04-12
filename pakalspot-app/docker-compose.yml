@@ -37,6 +37,7 @@ services:
       - S3_REGION=us-east-1
       - INIT_SEED_BUCKET=pakalspot-init-photos
       - MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - ENVIRONMENT=development
       - BASE_URL=http://pakalspot.local:8000
       - ADMIN_SEED_API_KEY=${ADMIN_SEED_API_KEY}
@@ -57,6 +58,7 @@ services:
     environment:
       VITE_API_BASE_URL: "http://localhost:8000/api"
       VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     depends_on:
       - backend
     networks:

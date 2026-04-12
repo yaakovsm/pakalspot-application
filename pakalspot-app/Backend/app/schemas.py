@@ -47,6 +47,10 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleLoginRequest(BaseModel):
+    id_token: str = Field(..., min_length=1)
+
+
 class UserOut(UserBase):
     id: uuid.UUID
     username: str  # Alias for display_name to match frontend
