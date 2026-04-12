@@ -21,6 +21,9 @@ import SpotActionCard from './SpotActionCard';
 // Israel map configuration
 const ISRAEL_CENTER: google.maps.LatLngLiteral = { lat: 31.3, lng: 34.8 };
 const ISRAEL_ZOOM = 10;
+/** Zoom levels to step back when closing a spot (keeps map center). */
+const ZOOM_OUT_DELTA = 2;
+const MIN_ZOOM_AFTER_DESELECT = ISRAEL_ZOOM;
 const ISRAEL_BOUNDS: google.maps.LatLngBoundsLiteral = {
   north: 33.4,
   south: 29.5,
@@ -53,7 +56,8 @@ const MapView: React.FC<MapViewProps> = ({
   const hoverMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
   const overlayRef = useRef<google.maps.OverlayView | null>(null);
   const overlayRootRef = useRef<Root | null>(null);
-  
+  const prevSelectedSpotIdRef = useRef<string | null>(null);
+
   const { spots, selectedSpot, selectSpot, userLocation } = useSpots();
   const spotsToRender = visibleSpots ?? spots;
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
@@ -254,34 +258,27 @@ const MapView: React.FC<MapViewProps> = ({
 
       markersRef.current.push(marker);
     });
-
-    // Fit bounds to show all spots if no spot is currently selected
-    if (!selectedSpot && fitToVisibleSpots && spotsToRender.length > 0) {
-      const bounds = new google.maps.LatLngBounds();
-      spotsToRender.forEach(spot => {
-        bounds.extend({ lat: spot.lat, lng: spot.lon });
-      });
-      // Add padding around the bounds
-      map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
-    }
-  }, [spotsToRender, selectSpot, selectedSpot, fitToVisibleSpots, mapLanguage]);
+  }, [spotsToRender, selectSpot, selectedSpot, mapLanguage]);
 
   // Handle selected spot: pan and zoom to selected spot
   useEffect(() => {
     if (!map.current) return;
 
     if (selectedSpot) {
-      // Pan to selected spot and zoom in
       map.current.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lon });
       map.current.setZoom(15);
+      prevSelectedSpotIdRef.current = selectedSpot.id;
     } else {
-      // When no spot is selected, fit bounds to show all spots
-      if (fitToVisibleSpots && spotsToRender.length > 0) {
+      const closedASpot = prevSelectedSpotIdRef.current != null;
+      if (closedASpot) {
+        prevSelectedSpotIdRef.current = null;
+        const z = map.current.getZoom() ?? 15;
+        map.current.setZoom(Math.max(MIN_ZOOM_AFTER_DESELECT, z - ZOOM_OUT_DELTA));
+      } else if (fitToVisibleSpots && spotsToRender.length > 0) {
         const bounds = new google.maps.LatLngBounds();
         spotsToRender.forEach(spot => {
           bounds.extend({ lat: spot.lat, lng: spot.lon });
         });
-        // Add padding around the bounds
         map.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
       }
     }
