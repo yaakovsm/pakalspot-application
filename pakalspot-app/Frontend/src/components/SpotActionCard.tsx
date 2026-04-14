@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
 import { resolvePhotoUrl } from '../utils/spotMedia';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Carousel, CarouselContent, CarouselItem } from './ui/carousel';
 
 interface SpotActionCardProps {
   spot: Spot;
@@ -70,72 +71,94 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
     >
       {/* Image Carousel Section - Exact Airbnb dimensions: 240x155.55 */}
       <div 
-        className="relative flex-shrink-0 cursor-pointer bg-gray-100 overflow-hidden rounded-t-2xl"
+        className="relative flex-shrink-0 bg-gray-100 overflow-hidden rounded-t-2xl"
         style={{
           width: '240px',
           height: '155.55px',
         }}
-        onClick={onOpenDetails}
       >
         {photos.length > 0 ? (
           <>
-            <div 
-              className="relative w-full h-full"
-              style={{
-                display: 'flex',
-                direction: 'ltr', // Force LTR for carousel to work correctly
-                transform: `translateX(-${currentImageIndex * 100}%)`,
-                transition: 'transform 0.3s ease-in-out',
-              }}
-            >
-              {photos.map((photo, index) => (
-                <img 
-                  key={photo.id || index}
-                  src={resolvePhotoUrl(photo) || ''} 
-                  alt={`${translatedTitle} - ${index + 1}`}
-                  className="w-full h-full object-cover flex-shrink-0"
-                  style={{ width: '240px', height: '155.55px' }}
-                />
-              ))}
-            </div>
-            
-            {/* Navigation arrows - only show if multiple photos */}
-            {hasMultiplePhotos && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={goToPrevious}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-sm z-10"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={goToNext}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-sm z-10"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                
-                {/* Image indicators */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                  {photos.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentImageIndex(index);
-                      }}
-                      className={`w-1.5 h-1.5 rounded-full transition-all ${
-                        index === currentImageIndex ? 'bg-white w-2' : 'bg-white/50'
-                      }`}
-                    />
+            <div className="block lg:hidden w-full h-full">
+              <Carousel
+                className="w-full h-full"
+                opts={{ direction: 'ltr' }}
+              >
+                <CarouselContent className="h-full">
+                  {photos.map((photo, index) => (
+                    <CarouselItem key={photo.id || index} className="h-full">
+                      <img
+                        src={resolvePhotoUrl(photo) || ''}
+                        alt={`${translatedTitle} - ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        style={{ width: '240px', height: '155.55px' }}
+                        onClick={onOpenDetails}
+                      />
+                    </CarouselItem>
                   ))}
-                </div>
-              </>
-            )}
+                </CarouselContent>
+              </Carousel>
+            </div>
+
+            <div className="hidden lg:block w-full h-full cursor-pointer" onClick={onOpenDetails}>
+              <div
+                className="relative w-full h-full"
+                style={{
+                  display: 'flex',
+                  direction: 'ltr', // Force LTR for carousel to work correctly
+                  transform: `translateX(-${currentImageIndex * 100}%)`,
+                  transition: 'transform 0.3s ease-in-out',
+                }}
+              >
+                {photos.map((photo, index) => (
+                  <img
+                    key={photo.id || index}
+                    src={resolvePhotoUrl(photo) || ''}
+                    alt={`${translatedTitle} - ${index + 1}`}
+                    className="w-full h-full object-cover flex-shrink-0"
+                    style={{ width: '240px', height: '155.55px' }}
+                  />
+                ))}
+              </div>
+
+              {/* Navigation arrows - desktop only */}
+              {hasMultiplePhotos && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={goToPrevious}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-sm z-10"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={goToNext}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-sm z-10"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+
+                  {/* Image indicators */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {photos.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImageIndex(index);
+                        }}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${
+                          index === currentImageIndex ? 'bg-white w-2' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </>
         ) : (
           <div className="w-full h-full bg-gradient-card flex items-center justify-center rounded-t-2xl">

@@ -27,6 +27,7 @@ import { resolvePhotoUrl } from '../utils/spotMedia';
 import { normalizeSpotType, type SpotType } from '../types/spot';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { Carousel, CarouselContent, CarouselItem } from '../components/ui/carousel';
 
 const SpotDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -258,13 +259,29 @@ const SpotDetails: React.FC = () => {
           {/* Image Gallery */}
           {selectedSpot.photos && selectedSpot.photos.length > 0 && (
             <Card className="mb-6 overflow-hidden">
-              <div className="relative">
-                <img 
+              <div className="relative lg:hidden">
+                <Carousel className="w-full" opts={{ direction: 'ltr' }}>
+                  <CarouselContent>
+                    {selectedSpot.photos.map((photo, index) => (
+                      <CarouselItem key={photo.id || index}>
+                        <img
+                          src={resolvePhotoUrl(photo) || ''}
+                          alt={`${selectedSpot.title} - ${index + 1}`}
+                          className="w-full h-80 object-cover"
+                        />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              </div>
+
+              <div className="relative hidden lg:block">
+                <img
                   src={resolvePhotoUrl(selectedSpot.photos[currentImageIndex]) || ''}
                   alt={selectedSpot.title}
                   className="w-full h-96 object-cover"
                 />
-                
+
                 {selectedSpot.photos.length > 1 && (
                   <>
                     <Button
@@ -287,7 +304,7 @@ const SpotDetails: React.FC = () => {
                     >
                       →
                     </Button>
-                    
+
                     {/* Image indicators */}
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
                       {selectedSpot.photos.map((_, index) => (
