@@ -29,7 +29,7 @@ const Favorites: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background" dir={isHebrew ? 'rtl' : 'ltr'}>
-        <Header className="hidden lg:block" />
+        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center py-16">
@@ -55,7 +55,7 @@ const Favorites: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={isHebrew ? 'rtl' : 'ltr'}>
-      <Header className="hidden lg:block" />
+      <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">

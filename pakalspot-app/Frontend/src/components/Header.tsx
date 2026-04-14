@@ -11,6 +11,8 @@ import i18n from 'i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 import { ADMIN_EMAIL } from '../utils/authUser';
 import { useAuthModal } from './AuthModalProvider';
+import MobileMoreMenu from './mobile/MobileMoreMenu';
+import MobileNavMenu from './mobile/MobileNavMenu';
 
 interface HeaderProps {
   className?: string;
@@ -28,6 +30,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   );
 
   const navDir = (i18n.language || 'he').startsWith('he') ? 'rtl' : 'ltr';
+  const isHebrewMobile = (i18n.language || 'he').startsWith('he');
 
   const handleLogout = () => {
     logout();
@@ -73,24 +76,96 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   return (
     <header className={`bg-background/80 backdrop-blur-md border-b border-border shadow-soft ${className}`}>
       <div className="w-full px-3 sm:px-6 py-3 sm:py-4">
-        <div className="flex items-center justify-between w-full">
-          {/* Logo */}
-          <div 
-            className="flex items-center gap-2 cursor-pointer px-1 sm:px-2 py-1 min-w-0" 
+        {/* Mobile header */}
+        <div className="flex lg:hidden items-center justify-between w-full">
+          {isHebrewMobile ? (
+            <>
+              <div
+                className="flex items-center cursor-pointer px-1 py-1"
+                onClick={() => navigate('/')}
+              >
+                <img
+                  src="/PakalSpot_Transperent_logo.png"
+                  alt="PakalSpot Logo"
+                  className="w-10 h-10 object-contain shrink-0"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                {isAuthenticated && user ? (
+                  <MobileNavMenu />
+                ) : null}
+
+                {isAuthenticated ? (
+                  <MobileMoreMenu />
+                ) : (
+                  <>
+                    <MobileMoreMenu />
+                    <Button
+                      variant="hero"
+                      onClick={() => openAuthModal('login')}
+                      className="text-sm font-medium px-3 py-1.5 whitespace-nowrap"
+                    >
+                      {t('auth.login')}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                {isAuthenticated && user ? (
+                  <MobileNavMenu />
+                ) : null}
+
+                {isAuthenticated ? (
+                  <MobileMoreMenu />
+                ) : (
+                  <>
+                    <MobileMoreMenu />
+                    <Button
+                      variant="hero"
+                      onClick={() => openAuthModal('login')}
+                      className="text-sm font-medium px-3 py-1.5 whitespace-nowrap"
+                    >
+                      {t('auth.login')}
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              <div
+                className="flex items-center cursor-pointer px-1 py-1"
+                onClick={() => navigate('/')}
+              >
+                <img
+                  src="/PakalSpot_Transperent_logo.png"
+                  alt="PakalSpot Logo"
+                  className="w-10 h-10 object-contain shrink-0"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Desktop header */}
+        <div className="hidden lg:flex items-center justify-between w-full">
+          <div
+            className="flex items-center gap-2 cursor-pointer px-1 sm:px-2 py-1 min-w-0"
             onClick={() => navigate('/')}
           >
-            <img 
-              src="/PakalSpot_Transperent_logo.png" 
-              alt="PakalSpot Logo" 
-              className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0"
+            <img
+              src="/PakalSpot_Transperent_logo.png"
+              alt="PakalSpot Logo"
+              className="w-12 h-12 object-contain shrink-0"
             />
-            <span className="hidden sm:inline text-xl lg:text-2xl font-bold text-foreground whitespace-nowrap">
+            <span className="text-xl lg:text-2xl font-bold text-foreground whitespace-nowrap">
               {t('app.name')}
             </span>
           </div>
 
           {/* Navigation */}
-          <nav dir={navDir} className="hidden md:flex items-center gap-8">
+          <nav dir={navDir} className="flex items-center gap-8">
             {(() => {
               const currentLanguage = i18n.language || 'he';
               const isHebrew = currentLanguage.startsWith('he');
@@ -146,7 +221,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
+          <div className="flex items-center gap-4 lg:gap-6 shrink-0">
             {(() => {
               const currentLanguage = i18n.language || 'he';
               const isHebrew = currentLanguage.startsWith('he');
