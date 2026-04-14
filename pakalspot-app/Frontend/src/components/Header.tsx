@@ -13,6 +13,7 @@ import { ADMIN_EMAIL } from '../utils/authUser';
 import { useAuthModal } from './AuthModalProvider';
 import MobileMoreMenu from './mobile/MobileMoreMenu';
 import MobileNavMenu from './mobile/MobileNavMenu';
+import { MIN_WIDTH_LG, useMediaQuery } from '../hooks/use-media-query';
 
 interface HeaderProps {
   className?: string;
@@ -24,6 +25,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   const { setUserLocation, userLocation } = useSpots();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const isDesktop = useMediaQuery(MIN_WIDTH_LG);
 
   const isAdmin = Boolean(
     user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
@@ -77,7 +79,8 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
     <header className={`bg-background/80 backdrop-blur-md border-b border-border shadow-soft ${className}`}>
       <div className="w-full px-3 sm:px-6 py-3 sm:py-4">
         {/* Mobile header */}
-        <div className="flex lg:hidden items-center justify-between w-full">
+        {!isDesktop && (
+        <div className="flex items-center justify-between w-full">
           {isHebrewMobile ? (
             <>
               <div
@@ -147,9 +150,11 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
             </>
           )}
         </div>
+        )}
 
         {/* Desktop header */}
-        <div className="hidden lg:flex items-center justify-between w-full">
+        {isDesktop && (
+        <div className="flex items-center justify-between w-full">
           <div
             className="flex items-center gap-2 cursor-pointer px-1 sm:px-2 py-1 min-w-0"
             onClick={() => navigate('/')}
@@ -392,6 +397,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
             })()}
           </div>
         </div>
+        )}
       </div>
     </header>
   );

@@ -4,7 +4,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import Header from '../components/Header';
-import AuthDialog from '../components/AuthDialog';
 import { useAuthModal } from '../components/AuthModalProvider';
 import { useSpots } from '../hooks/useSpots';
 import { useAuth } from '../hooks/useAuth';
@@ -19,28 +18,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
-import { ArrowLeft, MapPin, Heart, ThumbsUp, ThumbsDown, User, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Heart, Share2, Trash2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_EMAIL } from '../utils/authUser';
 import { getApiErrorDetail } from '../utils/apiError';
 import { resolvePhotoUrl } from '../utils/spotMedia';
 import { normalizeSpotType, type SpotType } from '../types/spot';
+import { getTranslatedSpotContent } from '../utils/spotTranslations';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 
 const SpotDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t } = useTranslation();
-  const { selectedSpot, selectSpot, likeSpot, fetchSpots } = useSpots();
+  const { t, i18n } = useTranslation();
+  const { selectedSpot, selectSpot, fetchSpots } = useSpots();
   const { isAuthenticated, user } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [detailLoading, setDetailLoading] = useState(true);
+  const [navigationPopoverOpen, setNavigationPopoverOpen] = useState(false);
 
   const isAdmin = Boolean(
     user?.is_admin || user?.email?.trim().toLowerCase() === ADMIN_EMAIL
@@ -111,29 +112,6 @@ const SpotDetails: React.FC = () => {
       toast({
         title: t('spots.added_to_favorites'),
         description: t('spots.added_to_favorites_desc'),
-      });
-    }
-  };
-
-  const handleLike = async (isLike: boolean) => {
-    if (!isAuthenticated) {
-      setShowAuthDialog(true);
-      return;
-    }
-
-    if (!selectedSpot) return;
-
-    try {
-      await likeSpot(selectedSpot.id, isLike);
-      toast({
-        title: isLike ? t('spots.spot_liked') : t('spots.feedback_recorded'),
-        description: isLike ? t('spots.like_recorded') : t('spots.dislike_recorded'),
-      });
-    } catch (error) {
-      toast({
-        title: t('common.error'),
-        description: t('spots.feedback_failed'),
-        variant: 'destructive',
       });
     }
   };
@@ -210,6 +188,20 @@ const SpotDetails: React.FC = () => {
     }
   };
 
+  const openGoogleMaps = () => {
+    if (!selectedSpot) return;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedSpot.lat},${selectedSpot.lon}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setNavigationPopoverOpen(false);
+  };
+
+  const openWaze = () => {
+    if (!selectedSpot) return;
+    const url = `https://waze.com/ul?ll=${selectedSpot.lat},${selectedSpot.lon}&navigate=yes`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setNavigationPopoverOpen(false);
+  };
+
   if (detailLoading || !selectedSpot || selectedSpot.id !== id) {
     return (
       <div className="min-h-screen bg-background">
@@ -222,6 +214,7 @@ const SpotDetails: React.FC = () => {
   }
 
   const spotTypeNorm = normalizeSpotType(String(selectedSpot.spot_type));
+  const translatedHowToGetThere = getTranslatedSpotContent(selectedSpot, t, 'how_to_get_there');
   const getTypeColor = (type: SpotType) => {
     const typeColors: Record<SpotType, string> = {
       waterfall: 'bg-blue-500',
@@ -379,88 +372,64 @@ const SpotDetails: React.FC = () => {
                     {selectedSpot.description}
                   </p>
 
-                  {/* Actions */}
-                  {canSocial && (
-                    <div className="flex items-center gap-4">
-                      <Button
-                        variant={selectedSpot.userLike?.isLike ? "default" : "outline"}
-                        onClick={() => handleLike(true)}
-                        className="gap-2"
-                      >
-                        <ThumbsUp className="w-4 h-4" />
-                        {selectedSpot.likeCount || 0}
-                      </Button>
-                      
-                      <Button
-                        variant={selectedSpot.userLike && !selectedSpot.userLike.isLike ? "default" : "outline"}
-                        onClick={() => handleLike(false)}
-                        className="gap-2"
-                      >
-                        <ThumbsDown className="w-4 h-4" />
-                        {selectedSpot.dislikeCount || 0}
-                      </Button>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>
 
             {/* Right Column - Details */}
             <div className="space-y-6">
-              {/* Location Info */}
+              {/* How to Get There */}
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <MapPin className="w-5 h-5" />
-                    {t('spots.location_details')}
+                  <h3 className="font-semibold text-foreground mb-3">
+                    {t('spots.how_to_get_there')}
                   </h3>
-                  
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">{t('spots.coordinates')}:</span>
-                      <span className="ml-2 font-mono text-xs">
-                        {selectedSpot.lat.toFixed(4)}, {selectedSpot.lon.toFixed(4)}
-                      </span>
-                    </div>
-                    {selectedSpot.distance && (
-                      <div>
-                        <span className="text-muted-foreground">{t('spots.distance')}:</span>
-                        <span className="ml-2 font-medium">
-                          {selectedSpot.distance < 1 
-                            ? `${Math.round(selectedSpot.distance * 1000)}m` 
-                            : `${selectedSpot.distance.toFixed(1)}km`}
-                        </span>
+                  {translatedHowToGetThere && (
+                    <p className="text-foreground leading-relaxed mb-4">
+                      {translatedHowToGetThere}
+                    </p>
+                  )}
+                  <Popover open={navigationPopoverOpen} onOpenChange={setNavigationPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="default" className="w-full gap-2">
+                        <MapPin className="w-4 h-4" />
+                        {t('spots.get_directions')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[230px] p-2 rounded-xl border-border/70 shadow-strong"
+                      align={i18n.language === 'he' ? 'start' : 'center'}
+                    >
+                      <p className="text-xs text-muted-foreground font-medium px-2 pt-1 pb-2">
+                        {t('spots.choose_navigation_app')}
+                      </p>
+                      <div className="space-y-1">
+                        <Button
+                          variant="ghost"
+                          onClick={openGoogleMaps}
+                          className="w-full h-11 justify-start rounded-lg border border-transparent text-foreground hover:text-foreground hover:border-primary/20 hover:bg-accent/60"
+                        >
+                          <img src="/maps_icon.png" alt={t('spots.google_maps')} className="w-5 h-5 rounded-sm object-contain" />
+                          <span className="font-medium">{t('spots.google_maps')}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={openWaze}
+                          className="w-full h-11 justify-start rounded-lg border border-transparent text-foreground hover:text-foreground hover:border-primary/20 hover:bg-accent/60"
+                        >
+                          <img src="/waze_icon.png" alt={t('spots.waze')} className="w-5 h-5 rounded-sm object-contain" />
+                          <span className="font-medium">{t('spots.waze')}</span>
+                        </Button>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Creator Info */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    {t('spots.spot_info')}
-                  </h3>
-                  
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">{t('spots.added_by')}:</span>
-                      <span className="ml-2 font-medium">{selectedSpot.createdBy?.username || t('spots.unknown')}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">{t('spots.popularity')}:</span>
-                      <span className="ml-2 font-medium">{selectedSpot.popularity || 0} {t('spots.views')}</span>
-                    </div>
-                  </div>
+                    </PopoverContent>
+                  </Popover>
                 </CardContent>
               </Card>
 
               {/* Map Button */}
               <Button 
                 variant="hero" 
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/map')}
                 className="w-full gap-2"
               >
                 <MapPin className="w-4 h-4" />
@@ -471,15 +440,6 @@ const SpotDetails: React.FC = () => {
         </div>
       </div>
       
-      <AuthDialog
-        open={showAuthDialog}
-        onOpenChange={setShowAuthDialog}
-        title={t('auth.sign_in_required')}
-        description={t('auth.favorites_sign_in_description')}
-        actionText={t('auth.sign_in')}
-        cancelText={t('common.cancel')}
-      />
-
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
