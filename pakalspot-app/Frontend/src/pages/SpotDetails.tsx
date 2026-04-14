@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
-import { ArrowLeft, MapPin, Heart, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin, Heart, Share2, Trash2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_EMAIL } from '../utils/authUser';
@@ -27,7 +27,7 @@ import { resolvePhotoUrl } from '../utils/spotMedia';
 import { normalizeSpotType, type SpotType } from '../types/spot';
 import { getTranslatedSpotContent } from '../utils/spotTranslations';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { Carousel, CarouselContent, CarouselItem } from '../components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '../components/ui/carousel';
 
 const SpotDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +39,7 @@ const SpotDetails: React.FC = () => {
   const { openAuthModal } = useAuthModal();
   const { isFavorited, favoriteSpot, unfavoriteSpot } = useFavorites();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [mobileCarouselApi, setMobileCarouselApi] = useState<CarouselApi>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [detailLoading, setDetailLoading] = useState(true);
@@ -79,6 +80,23 @@ const SpotDetails: React.FC = () => {
     };
   }, [id, navigate, selectSpot]);
 
+  useEffect(() => {
+    if (!mobileCarouselApi) return;
+
+    const updateIndex = () => {
+      setCurrentImageIndex(mobileCarouselApi.selectedScrollSnap());
+    };
+
+    updateIndex();
+    mobileCarouselApi.on('select', updateIndex);
+    mobileCarouselApi.on('reInit', updateIndex);
+
+    return () => {
+      mobileCarouselApi.off('select', updateIndex);
+      mobileCarouselApi.off('reInit', updateIndex);
+    };
+  }, [mobileCarouselApi]);
+
   const approvalRaw =
     selectedSpot?.approval_status ??
     (selectedSpot as { approvalStatus?: string } | undefined)?.approvalStatus;
@@ -90,6 +108,7 @@ const SpotDetails: React.FC = () => {
   );
   const showPendingBanner = Boolean(isPending && (isOwner || isAdmin));
   const canSocial = !isPending;
+  const isRTL = i18n.language === 'he';
 
   const handleFavoriteToggle = () => {
     if (!isAuthenticated) {
@@ -215,6 +234,8 @@ const SpotDetails: React.FC = () => {
   }
 
   const spotTypeNorm = normalizeSpotType(String(selectedSpot.spot_type));
+  const translatedTitle = getTranslatedSpotContent(selectedSpot, t, 'title');
+  const translatedDescription = getTranslatedSpotContent(selectedSpot, t, 'description');
   const translatedHowToGetThere = getTranslatedSpotContent(selectedSpot, t, 'how_to_get_there');
   const getTypeColor = (type: SpotType) => {
     const typeColors: Record<SpotType, string> = {
@@ -241,7 +262,7 @@ const SpotDetails: React.FC = () => {
           <Button 
             variant="ghost" 
             onClick={() => navigate('/')}
-            className="mb-6 gap-2"
+            className="mb-6 hidden gap-2 lg:inline-flex"
           >
             <ArrowLeft className="w-4 h-4" />
             {t('spots.back_to_map')}
@@ -257,28 +278,86 @@ const SpotDetails: React.FC = () => {
           )}
 
           {/* Image Gallery */}
-          {selectedSpot.photos && selectedSpot.photos.length > 0 && (
-            <Card className="mb-6 overflow-hidden">
-              <div className="relative lg:hidden">
-                <Carousel className="w-full" opts={{ direction: 'ltr' }}>
+          <Card className="mb-6 overflow-hidden">
+            <div className="relative lg:hidden">
+              {selectedSpot.photos && selectedSpot.photos.length > 0 ? (
+                <Carousel className="w-full" opts={{ direction: 'ltr' }} setApi={setMobileCarouselApi}>
                   <CarouselContent>
                     {selectedSpot.photos.map((photo, index) => (
                       <CarouselItem key={photo.id || index}>
                         <img
                           src={resolvePhotoUrl(photo) || ''}
-                          alt={`${selectedSpot.title} - ${index + 1}`}
+                          alt={`${translatedTitle} - ${index + 1}`}
                           className="w-full h-80 object-cover"
                         />
                       </CarouselItem>
                     ))}
                   </CarouselContent>
                 </Carousel>
+              ) : (
+                <div className="w-full h-80 bg-gradient-card" />
+              )}
+
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+
+              <div className="absolute start-3 top-3 z-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/')}
+                  className="h-10 w-10 rounded-full bg-background/85 text-foreground shadow-medium backdrop-blur-sm hover:bg-background"
+                  aria-label={t('spots.back_to_map')}
+                >
+                  {isRTL ? <ArrowRight className="h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
+                </Button>
               </div>
 
+              <div className="absolute end-3 top-3 z-10 flex items-center gap-2">
+                {canSocial && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleFavoriteToggle}
+                      className="h-10 w-10 rounded-full bg-background/85 shadow-medium backdrop-blur-sm hover:bg-background"
+                      aria-label={t('spots.add_to_favorites')}
+                    >
+                      <Heart className={`h-5 w-5 ${isSpotFavorited ? 'fill-primary text-primary' : 'text-foreground'}`} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleShare}
+                      className="h-10 w-10 rounded-full bg-background/85 shadow-medium backdrop-blur-sm hover:bg-background"
+                      aria-label={t('spots.share')}
+                    >
+                      <Share2 className="h-5 w-5 text-foreground" />
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              {selectedSpot.photos && selectedSpot.photos.length > 1 && (
+                <div className="absolute start-3 top-16 z-10 rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white">
+                  {currentImageIndex + 1} / {selectedSpot.photos.length}
+                </div>
+              )}
+
+              <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-4 pt-10">
+                <Badge className={`${getTypeColor(spotTypeNorm)} mb-2 w-fit text-white`}>
+                  {t(`spots.spot_types.${spotTypeNorm}`)}
+                </Badge>
+                <h1 className="text-2xl font-bold text-white drop-shadow-md line-clamp-2">
+                  {translatedTitle}
+                </h1>
+              </div>
+            </div>
+
+            {selectedSpot.photos && selectedSpot.photos.length > 0 && (
               <div className="relative hidden lg:block">
                 <img
                   src={resolvePhotoUrl(selectedSpot.photos[currentImageIndex]) || ''}
-                  alt={selectedSpot.title}
+                  alt={translatedTitle}
                   className="w-full h-96 object-cover"
                 />
 
@@ -320,8 +399,8 @@ const SpotDetails: React.FC = () => {
                   </>
                 )}
               </div>
-            </Card>
-          )}
+            )}
+          </Card>
 
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -329,19 +408,14 @@ const SpotDetails: React.FC = () => {
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardContent className="p-6">
-                  {/* Title and Actions */}
-                  <div className="flex items-start justify-between gap-2 mb-4 min-w-0">
+                  {/* Title and Actions (desktop only to avoid mobile empty gap) */}
+                  <div className="hidden lg:flex items-start justify-between gap-2 mb-4 min-w-0">
                     <div className="flex-1 min-w-0">
                       <h1 className="text-3xl font-bold text-foreground mb-2 break-words">
-                        {selectedSpot.title}
+                        {translatedTitle}
                       </h1>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Badge className={`${getTypeColor(spotTypeNorm)} text-white`}>
-                          {t(`spots.spot_types.${spotTypeNorm}`)}
-                        </Badge>
-                      </div>
                     </div>
-                    
+
                     <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
                       {isAuthenticated && isAdmin && isPending && (
                         <Button
@@ -385,8 +459,8 @@ const SpotDetails: React.FC = () => {
                   </div>
 
                   {/* Description */}
-                  <p className="text-foreground text-lg leading-relaxed mb-6">
-                    {selectedSpot.description}
+                  <p className="text-foreground text-lg leading-relaxed">
+                    {translatedDescription}
                   </p>
 
                 </CardContent>

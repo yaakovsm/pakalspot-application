@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../components/MapView';
-import SpotDetailSidebar from '../components/SpotDetailSidebar';
 import { useSpotDiscoveryBootstrap } from '../hooks/useSpotDiscoveryBootstrap';
 import { useSpots } from '../hooks/useSpots';
 import { Button } from '../components/ui/button';
@@ -15,10 +14,6 @@ const MapPage: React.FC = () => {
   const { selectedSpot } = useSpots();
   const { openAddSpot } = useAddSpotModal();
   useSpotDiscoveryBootstrap();
-
-  const [showDetailSidebar, setShowDetailSidebar] = useState(false);
-  const [isClosingSidebar, setIsClosingSidebar] = useState(false);
-  const [isOpeningSidebar, setIsOpeningSidebar] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -37,17 +32,8 @@ const MapPage: React.FC = () => {
   };
 
   const handleInfoClick = () => {
-    setShowDetailSidebar(true);
-    setIsOpeningSidebar(true);
-    setTimeout(() => setIsOpeningSidebar(false), 300);
-  };
-
-  const handleCloseDetailSidebar = () => {
-    setIsClosingSidebar(true);
-    setTimeout(() => {
-      setShowDetailSidebar(false);
-      setIsClosingSidebar(false);
-    }, 300);
+    if (!selectedSpot) return;
+    navigate(`/spot/${selectedSpot.id}`);
   };
 
   return (
@@ -55,7 +41,7 @@ const MapPage: React.FC = () => {
       <div className="flex-1 relative min-h-0">
         <MapView
           className="w-full h-full min-h-[50vh]"
-          isSpotDetailsOpen={showDetailSidebar}
+          isSpotDetailsOpen={false}
           onOpenDetails={handleInfoClick}
         />
         <Button
@@ -69,14 +55,6 @@ const MapPage: React.FC = () => {
         </Button>
       </div>
 
-      {showDetailSidebar && selectedSpot && (
-        <SpotDetailSidebar
-          spot={selectedSpot}
-          onClose={handleCloseDetailSidebar}
-          isClosing={isClosingSidebar}
-          isOpening={isOpeningSidebar}
-        />
-      )}
     </div>
   );
 };

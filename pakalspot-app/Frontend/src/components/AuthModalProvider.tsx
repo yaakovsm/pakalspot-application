@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
@@ -75,6 +75,7 @@ const AuthModal: React.FC<{
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
+  const googleButtonContainerRef = useRef<HTMLDivElement | null>(null);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({
     username: '',
@@ -105,9 +106,10 @@ const AuthModal: React.FC<{
     const setupGoogleSignIn = () => {
       if (cancelled || !window.google?.accounts?.id) return;
 
-      const target = document.getElementById('google-signin-button');
+      const target = googleButtonContainerRef.current;
       if (!target) return;
       target.innerHTML = '';
+      const responsiveButtonWidth = Math.floor(Math.max(Math.min(target.clientWidth || 0, 360), 220));
 
       window.google.accounts.id.initialize({
         client_id: VITE_GOOGLE_CLIENT_ID,
@@ -147,7 +149,7 @@ const AuthModal: React.FC<{
         size: 'large',
         text: 'continue_with',
         shape: 'pill',
-        width: 360,
+        width: responsiveButtonWidth,
       });
 
       setGoogleReady(true);
@@ -277,7 +279,7 @@ const AuthModal: React.FC<{
   return (
     <Dialog open={open} onOpenChange={(isOpen) => (isOpen ? onOpenChange(true) : close())}>
       <DialogContent
-        className="w-[95vw] max-w-md border-0 bg-background/95 p-6 shadow-strong backdrop-blur-sm sm:rounded-2xl"
+        className="w-[94vw] max-w-md max-h-[92dvh] overflow-y-auto border-0 bg-background/95 p-4 shadow-strong backdrop-blur-sm rounded-2xl sm:p-6"
         overlayClassName="bg-transparent backdrop-blur-[3px]"
       >
         <DialogHeader className="space-y-1 text-center">
@@ -294,7 +296,7 @@ const AuthModal: React.FC<{
         </DialogHeader>
 
         {mode === 'login' ? (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
+          <form onSubmit={handleLoginSubmit} className="space-y-3.5 sm:space-y-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">{t('auth.email')}</label>
               <div className="relative">
@@ -350,7 +352,13 @@ const AuthModal: React.FC<{
                   </div>
                 </div>
                 <div className={isGoogleLoading ? 'pointer-events-none opacity-60' : ''}>
-                  <div id="google-signin-button" className="flex justify-center" />
+                  <div className="flex justify-center">
+                    <div
+                      ref={googleButtonContainerRef}
+                      id="google-signin-button"
+                      className="w-full max-w-[360px]"
+                    />
+                  </div>
                 </div>
                 {!googleReady && (
                   <p className="text-center text-xs text-muted-foreground">Loading Google sign-in...</p>
@@ -369,7 +377,7 @@ const AuthModal: React.FC<{
             </p>
           </form>
         ) : (
-          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+          <form onSubmit={handleRegisterSubmit} className="space-y-3.5 sm:space-y-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">{t('auth.username')}</label>
               <div className="relative">
