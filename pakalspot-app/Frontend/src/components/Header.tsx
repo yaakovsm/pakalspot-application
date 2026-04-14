@@ -72,19 +72,21 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
 
   return (
     <header className={`bg-background/80 backdrop-blur-md border-b border-border shadow-soft ${className}`}>
-      <div className="w-full px-6 py-4">
+      <div className="w-full px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <div 
-            className="flex items-center gap-2 cursor-pointer px-2 py-1" 
+            className="flex items-center gap-2 cursor-pointer px-1 sm:px-2 py-1 min-w-0" 
             onClick={() => navigate('/')}
           >
             <img 
               src="/PakalSpot_Transperent_logo.png" 
               alt="PakalSpot Logo" 
-              className="w-12 h-12 object-contain"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0"
             />
-            <span className="text-2xl font-bold text-foreground">{t('app.name')}</span>
+            <span className="hidden sm:inline text-xl lg:text-2xl font-bold text-foreground whitespace-nowrap">
+              {t('app.name')}
+            </span>
           </div>
 
           {/* Navigation */}
@@ -144,7 +146,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
             {(() => {
               const currentLanguage = i18n.language || 'he';
               const isHebrew = currentLanguage.startsWith('he');
@@ -203,7 +205,11 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="hero" onClick={() => openAuthModal('login')} className="text-lg font-medium px-6 py-2">
+                      <Button
+                        variant="hero"
+                        onClick={() => openAuthModal('login')}
+                        className="text-sm sm:text-lg font-medium px-3 sm:px-6 py-1.5 sm:py-2 whitespace-nowrap"
+                      >
                         {t('auth.login')}
                       </Button>
                     )}
@@ -216,13 +222,13 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                       onClick={handleLocationRequest}
                       aria-label="Get current location"
                       title={userLocation ? "Update location" : "Get current location"}
-                      className="w-10 h-10"
+                      className="w-9 h-9 sm:w-10 sm:h-10"
                     >
-                      <MapPin className="w-5 h-5" />
+                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
                     {/* Theme toggle */}
-                    <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme" className="w-10 h-10">
-                      {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme" className="w-9 h-9 sm:w-10 sm:h-10">
+                      {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </Button>
                   </>
                 );
@@ -239,13 +245,13 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                       onClick={handleLocationRequest}
                       aria-label="Get current location"
                       title={userLocation ? "Update location" : "Get current location"}
-                      className="w-10 h-10"
+                      className="w-9 h-9 sm:w-10 sm:h-10"
                     >
-                      <MapPin className="w-5 h-5" />
+                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
                     {/* Theme toggle */}
-                    <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme" className="w-10 h-10">
-                      {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme" className="w-9 h-9 sm:w-10 sm:h-10">
+                      {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </Button>
                     {isAuthenticated && user ? (
                       <DropdownMenu>
@@ -297,7 +303,11 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="hero" onClick={() => openAuthModal('login')} className="text-lg font-medium px-6 py-2">
+                      <Button
+                        variant="hero"
+                        onClick={() => openAuthModal('login')}
+                        className="text-sm sm:text-lg font-medium px-3 sm:px-6 py-1.5 sm:py-2 whitespace-nowrap"
+                      >
                         {t('auth.login')}
                       </Button>
                     )}

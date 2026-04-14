@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { MapPin } from 'lucide-react';
 import Header from '../components/Header';
+import MobileLayout from '../components/mobile/MobileLayout';
 
 const About: React.FC = () => {
   const navigate = useNavigate();
@@ -12,29 +13,30 @@ const About: React.FC = () => {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background">
-      <Header />
+    <MobileLayout>
+      <div dir="rtl" className="min-h-screen bg-background">
+        <Header />
 
-      <section className="pt-0 pb-16 px-4 sm:px-6 lg:px-8 bg-background">
-        <div className="max-w-7xl mx-auto">
-          {/* First 2x2 Grid: welcome + story (ltr grid so TL/TR match layout spec) */}
-          <div dir="ltr" className="grid grid-cols-2 grid-rows-2 gap-0 h-[1130px]">
+        <section className="pt-0 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 bg-background">
+          <div className="max-w-7xl mx-auto">
+            {/* First 2x2 Grid: welcome + story (ltr grid so TL/TR match layout spec) */}
+            <div dir="ltr" className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-0 md:min-h-[900px] lg:min-h-[1130px]">
             {/* Top Left - Welcome (title + subtitle + logo) */}
-            <div className="bg-background flex items-center justify-center p-6 sm:p-8 min-h-0 overflow-y-auto">
+            <div className="bg-background flex items-center justify-center p-5 sm:p-7 lg:p-8 min-h-0 md:overflow-y-auto">
               <div
-                className="flex flex-col items-center justify-center text-center gap-6 w-full max-w-xl"
+                className="flex flex-col items-center justify-center text-center gap-4 sm:gap-6 w-full max-w-xl"
                 dir="rtl"
               >
                 <img
                   src="/PakalSpot_Transperent_logo.png"
                   alt="PakalSpot Logo"
-                  className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 object-contain"
+                  className="w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 shrink-0 object-contain"
                 />
                 <div className="space-y-4 shrink">
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight text-center">
+                  <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-foreground leading-tight text-center">
                     ברוכים הבאים ל־PakalSpot
                   </h1>
-                  <p className="text-lg sm:text-xl text-foreground/80 leading-relaxed text-center">
+                  <p className="text-base sm:text-lg lg:text-xl text-foreground/80 leading-relaxed text-center">
                     קהילה של אנשים שאוהבים קפה, טבע ורגעים טובים.
                   </p>
                 </div>
@@ -42,7 +44,7 @@ const About: React.FC = () => {
             </div>
 
             {/* Top Right - Welcome image */}
-            <div className="overflow-hidden min-h-0">
+            <div className="overflow-hidden min-h-0 h-64 sm:h-80 md:h-auto">
               <img
                 src="/IMG_1396.JPG"
                 alt="קפה בטבע"
@@ -51,7 +53,7 @@ const About: React.FC = () => {
             </div>
 
             {/* Bottom Left - Story image */}
-            <div className="overflow-hidden min-h-0">
+            <div className="overflow-hidden min-h-0 h-64 sm:h-80 md:h-auto">
               <img
                 src="/IMG_5755.jpg"
                 alt="חוויית PakalSpot בטבע"
@@ -60,12 +62,12 @@ const About: React.FC = () => {
             </div>
 
             {/* Bottom Right - Story text */}
-            <div className="bg-background flex items-center justify-end p-6 sm:p-8 min-h-0 overflow-y-auto">
+            <div className="bg-background flex items-center justify-end p-5 sm:p-7 lg:p-8 min-h-0 md:overflow-y-auto">
               <div className="space-y-4 sm:space-y-6" dir="rtl">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
+                <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold text-foreground">
                   הסיפור שלנו
                 </h2>
-                <div className="space-y-3 sm:space-y-4 text-base sm:text-lg text-foreground/90 leading-relaxed">
+                <div className="space-y-3 sm:space-y-4 text-sm sm:text-base lg:text-lg text-foreground/90 leading-relaxed">
                   <p>
                     PakalSpot נוצר מתוך אהבה לקפה, לטבע ולשיתוף רגעים עם אחרים.
                   </p>
@@ -81,15 +83,15 @@ const About: React.FC = () => {
             </div>
           </div>
 
-          {/* Second 2x2 Grid: step 1 + step 2 */}
-          <div dir="ltr" className="grid grid-cols-2 grid-rows-2 gap-0 h-[1130px]">
+            {/* Second 2x2 Grid: step 1 + step 2 */}
+            <div dir="ltr" className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-0 md:min-h-[900px] lg:min-h-[1130px]">
             {/* Top Left - Step 1 text */}
-            <div className="bg-background flex items-center justify-start p-6 sm:p-8 min-h-0 overflow-y-auto">
+            <div className="bg-background flex items-center justify-start p-5 sm:p-7 lg:p-8 min-h-0 md:overflow-y-auto">
               <div className="space-y-4 sm:space-y-6" dir="rtl">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                <h3 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground">
                   איך זה עובד?
                 </h3>
-                <div className="space-y-3 sm:space-y-4 text-base sm:text-lg text-foreground/90 leading-relaxed">
+                <div className="space-y-3 sm:space-y-4 text-sm sm:text-base lg:text-lg text-foreground/90 leading-relaxed">
                   <p>
                     חפש ספוטים על המפה, גלה מקומות מיוחדים להכנת קפה בטבע — לפי אזור, סוג נוף או חוות דעת של אחרים.
                     עיין בתמונות, חוויות והמלצות של אנשים שביקרו במקום, ושתף גם אתה את המיקום שלך והוסף תמונה כדי להכניס אחרים לחוויה.
@@ -99,7 +101,7 @@ const About: React.FC = () => {
             </div>
 
             {/* Top Right - Step 1 image */}
-            <div className="overflow-hidden min-h-0">
+            <div className="overflow-hidden min-h-0 h-64 sm:h-80 md:h-auto">
               <img
                 src="/pakalspot-screenshot.jpg"
                 alt="חיפוש ספוטים על המפה"
@@ -108,7 +110,7 @@ const About: React.FC = () => {
             </div>
 
             {/* Bottom Left - Step 2 image */}
-            <div className="overflow-hidden min-h-0">
+            <div className="overflow-hidden min-h-0 h-64 sm:h-80 md:h-auto">
               <img
                 src="/IMG_6930.JPG"
                 alt="חוות דעת ותמונות"
@@ -117,12 +119,12 @@ const About: React.FC = () => {
             </div>
 
             {/* Bottom Right - Step 2 text */}
-            <div className="bg-background flex items-center justify-end p-6 sm:p-8 min-h-0 overflow-y-auto">
+            <div className="bg-background flex items-center justify-end p-5 sm:p-7 lg:p-8 min-h-0 md:overflow-y-auto">
               <div className="space-y-4 sm:space-y-6" dir="rtl">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                <h3 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground">
                   שתף חוויה, לא רק מיקום
                 </h3>
-                <div className="space-y-3 sm:space-y-4 text-base sm:text-lg text-foreground/90 leading-relaxed">
+                <div className="space-y-3 sm:space-y-4 text-sm sm:text-base lg:text-lg text-foreground/90 leading-relaxed">
                   <p>
                     ב־PakalSpot אנחנו מאמינים שכל רגע קטן של קפה בטבע שווה שיתוף.
                     ספר את הסיפור שלך — מה גרם לך לבחור דווקא בספוט הזה, עם מי היית, ואיך הרגע הזה הרגיש.
@@ -131,23 +133,24 @@ const About: React.FC = () => {
                 </div>
               </div>
             </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <Button
-            onClick={handleExploreMap}
-            size="lg"
-            className="bg-primary hover:bg-primary-dark text-primary-foreground px-8 py-4 text-lg font-semibold rounded-full shadow-strong hover:shadow-strong transition-all duration-300 transform hover:scale-105"
-          >
-            <MapPin className="w-5 h-5 ml-2" />
-            גלו ספוטים על המפה
-          </Button>
-        </div>
-      </section>
-    </div>
+        <section className="pt-8 pb-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <Button
+              onClick={handleExploreMap}
+              size="lg"
+              className="bg-primary hover:bg-primary-dark text-primary-foreground px-8 py-4 text-lg font-semibold rounded-full shadow-strong hover:shadow-strong transition-all duration-300 transform hover:scale-105"
+            >
+              <MapPin className="w-5 h-5 ml-2" />
+              גלו ספוטים על המפה
+            </Button>
+          </div>
+        </section>
+      </div>
+    </MobileLayout>
   );
 };
 
