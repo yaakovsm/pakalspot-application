@@ -63,7 +63,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
 
   return (
     <Card 
-      className={`rounded-2xl shadow-strong bg-white overflow-hidden flex flex-col ${className}`}
+      className={`rounded-2xl shadow-strong bg-card overflow-hidden flex flex-col ${className}`}
       style={{
         width: '240px',
         transform: 'translate(-50%, 10px)',
@@ -71,7 +71,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
     >
       {/* Image Carousel Section - Exact Airbnb dimensions: 240x155.55 */}
       <div 
-        className="relative flex-shrink-0 bg-gray-100 overflow-hidden rounded-t-2xl"
+        className="relative flex-shrink-0 bg-muted overflow-hidden rounded-t-2xl"
         style={{
           width: '240px',
           height: '155.55px',
@@ -128,7 +128,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
                     variant="ghost"
                     size="icon"
                     onClick={goToPrevious}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-sm z-10"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/90 text-foreground hover:bg-background shadow-soft z-10"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -136,7 +136,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
                     variant="ghost"
                     size="icon"
                     onClick={goToNext}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-sm z-10"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/90 text-foreground hover:bg-background shadow-soft z-10"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -151,7 +151,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
                           setCurrentImageIndex(index);
                         }}
                         className={`w-1.5 h-1.5 rounded-full transition-all ${
-                          index === currentImageIndex ? 'bg-white w-2' : 'bg-white/50'
+                          index === currentImageIndex ? 'bg-background w-2' : 'bg-background/60'
                         }`}
                       />
                     ))}
@@ -174,7 +174,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
             e.stopPropagation();
             onToggleFavorite();
           }}
-          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-sm z-10"
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/90 text-foreground backdrop-blur-sm hover:bg-background shadow-soft z-10"
         >
           <Heart className={`w-4 h-4 ${isFavorite ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
         </Button>
@@ -188,7 +188,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
               e.stopPropagation();
               onClearSelection();
             }}
-            className="absolute top-2 left-2 h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-sm z-10"
+            className="absolute top-2 left-2 h-8 w-8 rounded-full bg-background/90 text-foreground backdrop-blur-sm hover:bg-background shadow-soft z-10"
           >
             <X className="w-4 h-4 text-muted-foreground" />
           </Button>
@@ -197,7 +197,7 @@ const SpotActionCard: React.FC<SpotActionCardProps> = ({
 
       {/* Bottom Section: Title and Actions - Always visible, flex-shrink-0 ensures it's always shown */}
       <div 
-        className={`p-3 flex-shrink-0 bg-white`} 
+        className={`p-3 flex-shrink-0 bg-card`} 
         style={{ 
           minHeight: '116px',
           direction: isRTL ? 'rtl' : 'ltr',
