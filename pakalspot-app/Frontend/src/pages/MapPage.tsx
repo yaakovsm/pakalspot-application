@@ -31,6 +31,10 @@ const MapPage: React.FC = () => {
     openAddSpot();
   };
 
+  const handleConfirmMapPinAdd = (location: { lat: number; lng: number }) => {
+    openAddSpot({ initialLocation: location });
+  };
+
   const handleInfoClick = () => {
     if (!selectedSpot) return;
     navigate(`/spot/${selectedSpot.id}`);
@@ -43,6 +47,7 @@ const MapPage: React.FC = () => {
           className="w-full h-full min-h-[50vh]"
           isSpotDetailsOpen={false}
           onOpenDetails={handleInfoClick}
+          onConfirmMapPinAdd={handleConfirmMapPinAdd}
         />
         <Button
           variant="hero"

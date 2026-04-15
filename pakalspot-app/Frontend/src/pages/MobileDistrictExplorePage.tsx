@@ -7,6 +7,7 @@ import SpotCard from '../components/SpotCard';
 import { Button } from '../components/ui/button';
 import { useSpots } from '../hooks/useSpots';
 import { useSpotDiscoveryBootstrap } from '../hooks/useSpotDiscoveryBootstrap';
+import { useAddSpotModal } from '../components/AddSpotModalProvider';
 import {
   groupSpotsByDistrict,
   isDistrictId,
@@ -25,6 +26,7 @@ const MobileDistrictExplorePage: React.FC = () => {
   const navigate = useNavigate();
   const { districtId: rawDistrictId } = useParams();
   const { spots, selectSpot } = useSpots();
+  const { openAddSpot } = useAddSpotModal();
   useSpotDiscoveryBootstrap();
 
   const districtId: DistrictId | null =
@@ -91,6 +93,10 @@ const MobileDistrictExplorePage: React.FC = () => {
     setIsDraggingSheet(true);
   };
 
+  const handleConfirmMapPinAdd = (location: { lat: number; lng: number }) => {
+    openAddSpot({ initialLocation: location });
+  };
+
   if (!districtId) {
     return (
       <div className="h-[100dvh] bg-background flex items-center justify-center p-6">
@@ -140,6 +146,7 @@ const MobileDistrictExplorePage: React.FC = () => {
             className="w-full h-full rounded-none"
             visibleSpots={districtSpots}
             fitToVisibleSpots
+            onConfirmMapPinAdd={handleConfirmMapPinAdd}
           />
         </div>
 

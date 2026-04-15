@@ -47,6 +47,10 @@ const Home: React.FC = () => {
     openAddSpot();
   };
 
+  const handleConfirmMapPinAdd = (location: { lat: number; lng: number }) => {
+    openAddSpot({ initialLocation: location });
+  };
+
   const handleInfoClick = () => {
     setShowDetailSidebar(true);
     setIsOpeningSidebar(true);
@@ -82,6 +86,7 @@ const Home: React.FC = () => {
                 hoveredSpot={hoveredSpot}
                 isSpotDetailsOpen={showDetailSidebar}
                 onOpenDetails={handleInfoClick}
+                onConfirmMapPinAdd={handleConfirmMapPinAdd}
               />
             </div>
           </div>

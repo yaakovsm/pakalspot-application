@@ -33,11 +33,27 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const skipNextSearchRef = useRef(false);
+  const [hasUserTyped, setHasUserTyped] = useState(false);
+
+  useEffect(() => {
+    skipNextSearchRef.current = true;
+    setQuery(initialValue);
+    setResults([]);
+    setShowResults(false);
+    setSelectedIndex(-1);
+    setHasUserTyped(false);
+  }, [initialValue]);
 
   // Debounced search
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
+    }
+
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
     }
 
     if (query.trim().length < 2) {
@@ -147,6 +163,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       setSelectedLocation(geocodeResult);
       setQuery(geocodeResult.name);
       setShowResults(false);
+      setHasUserTyped(false);
       onLocationSelect(geocodeResult);
       
       toast({
@@ -196,6 +213,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     setResults([]);
     setShowResults(false);
     setSelectedIndex(-1);
+    setHasUserTyped(false);
     onLocationSelect({
       name: '',
       lat: 0,
@@ -211,7 +229,10 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
         <Input
           ref={inputRef}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setHasUserTyped(true);
+            setQuery(e.target.value);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="pl-10 pr-10"
@@ -277,7 +298,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       )}
 
       {/* No results */}
-      {showResults && !isLoading && results.length === 0 && query.trim().length >= 2 && !selectedLocation && (
+      {showResults && !isLoading && results.length === 0 && query.trim().length >= 2 && !selectedLocation && hasUserTyped && (
         <Card className="absolute top-full left-0 right-0 z-50 mt-1 p-4 text-center">
           <p className="text-sm text-muted-foreground">No locations found</p>
           <p className="text-xs text-muted-foreground mt-1">Try searching for cities, towns, or landmarks in Israel</p>

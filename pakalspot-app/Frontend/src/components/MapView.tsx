@@ -38,6 +38,7 @@ interface MapViewProps {
   hoveredSpot?: Spot | null;
   isSpotDetailsOpen?: boolean;
   onOpenDetails?: () => void;
+  onConfirmMapPinAdd?: (location: { lat: number; lng: number }) => void;
   visibleSpots?: Spot[];
   fitToVisibleSpots?: boolean;
 }
@@ -47,6 +48,7 @@ const MapView: React.FC<MapViewProps> = ({
   hoveredSpot,
   isSpotDetailsOpen = false,
   onOpenDetails,
+  onConfirmMapPinAdd,
   visibleSpots,
   fitToVisibleSpots = true,
 }) => {
@@ -57,6 +59,8 @@ const MapView: React.FC<MapViewProps> = ({
   const overlayRef = useRef<google.maps.OverlayView | null>(null);
   const overlayRootRef = useRef<Root | null>(null);
   const prevSelectedSpotIdRef = useRef<string | null>(null);
+  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
+  const suppressMapClickUntilRef = useRef(0);
 
   const { spots, selectedSpot, selectSpot, userLocation } = useSpots();
   const spotsToRender = visibleSpots ?? spots;
@@ -65,7 +69,14 @@ const MapView: React.FC<MapViewProps> = ({
   const { t, i18n } = useTranslation();
   const { openAuthModal } = useAuthModal();
   const [userLocationMarker, setUserLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null);
+  const [mapInstanceVersion, setMapInstanceVersion] = useState(0);
+  const [pendingPinLocation, setPendingPinLocation] = useState<{ lat: number; lng: number } | null>(null);
   const mapLanguage = (i18n.resolvedLanguage || i18n.language || 'he').toLowerCase().startsWith('en') ? 'en' : 'he';
+  const isRtlLanguage = mapLanguage === 'he';
+
+  const suppressNextMapClick = () => {
+    suppressMapClickUntilRef.current = Date.now() + 400;
+  };
 
   const clearMapArtifacts = () => {
     markersRef.current.forEach(marker => {
@@ -102,6 +113,10 @@ const MapView: React.FC<MapViewProps> = ({
     if (overlayRootRef.current) {
       overlayRootRef.current.unmount();
       overlayRootRef.current = null;
+    }
+    if (mapClickListenerRef.current) {
+      mapClickListenerRef.current.remove();
+      mapClickListenerRef.current = null;
     }
 
     map.current = null;
@@ -146,6 +161,7 @@ const MapView: React.FC<MapViewProps> = ({
           disableDefaultUI: true,
           mapTypeId: google.maps.MapTypeId.TERRAIN
         });
+        setMapInstanceVersion((version) => version + 1);
 
         // Initialize info window
         // Removed infoWindow initialization - no longer needed
@@ -160,6 +176,36 @@ const MapView: React.FC<MapViewProps> = ({
       clearMapArtifacts();
     };
   }, [mapLanguage]);
+
+  // Prepare a pending pin on empty map clicks.
+  useEffect(() => {
+    if (!map.current || !onConfirmMapPinAdd) return;
+
+    if (mapClickListenerRef.current) {
+      mapClickListenerRef.current.remove();
+      mapClickListenerRef.current = null;
+    }
+
+    mapClickListenerRef.current = map.current.addListener('click', (event: google.maps.MapMouseEvent) => {
+      if (Date.now() < suppressMapClickUntilRef.current) return;
+      if (!event.latLng) return;
+      if (pendingPinLocation) {
+        setPendingPinLocation(null);
+        return;
+      }
+      setPendingPinLocation({
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng(),
+      });
+    });
+
+    return () => {
+      if (mapClickListenerRef.current) {
+        mapClickListenerRef.current.remove();
+        mapClickListenerRef.current = null;
+      }
+    };
+  }, [onConfirmMapPinAdd, mapLanguage, mapInstanceVersion, pendingPinLocation]);
 
   // Handle user location changes from store
   useEffect(() => {
@@ -359,24 +405,32 @@ const MapView: React.FC<MapViewProps> = ({
     selectSpot(null);
   };
 
-  // Overlay rendering: Show SpotActionCard anchored to selected marker
-  // Visibility: selectedSpot exists AND details panel is NOT open
-  useEffect(() => {
-    if (!map.current || !selectedSpot) {
-      // Clean up overlay if no spot is selected
-      if (overlayRef.current) {
-        overlayRef.current.setMap(null);
-        overlayRef.current = null;
-      }
-      if (overlayRootRef.current) {
-        overlayRootRef.current.unmount();
-        overlayRootRef.current = null;
-      }
-      return;
-    }
+  const handleOverlayActionInteraction = (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    suppressNextMapClick();
+  };
 
-    // Hide overlay when details panel is open
-    if (isSpotDetailsOpen) {
+  const handleDismissPendingPin = () => {
+    setPendingPinLocation(null);
+  };
+
+  const handleConfirmPendingPin = () => {
+    if (!pendingPinLocation || !onConfirmMapPinAdd) return;
+    onConfirmMapPinAdd(pendingPinLocation);
+    setPendingPinLocation(null);
+  };
+
+  useEffect(() => {
+    if (selectedSpot && pendingPinLocation) {
+      setPendingPinLocation(null);
+    }
+  }, [selectedSpot, pendingPinLocation]);
+
+  // Overlay rendering: Show SpotActionCard anchored to selected marker
+  // Visibility priority: selected spot card first, otherwise pending pin overlay.
+  useEffect(() => {
+    if (!map.current) {
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
         overlayRef.current = null;
@@ -420,7 +474,7 @@ const MapView: React.FC<MapViewProps> = ({
 
         const point = projection.fromLatLngToDivPixel(this.position);
         if (point) {
-          // Position container: center horizontally, offset below marker
+          // Position container: center horizontally at marker, with content-level transforms for offset.
           this.container.style.left = `${point.x}px`;
           this.container.style.top = `${point.y}px`;
         }
@@ -445,18 +499,36 @@ const MapView: React.FC<MapViewProps> = ({
       }
     }
 
-    // Remove existing overlay
-    if (overlayRef.current) {
-      overlayRef.current.setMap(null);
-      overlayRef.current = null;
-    }
-    if (overlayRootRef.current) {
-      overlayRootRef.current.unmount();
-      overlayRootRef.current = null;
+    const clearOverlay = () => {
+      if (overlayRef.current) {
+        overlayRef.current.setMap(null);
+        overlayRef.current = null;
+      }
+      if (overlayRootRef.current) {
+        overlayRootRef.current.unmount();
+        overlayRootRef.current = null;
+      }
+    };
+
+    const shouldShowSpotOverlay = Boolean(selectedSpot) && !isSpotDetailsOpen;
+    const shouldShowPinOverlay = !shouldShowSpotOverlay && Boolean(pendingPinLocation);
+
+    if (!shouldShowSpotOverlay && !shouldShowPinOverlay) {
+      clearOverlay();
+      return;
     }
 
+    // Remove existing overlay
+    clearOverlay();
+
+    const overlayPosition = shouldShowSpotOverlay && selectedSpot
+      ? { lat: selectedSpot.lat, lng: selectedSpot.lon }
+      : pendingPinLocation;
+
+    if (!overlayPosition) return;
+
     // Create new overlay
-    const position = new google.maps.LatLng(selectedSpot.lat, selectedSpot.lon);
+    const position = new google.maps.LatLng(overlayPosition.lat, overlayPosition.lng);
     const overlay = new SpotActionCardOverlay(position);
     overlay.setMap(map.current);
 
@@ -464,19 +536,82 @@ const MapView: React.FC<MapViewProps> = ({
     setTimeout(() => {
       const root = overlay.getRoot();
       if (root) {
-        root.render(
-          <SpotActionCard
-            spot={selectedSpot}
-            isFavorite={isFavorited(selectedSpot.id)}
-            onOpenDetails={() => {
-              if (onOpenDetails) {
-                onOpenDetails();
-              }
-            }}
-            onToggleFavorite={() => handleFavoriteSpot(selectedSpot.id)}
-            onClearSelection={handleClearSelection}
-          />
-        );
+        if (shouldShowSpotOverlay && selectedSpot) {
+          root.render(
+            <SpotActionCard
+              spot={selectedSpot}
+              isFavorite={isFavorited(selectedSpot.id)}
+              onOpenDetails={() => {
+                if (onOpenDetails) {
+                  onOpenDetails();
+                }
+              }}
+              onToggleFavorite={() => handleFavoriteSpot(selectedSpot.id)}
+              onClearSelection={handleClearSelection}
+            />
+          );
+        } else if (shouldShowPinOverlay && pendingPinLocation) {
+          root.render(
+            <div className="translate-x-[-50%] translate-y-[-120%] rounded-xl border border-border bg-background/95 backdrop-blur-sm shadow-strong p-3 min-w-[200px]">
+              <p className="text-xs font-medium text-foreground mb-2">
+                {t('spots.map_pin_overlay_title')}
+              </p>
+              <div className="flex items-center gap-2">
+                {isRtlLanguage ? (
+                  <>
+                    <button
+                      type="button"
+                      onPointerDown={handleOverlayActionInteraction}
+                      onClick={(event) => {
+                        handleOverlayActionInteraction(event);
+                        handleDismissPendingPin();
+                      }}
+                      className="inline-flex items-center justify-center rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      {t('spots.map_pin_overlay_cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      onPointerDown={handleOverlayActionInteraction}
+                      onClick={(event) => {
+                        handleOverlayActionInteraction(event);
+                        handleConfirmPendingPin();
+                      }}
+                      className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+                    >
+                      {t('spots.map_pin_overlay_add_cta')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onPointerDown={handleOverlayActionInteraction}
+                      onClick={(event) => {
+                        handleOverlayActionInteraction(event);
+                        handleConfirmPendingPin();
+                      }}
+                      className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+                    >
+                      {t('spots.map_pin_overlay_add_cta')}
+                    </button>
+                    <button
+                      type="button"
+                      onPointerDown={handleOverlayActionInteraction}
+                      onClick={(event) => {
+                        handleOverlayActionInteraction(event);
+                        handleDismissPendingPin();
+                      }}
+                      className="inline-flex items-center justify-center rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      {t('spots.map_pin_overlay_cancel')}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        }
         overlayRootRef.current = root;
       }
     }, 0);
@@ -494,7 +629,7 @@ const MapView: React.FC<MapViewProps> = ({
         overlayRootRef.current = null;
       }
     };
-  }, [selectedSpot, isSpotDetailsOpen, map, onOpenDetails, isFavorited, favoriteSpot, unfavoriteSpot, selectSpot, isAuthenticated, mapLanguage]);
+  }, [selectedSpot, isSpotDetailsOpen, pendingPinLocation, map, onOpenDetails, isFavorited, favoriteSpot, unfavoriteSpot, selectSpot, isAuthenticated, mapLanguage, t]);
 
   return (
     <div className={`relative w-full h-full ${className}`}>

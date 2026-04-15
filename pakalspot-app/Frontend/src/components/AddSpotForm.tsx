@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -35,7 +35,8 @@ const spotTypes: SpotType[] = [
 const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLocation }) => {
   const { createSpot } = useSpots();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtlLanguage = (i18n.resolvedLanguage || i18n.language || 'he').toLowerCase().startsWith('he');
   
   const [formData, setFormData] = useState<Partial<CreateSpotRequest>>({
     title: '',
@@ -52,6 +53,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<GeocodeResult | null>(null);
+  const [locationSearchInitialValue, setLocationSearchInitialValue] = useState('');
   const [showCoordinateInputs, setShowCoordinateInputs] = useState(false);
 
   const handleInputChange = (field: keyof CreateSpotRequest, value: any) => {
@@ -60,6 +62,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
 
   const handleLocationSelect = (location: GeocodeResult) => {
     setSelectedLocation(location);
+    setLocationSearchInitialValue(location.name);
     setFormData(prev => ({
       ...prev,
       latitude: location.lat,
@@ -84,6 +87,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
               const response = await spotsAPI.reverseGeocode(lat, lng);
               const locationData = response.data;
               setSelectedLocation(locationData);
+              setLocationSearchInitialValue(locationData.name);
               setFormData(prev => ({
                 ...prev,
                 latitude: lat,
@@ -124,6 +128,54 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
       );
     }
   };
+
+  useEffect(() => {
+    if (!initialLocation) return;
+
+    let isCancelled = false;
+
+    const hydrateInitialLocation = async () => {
+      const fallbackLabel = t('spots.pinned_location_fallback');
+
+      try {
+        const response = await spotsAPI.reverseGeocode(initialLocation.lat, initialLocation.lng);
+        const locationData = response.data as GeocodeResult;
+        if (isCancelled) return;
+
+        setSelectedLocation(locationData);
+        setLocationSearchInitialValue(locationData.name);
+        setFormData(prev => ({
+          ...prev,
+          latitude: initialLocation.lat,
+          longitude: initialLocation.lng,
+          locationName: locationData.name,
+        }));
+      } catch (error) {
+        if (isCancelled) return;
+
+        const fallbackLocation: GeocodeResult = {
+          name: fallbackLabel,
+          lat: initialLocation.lat,
+          lng: initialLocation.lng,
+          address: '',
+        };
+        setSelectedLocation(fallbackLocation);
+        setLocationSearchInitialValue(fallbackLabel);
+        setFormData(prev => ({
+          ...prev,
+          latitude: initialLocation.lat,
+          longitude: initialLocation.lng,
+          locationName: fallbackLabel,
+        }));
+      }
+    };
+
+    void hydrateInitialLocation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [initialLocation, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,6 +350,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
             </label>
             <LocationSearch
               onLocationSelect={handleLocationSelect}
+              initialValue={locationSearchInitialValue}
               placeholder={t('spots.location_placeholder')}
               className="mb-3"
             />
@@ -305,7 +358,9 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
             {/* Selected Location Display */}
             {selectedLocation && (
               <div className="mb-3 p-3 bg-muted/50 rounded-lg border">
-                <div className="flex items-center gap-2 mb-2">
+                <div
+                  className={`flex items-center mb-2 ${isRtlLanguage ? 'flex-row-reverse justify-end text-right gap-2' : 'gap-2 text-left'}`}
+                >
                   <MapPin className="w-4 h-4 text-primary" />
                   <span className="font-medium text-sm">{selectedLocation.name}</span>
                 </div>
