@@ -32,6 +32,26 @@ const spotTypes: SpotType[] = [
   'park',
 ];
 
+const ISRAEL_BOUNDS = {
+  minLat: 29.5,
+  maxLat: 33.4,
+  minLng: 34.25,
+  maxLng: 35.9,
+} as const;
+
+const FALLBACK_CURRENT_LOCATION_NAME = 'Pinned Location';
+
+const toFiniteNumber = (value: unknown): number | null => {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const isWithinIsraelBounds = (lat: number, lng: number): boolean =>
+  lng >= ISRAEL_BOUNDS.minLng &&
+  lng <= ISRAEL_BOUNDS.maxLng &&
+  lat >= ISRAEL_BOUNDS.minLat &&
+  lat <= ISRAEL_BOUNDS.maxLat;
+
 const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLocation }) => {
   const { createSpot } = useSpots();
   const { toast } = useToast();
@@ -71,6 +91,43 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     }));
   };
 
+  const applyLocationSelection = (
+    rawLocation: Partial<GeocodeResult> | null | undefined,
+    fallback: { lat: number; lng: number; name: string }
+  ) => {
+    const parsedLat = toFiniteNumber(rawLocation?.lat);
+    const parsedLng = toFiniteNumber(rawLocation?.lng);
+    const safeLat = parsedLat ?? fallback.lat;
+    const safeLng = parsedLng ?? fallback.lng;
+    const safeName =
+      typeof rawLocation?.name === 'string' && rawLocation.name.trim()
+        ? rawLocation.name
+        : fallback.name;
+
+    if (parsedLat === null || parsedLng === null) {
+      console.warn('Received malformed reverse geocode coordinates; using fallback coordinates.', {
+        rawLocation,
+        fallback,
+      });
+    }
+
+    const safeLocation: GeocodeResult = {
+      name: safeName,
+      lat: safeLat,
+      lng: safeLng,
+      address: typeof rawLocation?.address === 'string' ? rawLocation.address : '',
+    };
+
+    setSelectedLocation(safeLocation);
+    setLocationSearchInitialValue(safeLocation.name);
+    setFormData(prev => ({
+      ...prev,
+      latitude: safeLocation.lat,
+      longitude: safeLocation.lng,
+      locationName: safeLocation.name,
+    }));
+  };
+
   const getCurrentLocation = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -79,32 +136,29 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
           const lng = position.coords.longitude;
           
           // Check if location is within Israel bounds
-          const isInIsrael = lng >= 34.25 && lng <= 35.9 && lat >= 29.5 && lat <= 33.4;
+          const isInIsrael = isWithinIsraelBounds(lat, lng);
           
           if (isInIsrael) {
             try {
               // Try to reverse geocode to get location name
               const response = await spotsAPI.reverseGeocode(lat, lng);
-              const locationData = response.data;
-              setSelectedLocation(locationData);
-              setLocationSearchInitialValue(locationData.name);
-              setFormData(prev => ({
-                ...prev,
-                latitude: lat,
-                longitude: lng,
-                locationName: locationData.name,
-              }));
+              const locationData = response.data as Partial<GeocodeResult> | null | undefined;
+              applyLocationSelection(locationData, {
+                lat,
+                lng,
+                name: FALLBACK_CURRENT_LOCATION_NAME,
+              });
               toast({
                 title: "Location updated",
-                description: `Current location set: ${locationData.name}`,
+                description: `Current location set: ${locationData?.name || FALLBACK_CURRENT_LOCATION_NAME}`,
               });
             } catch (error) {
               // Fallback if reverse geocoding fails
-              setFormData(prev => ({
-                ...prev,
-                latitude: lat,
-                longitude: lng,
-              }));
+              applyLocationSelection(null, {
+                lat,
+                lng,
+                name: FALLBACK_CURRENT_LOCATION_NAME,
+              });
               toast({
                 title: "Location updated",
                 description: "Current location has been set for the spot.",
@@ -139,34 +193,22 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
 
       try {
         const response = await spotsAPI.reverseGeocode(initialLocation.lat, initialLocation.lng);
-        const locationData = response.data as GeocodeResult;
+        const locationData = response.data as Partial<GeocodeResult> | null | undefined;
         if (isCancelled) return;
 
-        setSelectedLocation(locationData);
-        setLocationSearchInitialValue(locationData.name);
-        setFormData(prev => ({
-          ...prev,
-          latitude: initialLocation.lat,
-          longitude: initialLocation.lng,
-          locationName: locationData.name,
-        }));
+        applyLocationSelection(locationData, {
+          lat: initialLocation.lat,
+          lng: initialLocation.lng,
+          name: fallbackLabel,
+        });
       } catch (error) {
         if (isCancelled) return;
 
-        const fallbackLocation: GeocodeResult = {
-          name: fallbackLabel,
+        applyLocationSelection(null, {
           lat: initialLocation.lat,
           lng: initialLocation.lng,
-          address: '',
-        };
-        setSelectedLocation(fallbackLocation);
-        setLocationSearchInitialValue(fallbackLabel);
-        setFormData(prev => ({
-          ...prev,
-          latitude: initialLocation.lat,
-          longitude: initialLocation.lng,
-          locationName: fallbackLabel,
-        }));
+          name: fallbackLabel,
+        });
       }
     };
 
@@ -199,8 +241,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
     }
 
     // Check if location is within Israel bounds
-    const isInIsrael = formData.longitude! >= 34.25 && formData.longitude! <= 35.9 && 
-                      formData.latitude! >= 29.5 && formData.latitude! <= 33.4;
+    const isInIsrael = isWithinIsraelBounds(formData.latitude!, formData.longitude!);
     
     if (!isInIsrael) {
       toast({
@@ -365,7 +406,11 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({ onClose, onSuccess, initialLo
                   <span className="font-medium text-sm">{selectedLocation.name}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  <p>{t('spots.coordinates')}: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                  {Number.isFinite(selectedLocation.lat) && Number.isFinite(selectedLocation.lng) && (
+                    <p>
+                      {t('spots.coordinates')}: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
