@@ -35,6 +35,23 @@
       "admin_load_error": "Could not load contact submissions.",
       "submitted_at": "Submitted"
     },
+    "about": {
+      "hero_title": "Welcome to PakalSpot",
+      "hero_subtitle": "A community of people who love coffee, nature, and good moments.",
+      "welcome_image_alt": "Coffee in nature",
+      "story_title": "Our Story",
+      "story_paragraph_1": "PakalSpot was created from a love of coffee, nature, and sharing moments with others.",
+      "story_paragraph_2": "The idea is simple: let everyone share the place where they love to drink coffee, see other people's experiences, and discover new places to make coffee in nature.",
+      "story_paragraph_3": "Join us for an experience that connects people, nature, and coffee - three loves woven together.",
+      "story_image_alt": "PakalSpot experience in nature",
+      "how_title": "How does it work?",
+      "how_paragraph": "Search for spots on the map, discover special places to make coffee in nature by area, scenery type, or other people's feedback. Browse photos, experiences, and recommendations from people who visited, then share your own location and add a photo so others can be part of the experience.",
+      "how_image_alt": "Searching for spots on the map",
+      "share_title": "Share an experience, not just a location",
+      "share_paragraph": "At PakalSpot, we believe every small coffee moment in nature is worth sharing. Tell your story - what made you choose this spot, who you were with, and how that moment felt. Every photo and recommendation you add inspires others to go out and discover.",
+      "share_image_alt": "Reviews and photos",
+      "cta_explore_map": "Explore spots on the map"
+    },
     "profile": {
       "title": "Your profile",
       "account": "Account",
